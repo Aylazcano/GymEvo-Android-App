@@ -7,7 +7,7 @@
     tools:context=".ui.statistics.StatisticsFragment">
 
     <TextView
-        android:id="@+id/text_exercice_creation"
+        android:id="@+id/textview_add_exercice_in_workout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"

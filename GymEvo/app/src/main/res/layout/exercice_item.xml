@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/taskRecyclerView"
+    android:id="@+id/ExerciceItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -10,6 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
+        android:padding="1dp"
         android:background="@color/black"
         android:orientation="horizontal">
 
@@ -18,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:padding="2dp"
+            android:padding="1dp"
             android:background="@color/black"
             tools:srcCompat="@tools:sample/avatars" />
 
@@ -27,7 +28,7 @@
             android:layout_height="match_parent"
             android:layout_weight="4"
             android:orientation="vertical"
-            android:padding="2dp">
+            android:padding="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -40,21 +41,22 @@
                     android:id="@+id/ExerciceNameTV"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="3"
-                    android:gravity="left"
-                    android:padding="2dp"
-                    android:textSize="18dp"
+                    android:layout_weight="2"
+                    android:paddingStart="4dp"
+                    android:autoSizeTextType="uniform"
+                    android:lines="1"
                     android:text="Bench Press" />
 
                 <TextView
                     android:id="@+id/MusclesTargetsTV"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="4"
+                    android:layout_weight="3"
                     android:gravity="center"
-                    android:padding="2dp"
-                    android:textSize="a"
-                    android:text="(Pectorales > Tricets > Hombros)" />
+                    android:padding="1dp"
+                    android:autoSizeTextType="uniform"
+                    android:lines="1"
+                    android:text="(Pectorales>Tricets>Hombros)" />
 
             </LinearLayout>
 
@@ -75,21 +77,21 @@
                         android:id="@+id/SeriesTV"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="2"
+                        android:layout_weight="4"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="12dp"
+                        android:textSize="16dp"
                         android:text="Series"
-                        android:padding="2dp" />
+                        android:padding="1dp" />
 
                     <TextView
                         android:id="@+id/SeriesQtyTV"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="3"
+                        android:layout_weight="5"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="14dp"
+                        android:textSize="20dp"
                         android:text="3"
                         android:padding="2dp" />
 
@@ -105,23 +107,23 @@
                         android:id="@+id/RepetitionsTV"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="2"
+                        android:layout_weight="4"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="12dp"
+                        android:textSize="16dp"
                         android:text="Repeticiones"
-                        android:padding="2dp" />
+                        android:padding="1dp" />
 
                     <TextView
                         android:id="@+id/RepetitionsQtyTV"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="3"
+                        android:layout_weight="5"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="14dp"
+                        android:textSize="20dp"
                         android:text="10"
-                        android:padding="2dp" />
+                        android:padding="1dp" />
 
                 </LinearLayout>
 
@@ -136,23 +138,23 @@
                         android:id="@+id/WeightTV"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="2"
+                        android:layout_weight="4"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="12dp"
+                        android:textSize="16dp"
                         android:text="Peso (Kg)"
-                        android:padding="2dp" />
+                        android:padding="1dp" />
 
                     <TextView
                         android:id="@+id/WeightNumTV"
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
-                        android:layout_weight="3"
+                        android:layout_weight="5"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="14dp"
+                        android:textSize="20dp"
                         android:text="45"
-                        android:padding="2dp" />
+                        android:padding="1dp" />
 
                 </LinearLayout>
 
@@ -161,16 +163,5 @@
         </LinearLayout>
 
     </LinearLayout>
-
-
-
-<!--    <View-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="1dp"-->
-<!--        android:background="#673AB7" />-->
-<!--    <View-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="2dp"-->
-<!--        android:background="#FFFFFF" />-->
 
 </LinearLayout>

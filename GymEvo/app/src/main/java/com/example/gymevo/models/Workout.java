@@ -1,29 +1,26 @@
 package com.example.gymevo.models;
 
-import java.sql.Time;
 import java.util.Date;
+import java.util.List;
 
 public class Workout {
-    public Long id;
-    public int Series;
-    public int Repetitions;
-    public int Weight;
-    public Time Time;
-    public int HeartRates;
-    public Date Date;
-    public Exercice Exercice;
+    private Long id;
+    private Date date;
+    private List<ExerciseInWorkout> exercisesList;
 
-
-
-    public Workout(Long pId, int pSeriesQty, int pRepetitionsQty, int pWeight, Time pTime, int pHeartRates, Date pDate, Exercice pExercice){
-        id = pId;
-        Series = pSeriesQty;
-        Repetitions = pRepetitionsQty;
-        Weight = pWeight;
-        Time = pTime;
-        HeartRates = pHeartRates;
-        Date = pDate;
-        Exercice = pExercice;
+    // Constructeurs, getters et setters
+    public Workout(Long id, Date date, List<ExerciseInWorkout> exercisesList) {
+        this.id = id;
+        this.date = date;
+        this.exercisesList = exercisesList;
     }
 
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Date getDate() { return date; }
+    public void setDate(Date date) { this.date = date; }
+
+    public List<ExerciseInWorkout> getExercisesList() { return exercisesList; }
+    public void setExercisesList(List<ExerciseInWorkout> exercisesList) { this.exercisesList = exercisesList; }
 }

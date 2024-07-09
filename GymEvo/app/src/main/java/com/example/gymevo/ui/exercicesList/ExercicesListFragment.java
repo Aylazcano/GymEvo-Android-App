@@ -1,4 +1,4 @@
-package com.example.gymevo.ui.statistics;
+package com.example.gymevo.ui.exercicesList;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,20 +12,20 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.gymevo.databinding.FragmentAddExerciceInWorkoutBinding;
 
-public class StatisticsFragment extends Fragment {
+public class ExercicesListFragment extends Fragment {
 
     private FragmentAddExerciceInWorkoutBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        StaticticsViewModel galleryViewModel =
-                new ViewModelProvider(this).get(StaticticsViewModel.class);
+        ExercicesListViewModel exercicesListViewModel =
+                new ViewModelProvider(this).get(ExercicesListViewModel.class);
 
         binding = FragmentAddExerciceInWorkoutBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         final TextView textView = binding.textviewAddExerciceInWorkout;
-        galleryViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        exercicesListViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }
 

@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_home">
+    app:startDestination="@+id/nav_workout_traker">
 
     <fragment
-        android:id="@+id/nav_home"
-        android:name="com.example.gymevo.ui.home.HomeFragment"
-        android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        android:id="@+id/nav_workout_traker"
+        android:name="com.example.gymevo.ui.workoutTracker.WorkoutTrackerFragment"
+        android:label="@string/menu_workout_tracker"
+        tools:layout="@layout/fragment_workout_tracker" />
 
     <fragment
         android:id="@+id/nav_statistics"
@@ -18,16 +18,10 @@
         tools:layout="@layout/fragment_statictics" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.example.gymevo.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
-
-    <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.example.gymevo.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_exercices_list"
+        android:name="com.example.gymevo.ui.exercicesList.ExercicesListFragment"
+        android:label="@string/menu_exercices_list"
+        tools:layout="@layout/fragment_exercices_list" />
 
     <fragment
         android:id="@+id/nav_exercice_creation"
@@ -36,8 +30,8 @@
         tools:layout="@layout/fragment_statictics" />
 
     <fragment
-        android:id="@+id/nav_workout_creation"
-        android:name="com.example.gymevo.ui.workoutCreation.WorkoutCreationFragment"
-        android:label="@string/menu_workout_creation"
+        android:id="@+id/nav_add_exercice_in_workout"
+        android:name="com.example.gymevo.ui.addExerciceInWorkout.AddExerciceInWorkoutFragment"
+        android:label="@string/menu_add_exercice_in_workout"
         tools:layout="@layout/fragment_statictics" />
 </navigation>

@@ -5,7 +5,7 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_home"
+            android:id="@+id/nav_workout_traker"
             android:icon="@drawable/ic_menu_camera"
             android:title="@string/menu_workout_tracker" />
 
@@ -15,12 +15,12 @@
             android:title="@string/menu_statistics" />
 
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/nav_exercices_list"
             android:icon="@drawable/ic_menu_gallery"
             android:title="@string/menu_exercices_gallery" />
 
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/nav_change_user"
             android:icon="@drawable/ic_menu_slideshow"
             android:title="@string/menu_userSwitch" />
 
@@ -30,7 +30,7 @@
             android:title="Exercice Creation (Test)" />
 
         <item
-            android:id="@+id/nav_workout_creation"
+            android:id="@+id/nav_add_exercice_in_workout"
             android:icon="@drawable/ic_menu_slideshow"
             android:title="Workout Creation (Test)" />
     </group>

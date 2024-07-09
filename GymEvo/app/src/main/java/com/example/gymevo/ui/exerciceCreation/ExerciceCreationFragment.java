@@ -10,18 +10,18 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.gymevo.databinding.FragmentGalleryBinding;
+import com.example.gymevo.databinding.FragmentExercicesListBinding;
 
 public class ExerciceCreationFragment extends Fragment {
 
-    private FragmentGalleryBinding binding;
+    private FragmentExercicesListBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         ExerciceCreationViewModel galleryViewModel =
                 new ViewModelProvider(this).get(ExerciceCreationViewModel.class);
 
-        binding = FragmentGalleryBinding.inflate(inflater, container, false);
+        binding = FragmentExercicesListBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         final TextView textView = binding.textGallery;
