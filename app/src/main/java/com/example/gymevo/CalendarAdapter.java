@@ -1,19 +1,26 @@
 package com.example.gymevo;
 
+import android.content.Context;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-public class CalendarAdapater extends RecyclerView.Adapter<CalendarViewHolder>{
+public class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder> {
     private final ArrayList<String> daysOfMonth;
     private final OnItemListener onItemListener;
+    private final Context context;  // Make sure context is defined as a class variable
 
-    public CalendarAdapater(ArrayList<String> daysOfMonth, OnItemListener onItemListener) {
+
+    public CalendarAdapter(Context context, ArrayList<String> daysOfMonth, OnItemListener onItemListener) {
+        this.context = context;  // Initialize context here
         this.daysOfMonth = daysOfMonth;
         this.onItemListener = onItemListener;
     }
@@ -24,7 +31,7 @@ public class CalendarAdapater extends RecyclerView.Adapter<CalendarViewHolder>{
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         View view = inflater.inflate(R.layout.calendar_day_cell, parent, false);
         ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-        layoutParams.height = (int) (parent.getHeight()* 0.1666666666);
+        layoutParams.height = (int) (parent.getHeight() * 0.1666666666);
         return new CalendarViewHolder(view, onItemListener);
     }
 
@@ -38,7 +45,9 @@ public class CalendarAdapater extends RecyclerView.Adapter<CalendarViewHolder>{
         return daysOfMonth.size();
     }
 
-    public interface OnItemListener{
+
+
+    public interface OnItemListener {
         void onItemClick(int position, String dayText);
     }
 }

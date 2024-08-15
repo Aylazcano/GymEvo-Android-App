@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="10dp"
     android:background="#03DAC5">
 
     <LinearLayout
@@ -11,7 +10,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="top"
-        android:padding="12dp">
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="2dp">
 
         <TextView
             android:id="@+id/oneMonthText"

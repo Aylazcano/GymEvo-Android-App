@@ -1,0 +1,55 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ui.workoutTracker.WorkoutTrackerFragment">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/oneAppBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="10dp">
+        <include
+            layout="@layout/calendar_header"/>
+
+        <FrameLayout
+            android:id="@+id/calendarMonthWeekFrame"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            >
+
+            <!-- RecyclerView for Month view -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/calendarMonthRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                android:background="#03DAC5"/>
+
+            <!-- Placeholder for Week view (to be implemented) -->
+            <!-- For now, let's use a dummy view -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/calendarWeekRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/ExerciceItem"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="8dp"
+        android:layout_weight="1"
+        android:background="@color/example_1_bg"/>
+
+
+</LinearLayout>
