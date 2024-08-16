@@ -54,6 +54,14 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.Exercise
         return exerciseInWorkoutList.size();
     }
 
+    // Méthode pour mettre à jour les données de l'adaptateur
+    public void setExercises(List<ExerciseInWorkout> exercises) {
+        // Remplacer l'ancienne liste par la nouvelle
+        this.exerciseInWorkoutList = exercises;
+        // Notifier l'adaptateur que les données ont changé
+        notifyDataSetChanged();
+    }
+
     public class ExerciseViewHolder extends RecyclerView.ViewHolder {
         TextView ExerciseNameTV, MusclesTargetsTV, SeriesQtyTV, RepetitionsQtyTV, WeightNumTV;
         ImageView ExeciceIV;
