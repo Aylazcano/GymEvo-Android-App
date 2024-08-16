@@ -2,6 +2,7 @@ package com.example.gymevo.ui.workoutTracker;
 
 import static java.time.LocalDate.now;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.GestureDetector;
@@ -17,13 +18,13 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.CalendarAdapter;
 import com.example.gymevo.R;
 import com.example.gymevo.databinding.FragmentWorkoutTrackerBinding;
-import com.example.gymevo.ui.workoutTracker.WorkoutTrackerViewModel;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -38,8 +39,10 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private TextView oneMonthText;
     private TextView oneYearText;
     private RecyclerView calendarRecyclerView;
+    private RecyclerView workoutRecyclerView;
     private LocalDate selectedDate;
     private GestureDetector gestureDetector;
+    private boolean isMonthView = true; // Track current view mode
 
     public static WorkoutTrackerFragment newInstance() {
         return new WorkoutTrackerFragment();
@@ -65,6 +68,8 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
 
         return root;
     }
+
+    @SuppressLint("ClickableViewAccessibility")
     private void InitGestureDetector(View root){
         // Set up the gesture detector
         gestureDetector = new GestureDetector(getContext(), new GestureListener());
@@ -83,25 +88,21 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     }
 
     private void initWidgets(View root) {
-        calendarRecyclerView = root.findViewById(R.id.calendarMonthRecyclerView);
+        calendarRecyclerView = root.findViewById(R.id.calendarRecyclerView);
         oneMonthText = root.findViewById(R.id.oneMonthText);
         oneYearText = root.findViewById(R.id.oneYearText);
+
+        workoutRecyclerView = binding.WorkoutRecyclerView;
     }
 
-    private void setMonthView() {
-        if (oneMonthText != null && oneYearText != null) {
-            oneMonthText.setText(monthFromDate(selectedDate));
-            oneYearText.setText(yearFromDate(selectedDate));
-            ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
+    private String monthFromDate(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM.");
+        return date.format(formatter);
+    }
 
-            CalendarAdapter calendarAdapter = new CalendarAdapter(getContext(), daysInMonth, this);
-            RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext().getApplicationContext(), 7);
-            calendarRecyclerView.setLayoutManager(layoutManager);
-            calendarRecyclerView.setAdapter(calendarAdapter);
-        } else {
-            // Handle case when TextViews are null
-            Toast.makeText(getContext(), "Error: TextViews not initialized", Toast.LENGTH_SHORT).show();
-        }
+    private String yearFromDate(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy");
+        return date.format(formatter);
     }
 
     private ArrayList<String> daysInMonthArray(LocalDate date) {
@@ -123,14 +124,65 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         return daysInMonthArray;
     }
 
-    private String monthFromDate(LocalDate date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM.");
-        return date.format(formatter);
+    private void setMonthView() {
+        if (oneMonthText != null && oneYearText != null) {
+            oneMonthText.setText(monthFromDate(selectedDate));
+            oneYearText.setText(yearFromDate(selectedDate));
+            ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
+
+            CalendarAdapter calendarAdapter = new CalendarAdapter(getContext(), daysInMonth, this);
+            RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext().getApplicationContext(), 7);
+            calendarRecyclerView.setLayoutManager(layoutManager);
+            calendarRecyclerView.setAdapter(calendarAdapter);
+
+            // Set item animator for smooth animations
+            calendarRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+            // Set the height of the calendarFrame to 240dp
+            ViewGroup.LayoutParams params = calendarRecyclerView.getLayoutParams();
+            params.height = (int) (240 * getResources().getDisplayMetrics().density);
+            calendarRecyclerView.setLayoutParams(params);
+
+            isMonthView = true; // Track current view mode
+        } else {
+            // Handle case when TextViews are null
+            Toast.makeText(getContext(), "Error: TextViews not initialized", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private String yearFromDate(LocalDate date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy");
-        return date.format(formatter);
+    private ArrayList<String> daysInWeekArray(LocalDate date) {
+        ArrayList<String> daysInWeekArray = new ArrayList<>();
+        LocalDate startOfWeek = date.with(java.time.DayOfWeek.MONDAY);
+
+        for (int i = 0; i < 7; i++) {
+            daysInWeekArray.add(String.valueOf(startOfWeek.plusDays(i).getDayOfMonth()));
+        }
+        return daysInWeekArray;
+    }
+
+    private void setWeekView() {
+        if (oneMonthText != null && oneYearText != null) {
+            oneMonthText.setText(monthFromDate(selectedDate));
+            oneYearText.setText(yearFromDate(selectedDate));
+            ArrayList<String> daysInWeek = daysInWeekArray(selectedDate);
+
+            CalendarAdapter calendarAdapter = new CalendarAdapter(getContext(), daysInWeek, this);
+            RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext().getApplicationContext(), 7);
+            calendarRecyclerView.setLayoutManager(layoutManager);
+            calendarRecyclerView.setAdapter(calendarAdapter);
+
+            // Set item animator for smooth animations
+            calendarRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+            // Adjust height for week view
+            ViewGroup.LayoutParams params = calendarRecyclerView.getLayoutParams();
+            params.height = (int) (40 * getResources().getDisplayMetrics().density);
+            calendarRecyclerView.setLayoutParams(params);
+
+            isMonthView = false; // Track current view mode
+        } else {
+            Toast.makeText(getContext(), "Error: TextViews not initialized", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void previousMonthAction(View view) {
@@ -141,6 +193,16 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     public void nextMonthAction(View view) {
         selectedDate = selectedDate.plusMonths(1);
         setMonthView();
+    }
+
+    public void previousWeekAction(View view) {
+        selectedDate = selectedDate.minusWeeks(1);
+        setWeekView();
+    }
+
+    public void nextWeekAction(View view) {
+        selectedDate = selectedDate.plusWeeks(1);
+        setWeekView();
     }
 
     @Override
@@ -195,20 +257,32 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     }
 
     private void onSwipeUp() {
-        Toast.makeText(getContext(), "Swipe Up - Switch to Week View", Toast.LENGTH_SHORT).show();
-        // Implement the logic to switch to week view if needed
+        if (isMonthView) {
+            Toast.makeText(getContext(), "Swipe Up - Switch to Week View", Toast.LENGTH_SHORT).show();
+            setWeekView();
+        }
     }
 
     private void onSwipeDown() {
-        Toast.makeText(getContext(), "Swipe Down - Switch to Month View", Toast.LENGTH_SHORT).show();
-        // Implement the logic to switch to month view if needed
+        if (!isMonthView) {
+            Toast.makeText(getContext(), "Swipe Down - Switch to Month View", Toast.LENGTH_SHORT).show();
+            setMonthView();
+        }
     }
 
     private void onSwipeLeft() {
-        nextMonthAction(null);  // Move to the next month
+        if (isMonthView) {
+            nextMonthAction(null);
+        } else {
+            nextWeekAction(null);
+        }
     }
 
     private void onSwipeRight() {
-        previousMonthAction(null);  // Move to the previous month
+        if (isMonthView) {
+            previousMonthAction(null);
+        } else {
+            previousWeekAction(null);
+        }
     }
 }

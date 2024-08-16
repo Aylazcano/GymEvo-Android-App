@@ -38,6 +38,11 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull CalendarViewHolder holder, int position) {
         holder.dayOfMonth.setText(daysOfMonth.get(position));
+
+        // La hauteur est fixée pour chaque item
+        ViewGroup.LayoutParams params = holder.itemView.getLayoutParams();
+        params.height = (int) (40 * holder.itemView.getContext().getResources().getDisplayMetrics().density); // Convert dp to pixels
+        holder.itemView.setLayoutParams(params);
     }
 
     @Override

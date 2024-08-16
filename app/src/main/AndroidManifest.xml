@@ -18,7 +18,7 @@
             android:name=".WeekViewActiviy"
             android:exported="false" />
         <activity
-            android:name=".ExerciseAdapter$WeekViewActivity"
+            android:name=".WorkoutAdapter$WeekViewActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

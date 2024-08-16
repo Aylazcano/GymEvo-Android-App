@@ -14,7 +14,7 @@ import java.util.Date;
 
 public class WorkoutDetailActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private ExerciseAdapter adapter;
+    private WorkoutAdapter adapter;
     private Workout workout;
 
     @Override
@@ -28,7 +28,7 @@ public class WorkoutDetailActivity extends AppCompatActivity {
         // Initialiser le workout avec les données (par exemple, en le récupérant à partir de la base de données ou d'un Intent)
         workout = getWorkoutFromIntent();
 
-        adapter = new ExerciseAdapter(this, workout.getExercisesList());
+        adapter = new WorkoutAdapter(this, workout.getExercisesList());
         recyclerView.setAdapter(adapter);
     }
 

@@ -21,24 +21,24 @@ import com.example.gymevo.models.ExerciseInWorkout;
 import java.util.List;
 
 
-public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder> {
-    private List<ExerciseInWorkout> exercisesList;
+public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ExerciseViewHolder> {
+    private List<ExerciseInWorkout> exerciseInWorkoutList;
     private Context context;
 
-    public ExerciseAdapter(Context context, List<ExerciseInWorkout> exercisesList) {
+    public WorkoutAdapter(Context context, List<ExerciseInWorkout> exerciseInWorkoutList) {
         this.context = context;
-        this.exercisesList = exercisesList;
+        this.exerciseInWorkoutList = exerciseInWorkoutList;
     }
 
     @Override
     public ExerciseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.exercice_item, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.exercice_in_workout_item, parent, false);
         return new ExerciseViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(ExerciseViewHolder holder, int position) {
-        ExerciseInWorkout exercise = exercisesList.get(position);
+        ExerciseInWorkout exercise = exerciseInWorkoutList.get(position);
         holder.ExerciseNameTV.setText(exercise.getExercice().getName());
         holder.MusclesTargetsTV.setText(exercise.getExercice().getTargetedMuscle());
         holder.SeriesQtyTV.setText(String.valueOf(exercise.getSeries()));
@@ -51,7 +51,7 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.Exerci
 
     @Override
     public int getItemCount() {
-        return exercisesList.size();
+        return exerciseInWorkoutList.size();
     }
 
     public class ExerciseViewHolder extends RecyclerView.ViewHolder {
@@ -75,7 +75,7 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.Exerci
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             EdgeToEdge.enable(this);
-            setContentView(R.layout.activity_week_view);
+            setContentView(R.layout.activity_main);
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
                 v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
