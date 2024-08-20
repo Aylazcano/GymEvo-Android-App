@@ -75,7 +75,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         initWorkoutRecyclerView();
 
         // Initialisation du GestureDetector pour détecter les gestes de l'utilisateur
-        InitGestureDetector(root);
+        InitGestureDetector();
 
         // Sélection de la date actuelle
         selectedDate = now();
@@ -114,22 +114,20 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         });
     }
 
+    //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
 
     @SuppressLint("ClickableViewAccessibility")
-    private void InitGestureDetector(View root) {
-        // Configurer le GestureDetector pour détecter les gestes de l'utilisateur
+    private void InitGestureDetector() {
         gestureDetector = new GestureDetector(getContext(), new GestureListener());
 
-        // Assurer que la vue racine gère les événements tactiles
-        root.setOnTouchListener((v, event) -> {
+        binding.calendarLayout.setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
-            return true;  // Retourne true pour indiquer que l'événement a été géré
+            return true; // Indique que l'événement tactile a été consommé
         });
 
-        // Assurer que le RecyclerView du calendrier gère les événements tactiles
         calendarRecyclerView.setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
-            return true;  // Retourne true pour indiquer que l'événement a été géré
+            return true; // Indique que l'événement tactile a été consommé
         });
     }
 
@@ -256,14 +254,31 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
 
     // Gérer la sélection d'un jour dans le calendrier
+//    public void onItemClick(int position, String dayText) {
+//        if (!dayText.equals("")) {
+//            selectedDate = selectedDate.withDayOfMonth(Integer.parseInt(dayText));
+//            if (isMonthView) {
+//                setMonthView();
+//            } else {
+//                setWeekView();
+//            }
+//        }
+//    }
+
+//    public void onItemClick(int position, String dayText) {
+//        if (!dayText.isEmpty()) {
+//            LocalDate clickedDate = viewModel.getCurrentDate().getValue().withDayOfMonth(Integer.parseInt(dayText));
+//            viewModel.setCurrentDate(clickedDate);
+//            // Fetch exercises for the selected date
+//        }
+//    }
+
+    @Override
     public void onItemClick(int position, String dayText) {
         if (!dayText.equals("")) {
-            selectedDate = selectedDate.withDayOfMonth(Integer.parseInt(dayText));
-            if (isMonthView) {
-                setMonthView();
-            } else {
-                setWeekView();
-            }
+            String message = "Selected date " + dayText + " " + monthFromDate(selectedDate) + " "
+                    + yearFromDate(selectedDate);
+            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -305,16 +320,22 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final int SWIPE_THRESHOLD = 100;
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
-        private Context context = null;
+        private Context context;
 
         public GestureListener() {
-            this.context = context;  // Initialize context here
+            this.context = getContext();  // Use the fragment's context
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            if (e1 == null || e2 == null) {
+                return false;
+            }
+
             float diffY = e2.getY() - e1.getY();
             float diffX = e2.getX() - e1.getX();
+
+            // Rest of the method remains the same
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                     if (diffX > 0) {

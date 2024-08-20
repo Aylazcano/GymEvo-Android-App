@@ -111,7 +111,7 @@
                         android:textAlignment="center"
                         android:gravity="center"
                         android:textSize="16dp"
-                        android:text="Repeticiones"
+                        android:text="Repetitions"
                         android:padding="1dp" />
 
                     <TextView
@@ -142,7 +142,7 @@
                         android:textAlignment="center"
                         android:gravity="center"
                         android:textSize="16dp"
-                        android:text="Peso (Kg)"
+                        android:text="Weight (lbs)"
                         android:padding="1dp" />
 
                     <TextView

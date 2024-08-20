@@ -13,6 +13,7 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <LinearLayout
+        android:id="@+id/calendarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -22,7 +23,6 @@
         <include
             layout="@layout/calendar_header"/>
 
-        <!-- RecyclerView for Month view -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/calendarRecyclerView"
             android:layout_width="match_parent"
@@ -31,12 +31,23 @@
             android:background="#03DAC5"/>
     </LinearLayout>
 
+<!--TODO: SWIPEREFRESHLAYOUT qui refresh la liste des exercices-->
+<!--    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
+<!--        android:id="@+id/swipeRefreshLayout"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:layout_margin="8dp">-->
+
+<!--        <androidx.recyclerview.widget.RecyclerView-->
+<!--            android:id="@+id/WorkoutRecyclerView"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"/>-->
+<!--    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>-->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/WorkoutRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:layout_weight="1"
-        android:background="@color/example_1_bg"/>
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"/>
 
 </LinearLayout>

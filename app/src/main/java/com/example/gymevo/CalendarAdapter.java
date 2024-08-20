@@ -1,12 +1,9 @@
 package com.example.gymevo;
 
 import android.content.Context;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,7 +34,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull CalendarViewHolder holder, int position) {
-        holder.dayOfMonth.setText(daysOfMonth.get(position));
+        holder.dayTextView.setText(daysOfMonth.get(position));
 
         // La hauteur est fixée pour chaque item
         ViewGroup.LayoutParams params = holder.itemView.getLayoutParams();
