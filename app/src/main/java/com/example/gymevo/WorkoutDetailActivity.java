@@ -26,16 +26,16 @@ public class WorkoutDetailActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // Initialiser le workout avec les données (par exemple, en le récupérant à partir de la base de données ou d'un Intent)
-        workout = getWorkoutFromIntent();
+//        workout = getWorkoutFromIntent();
 
         adapter = new WorkoutAdapter(this, workout.getExercisesList());
         recyclerView.setAdapter(adapter);
     }
 
-    private Workout getWorkoutFromIntent() {
-        // Code pour récupérer le workout à partir de l'Intent ou d'une autre source de données
-        // Par exemple :
-        // return (Workout) getIntent().getSerializableExtra("WORKOUT_KEY");
-        return new Workout(1L, new Date(), new ArrayList<>()); // Exemple statique
-    }
+//    private Workout getWorkoutFromIntent() {
+//        // Code pour récupérer le workout à partir de l'Intent ou d'une autre source de données
+//        // Par exemple :
+//        // return (Workout) getIntent().getSerializableExtra("WORKOUT_KEY");
+//        return new Workout(1L, new Date(), new ArrayList<>()); // Exemple statique
+//    }
 }

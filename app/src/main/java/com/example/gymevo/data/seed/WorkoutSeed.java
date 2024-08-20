@@ -2,37 +2,67 @@ package com.example.gymevo.data.seed;
 
 import com.example.gymevo.models.Exercice;
 import com.example.gymevo.models.ExerciseInWorkout;
+import com.example.gymevo.models.Workout;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
-public class ExerciceInWorkoutSeed {
+public class WorkoutSeed {
 
-    public static List<ExerciseInWorkout> getExercisesInWorkout() {
-        List<ExerciseInWorkout> exercisesInWorkout = new ArrayList<>();
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final Random random = new Random();
 
-        // Création des exercices
-        Exercice benchPress = new Exercice(1L, "Bench Press", "Pectorales > Triceps > Épaules",
-                "url_to_start_image_bench_press", "url_to_end_image_bench_press");
-        Exercice squat = new Exercice(2L, "Squat", "Cuisses > Fessiers",
-                "url_to_start_image_squat", "url_to_end_image_squat");
-        Exercice deadlift = new Exercice(3L, "Deadlift", "Dos > Fessiers > Cuisses",
-                "url_to_start_image_deadlift", "url_to_end_image_deadlift");
-        Exercice pullUp = new Exercice(4L, "Pull-up", "Dos > Biceps",
-                "url_to_start_image_pull_up", "url_to_end_image_pull_up");
-        Exercice lunge = new Exercice(5L, "Lunge", "Cuisses > Fessiers",
-                "url_to_start_image_lunge", "url_to_end_image_lunge");
+    public static List<Workout> generateWorkouts() {
+        List<Workout> workouts = new ArrayList<>();
+        List<Exercice> exercises = generateExercises();
 
-        // Ajout des exercices dans les workouts
-        exercisesInWorkout.add(new ExerciseInWorkout(1L, 3, 10, 45, 60, 120, new Date(), benchPress));
-        exercisesInWorkout.add(new ExerciseInWorkout(2L, 4, 12, 60, 90, 130, new Date(), squat));
-        exercisesInWorkout.add(new ExerciseInWorkout(3L, 5, 8, 70, 120, 140, new Date(), deadlift));
-        exercisesInWorkout.add(new ExerciseInWorkout(4L, 4, 15, 50, 60, 110, new Date(), pullUp));
-        exercisesInWorkout.add(new ExerciseInWorkout(5L, 3, 20, 40, 70, 100, new Date(), lunge));
+        LocalDate startDate = LocalDate.parse("20240101", formatter);
+        LocalDate endDate = LocalDate.parse("20240818", formatter);
 
-        // Ajoutez autant d'exercices que nécessaire
+        long workoutId = 1;
+        long exerciseInWorkoutId = 1;
 
-        return exercisesInWorkout;
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            // Créer un workout tous les 2-3 jours
+            if (random.nextInt(3) > 0) {
+                Workout workout = new Workout(workoutId++, date);
+
+                // Ajouter 3-5 exercices à chaque workout
+                int exerciseCount = random.nextInt(3) + 3;
+                for (int i = 0; i < exerciseCount; i++) {
+                    Exercice exercice = exercises.get(random.nextInt(exercises.size()));
+                    ExerciseInWorkout eiw = new ExerciseInWorkout(
+                            exerciseInWorkoutId++,
+                            random.nextInt(3) + 2, // 2-4 séries
+                            random.nextInt(8) + 8, // 8-15 répétitions
+                            random.nextInt(81) + 20, // 20-100 lbs
+                            random.nextInt(61) + 30, // 30-90 secondes
+                            random.nextInt(41) + 80, // 80-120 bpm
+                            exercice,
+                            workout,
+                            date // Add the date field here
+                    );
+                    workout.addExercise(eiw);
+                }
+
+                workouts.add(workout);
+            }
+        }
+
+        return workouts;
+    }
+
+    private static List<Exercice> generateExercises() {
+        List<Exercice> exercises = new ArrayList<>();
+        exercises.add(new Exercice(1L, "Squat", "Legs", "squat_start.png", "squat_end.png"));
+        exercises.add(new Exercice(2L, "Bench Press", "Chest", "bench_press_start.png", "bench_press_end.png"));
+        exercises.add(new Exercice(3L, "Deadlift", "Back", "deadlift_start.png", "deadlift_end.png"));
+        exercises.add(new Exercice(4L, "Shoulder Press", "Shoulders", "shoulder_press_start.png", "shoulder_press_end.png"));
+        exercises.add(new Exercice(5L, "Pull-up", "Back", "pull_up_start.png", "pull_up_end.png"));
+        return exercises;
     }
 }

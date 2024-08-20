@@ -15,7 +15,7 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:id="@+id/ExeciceIV"
+            android:id="@+id/ExerciseIV"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -38,7 +38,7 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/ExerciceNameTV"
+                    android:id="@+id/ExerciseNameTV"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="2"

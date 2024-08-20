@@ -1,27 +1,29 @@
 package com.example.gymevo.models;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class ExerciseInWorkout {
     private Long id;
     private int series;
     private int repetitions;
     private int weight;
-    private int time; // assuming time is in seconds
+    private int time; // en secondes
     private int heartRates;
-    private Date date;
     private Exercice exercice;
+    private Workout workout;
 
-    // Constructeurs, getters et setters
-    public ExerciseInWorkout(Long id, int series, int repetitions, int weight, int time, int heartRates, Date date, Exercice exercice) {
+    public ExerciseInWorkout(Long id, int series, int repetitions, int weight, int time, int heartRates, Exercice exercice, Workout workout, LocalDate date) {
         this.id = id;
         this.series = series;
         this.repetitions = repetitions;
         this.weight = weight;
         this.time = time;
         this.heartRates = heartRates;
-        this.date = date;
         this.exercice = exercice;
+        this.workout = workout;
+        if (workout != null) {
+            workout.addExercise(this);
+        }
     }
 
     public Long getId() { return id; }
@@ -42,9 +44,25 @@ public class ExerciseInWorkout {
     public int getHeartRates() { return heartRates; }
     public void setHeartRates(int heartRates) { this.heartRates = heartRates; }
 
-    public Date getDate() { return date; }
-    public void setDate(Date date) { this.date = date; }
-
     public Exercice getExercice() { return exercice; }
     public void setExercice(Exercice exercice) { this.exercice = exercice; }
+
+    public Workout getWorkout() {
+        return workout;
+    }
+
+    public void setWorkout(Workout workout) {
+        if (this.workout != workout) {
+            if (this.workout != null) {
+                this.workout.removeExercise(this);
+            }
+            this.workout = workout;
+            if (workout != null) {
+                workout.addExercise(this);
+            }
+        }
+    }
+
+//    public Date getDate(LocalDate date) { return this.date; } // Add this getter
+//    public void setDate(Date date) { this.date = date; } // Add this setter
 }

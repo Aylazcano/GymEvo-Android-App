@@ -1,25 +1,18 @@
 package com.example.gymevo;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-
+import com.bumptech.glide.Glide;
 import com.example.gymevo.models.ExerciseInWorkout;
 
 import java.util.List;
-
 
 public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ExerciseViewHolder> {
     private List<ExerciseInWorkout> exerciseInWorkoutList;
@@ -45,8 +38,14 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.Exercise
         holder.RepetitionsQtyTV.setText(String.valueOf(exercise.getRepetitions()));
         holder.WeightNumTV.setText(String.valueOf(exercise.getWeight()));
 
-        // Charger les images avec une bibliothèque comme Glide ou Picasso
-        // Glide.with(context).load(exercise.getExercice().getStartImage()).into(holder.ExeciceIV);
+        // Charger les images avec Glide
+        Glide.with(context).load(exercise.getExercice().getStartImage()).into(holder.ExerciseIV);
+    }
+
+    // Méthode pour mettre à jour les données de l'adaptateur
+    public void setExercises(List<ExerciseInWorkout> exercises) {
+        this.exerciseInWorkoutList = exercises;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -54,41 +53,18 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.Exercise
         return exerciseInWorkoutList.size();
     }
 
-    // Méthode pour mettre à jour les données de l'adaptateur
-    public void setExercises(List<ExerciseInWorkout> exercises) {
-        // Remplacer l'ancienne liste par la nouvelle
-        this.exerciseInWorkoutList = exercises;
-        // Notifier l'adaptateur que les données ont changé
-        notifyDataSetChanged();
-    }
-
     public class ExerciseViewHolder extends RecyclerView.ViewHolder {
         TextView ExerciseNameTV, MusclesTargetsTV, SeriesQtyTV, RepetitionsQtyTV, WeightNumTV;
-        ImageView ExeciceIV;
+        ImageView ExerciseIV;
 
         public ExerciseViewHolder(View itemView) {
             super(itemView);
-            ExeciceIV = itemView.findViewById(R.id.ExeciceIV);
-            ExerciseNameTV = itemView.findViewById(R.id.ExerciceNameTV);
+            ExerciseIV = itemView.findViewById(R.id.ExerciseIV);
+            ExerciseNameTV = itemView.findViewById(R.id.ExerciseNameTV);
             MusclesTargetsTV = itemView.findViewById(R.id.MusclesTargetsTV);
             SeriesQtyTV = itemView.findViewById(R.id.SeriesQtyTV);
             RepetitionsQtyTV = itemView.findViewById(R.id.RepetitionsQtyTV);
             WeightNumTV = itemView.findViewById(R.id.WeightNumTV);
-        }
-    }
-
-    public static class WeekViewActivity extends AppCompatActivity {
-
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            EdgeToEdge.enable(this);
-            setContentView(R.layout.activity_main);
-            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-                return insets;
-            });
         }
     }
 }

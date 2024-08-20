@@ -18,7 +18,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -36,6 +35,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -43,7 +43,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
 
     // Déclaration des variables pour les widgets et les objets
     private FragmentWorkoutTrackerBinding binding;
-    private WorkoutTrackerViewModel mViewModel;
+    private WorkoutTrackerViewModel workoutTrackerViewModel;
     private TextView oneMonthText;
     private TextView oneYearText;
     private RecyclerView calendarRecyclerView;
@@ -61,6 +61,9 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        // Initialiser selectedDate avec la date actuelle avant de l'utiliser ailleurs
+        selectedDate = now();
+
         // Liaison de la vue avec le FragmentWorkoutTrackerBinding
         binding = FragmentWorkoutTrackerBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -69,16 +72,13 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         initWidgets(root);
 
         // Initialisation du ViewModel pour gérer les données de la vue
-        mViewModel = new ViewModelProvider(this).get(WorkoutTrackerViewModel.class);
+        workoutTrackerViewModel = new ViewModelProvider(this).get(WorkoutTrackerViewModel.class);
 
         // Initialisation du RecyclerView pour afficher la liste des exercices
-        initWorkoutRecyclerView();
+        initWorkoutRecyclerView(selectedDate);
 
         // Initialisation du GestureDetector pour détecter les gestes de l'utilisateur
         InitGestureDetector();
-
-        // Sélection de la date actuelle
-        selectedDate = now();
 
         // Configuration initiale de la vue en mode mois
         setMonthView();
@@ -89,30 +89,31 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     /**
      * Initialiser le RecyclerView pour afficher la liste des exercices dans l'entraînement.
      */
-    private void initWorkoutRecyclerView() {
-        // Créez une liste vide ou récupérez-la depuis le ViewModel
-        List<ExerciseInWorkout> exerciseList = new ArrayList<>();
-
-        // Obtenez le contexte depuis le fragment
+    private void initWorkoutRecyclerView(LocalDate selectedDate) {
         Context context = getContext();
+        if (context == null) return;
 
-        // Créez l'adaptateur avec le contexte et la liste
-        final WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, exerciseList);
+        // Créer l'adaptateur avec une liste vide
+        WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, new ArrayList<>());
 
-        // Configurez le RecyclerView comme précédemment
-        workoutRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        // Configurer le RecyclerView
+        workoutRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         workoutRecyclerView.setAdapter(workoutAdapter);
         workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        // Observez les données du ViewModel et mettez à jour l'adaptateur
-        mViewModel.getExercises().observe(getViewLifecycleOwner(), new Observer<List<ExerciseInWorkout>>() {
-            @Override
-            public void onChanged(List<ExerciseInWorkout> exercises) {
-                // Mettez à jour les données de l'adaptateur lorsqu'elles changent
-                workoutAdapter.setExercises(exercises);
+        // Observer les données LiveData pour mettre à jour l'adaptateur
+        workoutTrackerViewModel.getExercisesForWorkoutOnDate(selectedDate).observe(getViewLifecycleOwner(), exercisesInWorkout -> {
+            if (exercisesInWorkout != null && !exercisesInWorkout.isEmpty()) {
+                // Mettre à jour les données de l'adaptateur
+                workoutAdapter.setExercises(exercisesInWorkout);
+            } else {
+                // Gérer le cas où il n'y a pas d'exercices pour la date sélectionnée
+                workoutAdapter.setExercises(new ArrayList<>());
             }
         });
     }
+
+
 
     //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
 
@@ -145,14 +146,19 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
 
     //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
 
+    // Convert a date to a string representing the day of the month
+    private String dayFromDateString(LocalDate date) {
+        return DateTimeFormatter.ofPattern("dd").format(date);
+    }
+
     // Convertir une date en nom de mois abrégé (ex: "Jan.")
-    private String monthFromDate(LocalDate date) {
+    private String monthFromDateString(LocalDate date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM.");
         return date.format(formatter);
     }
 
     // Convertir une date en année (ex: "2024")
-    private String yearFromDate(LocalDate date) {
+    private String yearFromDateString(LocalDate date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy");
         return date.format(formatter);
     }
@@ -185,8 +191,8 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     // Configurer la vue pour afficher le mois sélectionné
     private void setMonthView() {
         if (oneMonthText != null && oneYearText != null) {
-            oneMonthText.setText(monthFromDate(selectedDate));
-            oneYearText.setText(yearFromDate(selectedDate));
+            oneMonthText.setText(monthFromDateString(selectedDate));
+            oneYearText.setText(yearFromDateString(selectedDate));
             ArrayList<String> daysInMonth = daysInMonthArray(selectedDate);
 
             CalendarAdapter calendarAdapter = new CalendarAdapter(getContext(), daysInMonth, this);
@@ -227,8 +233,8 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     // Configurer la vue pour afficher la semaine sélectionnée
     private void setWeekView() {
         if (oneMonthText != null && oneYearText != null) {
-            oneMonthText.setText(monthFromDate(selectedDate));
-            oneYearText.setText(yearFromDate(selectedDate));
+            oneMonthText.setText(monthFromDateString(selectedDate));
+            oneYearText.setText(yearFromDateString(selectedDate));
             ArrayList<String> daysInWeek = daysInWeekArray(selectedDate);
 
             CalendarAdapter calendarAdapter = new CalendarAdapter(getContext(), daysInWeek, this);
@@ -254,33 +260,22 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
 
     // Gérer la sélection d'un jour dans le calendrier
-//    public void onItemClick(int position, String dayText) {
-//        if (!dayText.equals("")) {
-//            selectedDate = selectedDate.withDayOfMonth(Integer.parseInt(dayText));
-//            if (isMonthView) {
-//                setMonthView();
-//            } else {
-//                setWeekView();
-//            }
-//        }
-//    }
-
-//    public void onItemClick(int position, String dayText) {
-//        if (!dayText.isEmpty()) {
-//            LocalDate clickedDate = viewModel.getCurrentDate().getValue().withDayOfMonth(Integer.parseInt(dayText));
-//            viewModel.setCurrentDate(clickedDate);
-//            // Fetch exercises for the selected date
-//        }
-//    }
-
     @Override
-    public void onItemClick(int position, String dayText) {
-        if (!dayText.equals("")) {
-            String message = "Selected date " + dayText + " " + monthFromDate(selectedDate) + " "
-                    + yearFromDate(selectedDate);
-            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-        }
+    public void onItemClick(int position, @NonNull String dayText) {
+        if (dayText.isEmpty()) return;
+
+        int day = Integer.parseInt(dayText);
+        int month = selectedDate.getMonthValue();
+        int year = selectedDate.getYear();
+        selectedDate = LocalDate.of(year, month, day);
+
+        String message = String.format("Selected date %s %s %d", dayFromDateString(selectedDate),
+                monthFromDateString(selectedDate), year);
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+
+        initWorkoutRecyclerView(selectedDate);
     }
+
 
     //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
 
@@ -320,22 +315,14 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final int SWIPE_THRESHOLD = 100;
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
-        private Context context;
-
-        public GestureListener() {
-            this.context = getContext();  // Use the fragment's context
-        }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (e1 == null || e2 == null) {
-                return false;
-            }
+            if (e1 == null || e2 == null) return false;
 
-            float diffY = e2.getY() - e1.getY();
             float diffX = e2.getX() - e1.getX();
+            float diffY = e2.getY() - e1.getY();
 
-            // Rest of the method remains the same
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                     if (diffX > 0) {
@@ -357,47 +344,47 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
             }
             return false;
         }
-
-        //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
-
-        // Méthode appelée lors d'un swipe vers le haut
-        private void onSwipeUp() {
-            if (isMonthView) {
-                Toast.makeText(getContext(), "Swipe Up - Switch to Week View", Toast.LENGTH_SHORT).show();
-                setWeekView();
-            }
-        }
-
-        //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
-
-        // Méthode appelée lors d'un swipe vers le bas
-        private void onSwipeDown() {
-            if (!isMonthView) {
-                Toast.makeText(getContext(), "Swipe Down - Switch to Month View", Toast.LENGTH_SHORT).show();
-                setMonthView();
-            }
-        }
-        //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
-
-        // Méthode appelée lors d'un swipe à gauche
-        private void onSwipeLeft() {
-            if (isMonthView) {
-                nextMonthAction(); // Passer au mois suivant si on est en vue mensuelle
-            } else {
-                nextWeekAction(); // Passer à la semaine suivante si on est en vue hebdomadaire
-            }
-        }
-
-        //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
-
-        // Méthode appelée lors d'un swipe à droite
-        private void onSwipeRight() {
-            if (isMonthView) {
-                previousMonthAction(); // Revenir au mois précédent si on est en vue mensuelle
-            } else {
-                previousWeekAction(); // Revenir à la semaine précédente si on est en vue hebdomadaire
-            }
-        }
-
     }
+
+    //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
+
+    // Méthode appelée lors d'un swipe vers le haut
+    private void onSwipeUp() {
+        if (isMonthView) {
+            Toast.makeText(getContext(), "Swipe Up - Switch to Week View", Toast.LENGTH_SHORT).show();
+            setWeekView();
+        }
+    }
+
+    //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
+
+    // Méthode appelée lors d'un swipe vers le bas
+    private void onSwipeDown() {
+        if (!isMonthView) {
+            Toast.makeText(getContext(), "Swipe Down - Switch to Month View", Toast.LENGTH_SHORT).show();
+            setMonthView();
+        }
+    }
+    //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
+
+    // Méthode appelée lors d'un swipe à gauche
+    private void onSwipeLeft() {
+        if (isMonthView) {
+            nextMonthAction(); // Passer au mois suivant si on est en vue mensuelle
+        } else {
+            nextWeekAction(); // Passer à la semaine suivante si on est en vue hebdomadaire
+        }
+    }
+
+    //TODO (OPTIMAZATION): DEPLACER DANS CalendarViewHolder ou CalendarAdapter a voir
+
+    // Méthode appelée lors d'un swipe à droite
+    private void onSwipeRight() {
+        if (isMonthView) {
+            previousMonthAction(); // Revenir au mois précédent si on est en vue mensuelle
+        } else {
+            previousWeekAction(); // Revenir à la semaine précédente si on est en vue hebdomadaire
+        }
+    }
+
 }
