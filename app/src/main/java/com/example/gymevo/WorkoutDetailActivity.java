@@ -8,9 +8,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.models.Workout;
 
-import java.util.ArrayList;
-import java.util.Date;
-
 
 public class WorkoutDetailActivity extends AppCompatActivity {
     private RecyclerView recyclerView;

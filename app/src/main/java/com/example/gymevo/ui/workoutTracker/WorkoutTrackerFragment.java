@@ -28,15 +28,12 @@ import com.example.gymevo.CalendarAdapter;
 import com.example.gymevo.R;
 import com.example.gymevo.WorkoutAdapter;
 import com.example.gymevo.databinding.FragmentWorkoutTrackerBinding;
-import com.example.gymevo.models.ExerciseInWorkout;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.OnItemListener {

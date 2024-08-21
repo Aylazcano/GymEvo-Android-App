@@ -1,4 +1,4 @@
-package com.example.gymevo.ui.exerciceCreation;
+package com.example.gymevo.ui.exerciseCreation;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.gymevo.databinding.FragmentExercicesListBinding;
 
-public class ExerciceCreationFragment extends Fragment {
+public class ExerciseCreationFragment extends Fragment {
 
     private FragmentExercicesListBinding binding;
 

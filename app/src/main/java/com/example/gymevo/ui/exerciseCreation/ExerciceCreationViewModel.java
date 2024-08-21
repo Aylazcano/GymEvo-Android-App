@@ -1,4 +1,4 @@
-package com.example.gymevo.ui.exerciceCreation;
+package com.example.gymevo.ui.exerciseCreation;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

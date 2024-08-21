@@ -25,13 +25,13 @@
 
     <fragment
         android:id="@+id/nav_exercice_creation"
-        android:name="com.example.gymevo.ui.exerciceCreation.ExerciceCreationFragment"
+        android:name="com.example.gymevo.ui.exerciseCreation.ExerciseCreationFragment"
         android:label="@string/menu_exercice_creation"
         tools:layout="@layout/fragment_statictics" />
 
     <fragment
         android:id="@+id/nav_add_exercice_in_workout"
-        android:name="com.example.gymevo.ui.addExerciceInWorkout.AddExerciceInWorkoutFragment"
+        android:name="com.example.gymevo.ui.WorkoutCreation.WorkoutCreationFragment"
         android:label="@string/menu_add_exercice_in_workout"
         tools:layout="@layout/fragment_statictics" />
 </navigation>

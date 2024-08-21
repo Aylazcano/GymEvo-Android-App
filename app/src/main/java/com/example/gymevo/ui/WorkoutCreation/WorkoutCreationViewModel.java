@@ -1,10 +1,14 @@
-package com.example.gymevo.ui.workoutTracker;
+package com.example.gymevo.ui.WorkoutCreation;
 
+import android.app.DatePickerDialog;
+import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.example.gymevo.data.seed.WorkoutSeed;
 import com.example.gymevo.models.ExerciseInWorkout;
 import com.example.gymevo.models.Workout;
 
@@ -12,12 +16,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WorkoutTrackerViewModel extends ViewModel {
+@RequiresApi(api = Build.VERSION_CODES.O)
+public class WorkoutCreationViewModel extends ViewModel {
     private final MutableLiveData<List<Workout>> workoutsLiveData = new MutableLiveData<>();
     private final MutableLiveData<Workout> currentWorkoutLiveData = new MutableLiveData<>();
     private final MutableLiveData<List<ExerciseInWorkout>> exercisesOnDateLiveData = new MutableLiveData<>();
 
-    public WorkoutTrackerViewModel() {
+    public WorkoutCreationViewModel() {
         loadSeedData();
     }
 

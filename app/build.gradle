@@ -6,10 +6,6 @@ android {
     namespace 'com.example.gymevo'
     compileSdk 34
 
-    viewBinding{
-        enable = true
-    }
-
     defaultConfig {
         applicationId "com.example.gymevo"
         minSdk 24
@@ -26,41 +22,57 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     buildFeatures {
         viewBinding true
     }
 }
 
 dependencies {
-
-    // Exemple pour Glide
+    // Glide for image loading
     implementation 'com.github.bumptech.glide:glide:4.14.2'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
 
-    // Exemple pour Picasso
+    // Picasso for image loading (if needed, otherwise remove)
     implementation 'com.squareup.picasso:picasso:2.71828'
 
-    // Appcompat
+    // AppCompat library
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.appcompat:appcompat-resources:1.6.1'
 
+    // SwipeRefreshLayout
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01"
 
+    // RecyclerView and selection
     implementation "androidx.recyclerview:recyclerview:1.3.2"
     implementation "androidx.recyclerview:recyclerview-selection:1.1.0"
 
+    // Material Design components
     implementation 'com.google.android.material:material:1.12.0'
+
+    // ConstraintLayout
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // Lifecycle components
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+
+    // Navigation components
     implementation 'androidx.navigation:navigation-fragment:2.7.6'
     implementation 'androidx.navigation:navigation-ui:2.7.6'
+
+    // Legacy support library (if needed)
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
+    // Activity library
     implementation 'androidx.activity:activity:1.8.0'
+
+    // Testing libraries
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
