@@ -2,7 +2,13 @@ package com.example.gymevo.models;
 
 import java.time.LocalDate;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+import androidx.room.ForeignKey;
+
+@Entity(tableName = "exercise_in_workout")
 public class ExerciseInWorkout {
+    @PrimaryKey(autoGenerate = true)
     private Long id;
     private int series;
     private int repetitions;

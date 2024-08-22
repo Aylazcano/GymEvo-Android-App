@@ -1,11 +1,19 @@
 package com.example.gymevo.models;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+import androidx.room.ForeignKey;
+
+@Entity(tableName = "exercice")
 public class Exercice {
+    @PrimaryKey(autoGenerate = true)
     private Long id;
     private String name;
     private String targetedMuscle;
     private String startImage;
     private String endImage;
+    @ForeignKey(entity = ExerciseInWorkout.class, parentColumns = "id", childColumns = "exerciseInWorkoutId")
+    private int exerciseInWorkoutId;
 
     // Constructeurs, getters et setters
     public Exercice(Long id, String name, String targetedMuscle, String startImage, String endImage) {

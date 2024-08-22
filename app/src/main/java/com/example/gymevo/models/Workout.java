@@ -5,11 +5,15 @@ import androidx.lifecycle.Observer;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+import androidx.room.ForeignKey;
+
+@Entity(tableName = "workout")
 public class Workout {
+    @PrimaryKey(autoGenerate = true)
     private Long id;
     private String name;
     private LocalDate date;
