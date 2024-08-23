@@ -1,14 +1,18 @@
 package com.example.gymevo.models;
 
-public class Exercice {
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity(tableName = "exercise")
+public class Exercise {
+    @PrimaryKey(autoGenerate = true)
     private Long id;
     private String name;
     private String targetedMuscle;
     private String startImage;
     private String endImage;
 
-    // Constructeurs, getters et setters
-    public Exercice(Long id, String name, String targetedMuscle, String startImage, String endImage) {
+    public Exercise(Long id, String name, String targetedMuscle, String startImage, String endImage) {
         this.id = id;
         this.name = name;
         this.targetedMuscle = targetedMuscle;
@@ -16,6 +20,7 @@ public class Exercice {
         this.endImage = endImage;
     }
 
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
