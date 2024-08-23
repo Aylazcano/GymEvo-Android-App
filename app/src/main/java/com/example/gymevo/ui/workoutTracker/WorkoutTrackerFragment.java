@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -24,6 +23,7 @@ import com.example.gymevo.CalendarAdapter;
 import com.example.gymevo.R;
 import com.example.gymevo.WorkoutAdapter;
 import com.example.gymevo.databinding.FragmentWorkoutTrackerBinding;
+import com.example.gymevo.models.Exercise;
 import com.example.gymevo.models.ExerciseInWorkout;
 
 import java.time.LocalDate;
@@ -70,13 +70,25 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         Context context = getContext();
         if (context == null) return;
 
-        WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, new ArrayList<>());
+        // Create an empty adapter with placeholder lists
+        WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, new ArrayList<>(), new ArrayList<>());
         workoutRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         workoutRecyclerView.setAdapter(workoutAdapter);
         workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
+        // Observe exercises for the selected date
         workoutTrackerViewModel.getExercisesForWorkoutOnDate(selectedDate).observe(getViewLifecycleOwner(), exercisesInWorkout -> {
-            workoutAdapter.setExercises(exercisesInWorkout != null ? exercisesInWorkout : new ArrayList<>());
+            if (exercisesInWorkout != null) {
+                // Fetch the list of exercises based on the exercise IDs from the workout
+                workoutTrackerViewModel.getAllExercises().observe(getViewLifecycleOwner(), allExercises -> {
+                    if (allExercises != null) {
+                        // Update the adapter with both the exercisesInWorkout and allExercises lists
+                        workoutAdapter.setExercises(exercisesInWorkout, allExercises);
+                    }
+                });
+            } else {
+                workoutAdapter.setExercises(new ArrayList<>(), new ArrayList<>());
+            }
         });
     }
 

@@ -8,9 +8,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.models.Workout;
 
-import java.util.ArrayList;
-import java.util.Date;
-
 
 public class WorkoutDetailActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -28,7 +25,7 @@ public class WorkoutDetailActivity extends AppCompatActivity {
         // Initialiser le workout avec les données (par exemple, en le récupérant à partir de la base de données ou d'un Intent)
 //        workout = getWorkoutFromIntent();
 
-        adapter = new WorkoutAdapter(this, workout.getExercisesList());
+        adapter = new WorkoutAdapter(this, workout.getExercises());
         recyclerView.setAdapter(adapter);
     }
 
