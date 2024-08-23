@@ -10,21 +10,21 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.gymevo.databinding.FragmentAddExerciceInWorkoutBinding;
+import com.example.gymevo.databinding.FragmentStaticticsBinding;
 
 public class StatisticsFragment extends Fragment {
 
-    private FragmentAddExerciceInWorkoutBinding binding;
+    private FragmentStaticticsBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         StaticticsViewModel galleryViewModel =
                 new ViewModelProvider(this).get(StaticticsViewModel.class);
 
-        binding = FragmentAddExerciceInWorkoutBinding.inflate(inflater, container, false);
+        binding = FragmentStaticticsBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        final TextView textView = binding.textviewAddExerciceInWorkout;
+        final TextView textView = binding.textStatistics;
         galleryViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }

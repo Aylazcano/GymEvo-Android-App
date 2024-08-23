@@ -25,4 +25,5 @@
     <string name="calendar_header_month">Jan</string>
     <string name="calendar_header_years">2024</string>
     <string name="edit_text_workout_name_desc">DESCRIPTION!!!!</string>
+    <string name="menu_exercise_in_workout_creation">Exercise In Workout Creation</string>
 </resources>

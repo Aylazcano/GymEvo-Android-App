@@ -27,11 +27,25 @@
         android:id="@+id/nav_exercice_creation"
         android:name="com.example.gymevo.ui.exerciseCreation.ExerciseCreationFragment"
         android:label="@string/menu_exercise_creation"
-        tools:layout="@layout/fragment_exercice_creation" />
+        tools:layout="@layout/fragment_exercise_creation" />
 
     <fragment
         android:id="@+id/nav_workout_creation"
         android:name="com.example.gymevo.ui.workoutCreation.WorkoutCreationFragment"
         android:label="@string/menu_workout_creation"
         tools:layout="@layout/fragment_workout_creation" />
+
+    <fragment
+        android:id="@+id/nav_exercise_in_workout_creation"
+        android:name="com.example.gymevo.ui.exerciseInWorkoutCreation.ExerciseInWorkoutCreation"
+        android:label="@string/menu_exercise_in_workout_creation"
+        tools:layout="@layout/fragment_exercise_in_workout_creation" />
+
+<!--    TODO: Change User action-->
+<!--    <fragment-->
+<!--        android:id="@+id/nav_change_user"-->
+<!--        android:name="com.example.gymevo.ui.changeUser.ChangeUserFragment"-->
+<!--        android:label="@string/menu_userSwitch"-->
+<!--        tools:layout="@layout/fragment_change_user"/>-->
+
 </navigation>

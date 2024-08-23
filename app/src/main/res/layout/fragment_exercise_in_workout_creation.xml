@@ -6,6 +6,7 @@
     tools:context=".ui.exerciseInWorkoutCreation.ExerciseInWorkoutCreation">
 
     <TextView
+        android:id="@+id/textview_add_exercise_in_workout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="Hello" />

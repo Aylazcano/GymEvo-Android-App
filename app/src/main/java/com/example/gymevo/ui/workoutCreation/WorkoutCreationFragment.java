@@ -75,10 +75,10 @@ public class WorkoutCreationFragment extends Fragment {
         // Handle "Pick Date" button click
         binding.buttonPickDate.setOnClickListener(v -> showDatePickerDialog());
 
-        // Handle "Add Exercise" button click
-        binding.addExerciseButton.setOnClickListener(v -> {
-            // Logic to add an exercise
-        });
+        // REPLACED BY FAB > Handle "Add Exercise" button click
+//        binding.addExerciseButton.setOnClickListener(v -> {
+//            // Logic to add an exercise
+//        });
 
         // Handle "Save Workout" button click
         binding.saveButton.setOnClickListener(v -> {

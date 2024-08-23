@@ -66,12 +66,13 @@ public class MainActivity extends AppCompatActivity {
                     WorkoutCreationFragment workoutCreationFragment = WorkoutCreationFragment.newInstance(LocalDate.now());
                     navController.navigate(R.id.nav_workout_creation, null, new NavOptions.Builder().setPopUpTo(R.id.nav_workout_tracker, true).build());
                 }
-                if (currentFragment == R.id.nav_workout_creation) {
+                // Check if the current fragment is WorkoutCreationFragment
+                else if (currentFragment == R.id.nav_workout_creation) {
                     // Clear the back stack
                     navController.popBackStack(R.id.nav_workout_creation, true);
 
-                    // Navigate to WorkoutTrackerFragment
-                    navController.navigate(R.id.nav_workout_tracker, null, new NavOptions.Builder().setPopUpTo(R.id.nav_workout_creation, true).build());
+                    // Navigate to ExeciseInWorkoutCreationFragment
+                    navController.navigate(R.id.nav_exercise_in_workout_creation, null, new NavOptions.Builder().setPopUpTo(R.id.nav_workout_creation, true).build());
                 }
                 else {
                     Snackbar.make(view, "Current fragment is not WorkoutTrackerFragment", Snackbar.LENGTH_LONG)
