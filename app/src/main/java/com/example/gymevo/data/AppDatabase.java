@@ -11,15 +11,16 @@ import com.example.gymevo.models.ExerciseInWorkout;
 import com.example.gymevo.models.Workout;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Database(entities = {Workout.class, Exercise.class, ExerciseInWorkout.class}, version = 1, exportSchema = false)
 @TypeConverters(LocalDateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
-    public static Executor databaseWriteExecutor;
+    public static Executor databaseWriteExecutor = Executors.newFixedThreadPool(4);
 
     public abstract WorkoutDao workoutDao();
     public abstract ExerciseInWorkoutDao exerciseInWorkoutDao();
-//    public abstract ExerciseDao exerciseDao(); // Add this if you have an ExerciseDao
+    public abstract ExerciseDao exerciseDao();
 
     private static volatile AppDatabase INSTANCE;
     private static final Object LOCK = new Object();
