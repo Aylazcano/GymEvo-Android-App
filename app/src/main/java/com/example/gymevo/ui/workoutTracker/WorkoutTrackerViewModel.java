@@ -12,6 +12,7 @@ import com.example.gymevo.models.Workout;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class WorkoutTrackerViewModel extends ViewModel {
     private final MutableLiveData<List<Workout>> workoutsLiveData = new MutableLiveData<>();
@@ -25,10 +26,13 @@ public class WorkoutTrackerViewModel extends ViewModel {
 
     private void loadSeedData() {
         List<Workout> seedWorkouts = WorkoutSeed.generateWorkouts();
-        workoutsLiveData.setValue(seedWorkouts != null ? seedWorkouts : new ArrayList<>());
-
-        // Initialize currentWorkoutLiveData with the first workout or an empty workout
-        setCurrentWorkout(!seedWorkouts.isEmpty() ? seedWorkouts.get(0) : new Workout());
+        if (seedWorkouts != null && !seedWorkouts.isEmpty()) {
+            workoutsLiveData.setValue(seedWorkouts);
+            currentWorkoutLiveData.setValue(seedWorkouts.get(0)); // Set the first workout as default
+        } else {
+            workoutsLiveData.setValue(new ArrayList<>());
+            currentWorkoutLiveData.setValue(new Workout()); // Initialize with an empty workout if seed data is empty
+        }
     }
 
     public LiveData<List<ExerciseInWorkout>> getExercisesForWorkoutOnDate(LocalDate date) {
