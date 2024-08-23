@@ -12,7 +12,7 @@ import com.example.gymevo.models.Workout;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 public class WorkoutTrackerViewModel extends ViewModel {
     private final MutableLiveData<List<Workout>> workoutsLiveData = new MutableLiveData<>();
@@ -50,9 +50,5 @@ public class WorkoutTrackerViewModel extends ViewModel {
 
         exercisesOnDateLiveData.setValue(exercisesForDate);
         return exercisesOnDateLiveData;
-    }
-
-    public LiveData<List<Exercise>> getAllExercises() {
-        return allExercisesLiveData;
     }
 }
