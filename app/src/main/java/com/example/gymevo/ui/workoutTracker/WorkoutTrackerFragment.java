@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,6 +28,7 @@ import com.example.gymevo.models.Exercise;
 import com.example.gymevo.models.ExerciseInWorkout;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.OnItemListener {
@@ -38,6 +40,8 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private LocalDate selectedDate;
     private GestureDetector gestureDetector;
     private boolean isMonthView = true;
+    private TextView oneMonthText;
+    private TextView oneYearText;
 
     public static WorkoutTrackerFragment newInstance() {
         return new WorkoutTrackerFragment();
@@ -63,6 +67,9 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private void initWidgets(View root) {
         calendarRecyclerView = root.findViewById(R.id.calendarRecyclerView);
         workoutRecyclerView = binding.WorkoutRecyclerView;
+        oneMonthText = root.findViewById(R.id.oneMonthText);
+        oneYearText = root.findViewById(R.id.oneYearText);
+
         // Initialize other widgets as needed
     }
 
@@ -78,16 +85,12 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
 
         // Observe exercises for the selected date
         workoutTrackerViewModel.getExercisesForWorkoutOnDate(selectedDate).observe(getViewLifecycleOwner(), exercisesInWorkout -> {
-            if (exercisesInWorkout != null) {
-                // Fetch the list of exercises based on the exercise IDs from the workout
-                workoutTrackerViewModel.getAllExercises().observe(getViewLifecycleOwner(), allExercises -> {
-                    if (allExercises != null) {
-                        // Update the adapter with both the exercisesInWorkout and allExercises lists
-                        workoutAdapter.setExercises(exercisesInWorkout, allExercises);
-                    }
-                });
+            if (exercisesInWorkout != null && !exercisesInWorkout.isEmpty()) {
+                // Mettre à jour les données de l'adaptateur
+                workoutAdapter.setExercises(exercisesInWorkout);
             } else {
-                workoutAdapter.setExercises(new ArrayList<>(), new ArrayList<>());
+                // Gérer le cas où il n'y a pas d'exercices pour la date sélectionnée
+                workoutAdapter.setExercises(new ArrayList<>());
             }
         });
     }
@@ -180,6 +183,10 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         params.height = (int) (240 * getResources().getDisplayMetrics().density);
         calendarRecyclerView.setLayoutParams(params);
 
+        // Update month and year texts
+        oneMonthText.setText(monthFromDateString(selectedDate));
+        oneYearText.setText(String.valueOf(selectedDate.getYear()));
+
         isMonthView = true;
     }
 
@@ -193,7 +200,16 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         params.height = (int) (40 * getResources().getDisplayMetrics().density);
         calendarRecyclerView.setLayoutParams(params);
 
+        // You may also want to update the TextViews for week view if applicable
+        oneMonthText.setText(monthFromDateString(selectedDate));
+        oneYearText.setText(String.valueOf(selectedDate.getYear()));
+
         isMonthView = false;
+    }
+
+    private String monthFromDateString(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM.");
+        return date.format(formatter);
     }
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {

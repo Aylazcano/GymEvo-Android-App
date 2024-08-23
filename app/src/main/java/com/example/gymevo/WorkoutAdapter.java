@@ -60,9 +60,8 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.Exercise
     }
 
     // Méthode pour mettre à jour les données de l'adaptateur
-    public void setExercises(List<ExerciseInWorkout> exercises, List<Exercise> exerciseList) {
+    public void setExercises(List<ExerciseInWorkout> exercises) {
         this.exerciseInWorkoutList = exercises;
-        this.exerciseList = exerciseList;
         notifyDataSetChanged();
     }
 
