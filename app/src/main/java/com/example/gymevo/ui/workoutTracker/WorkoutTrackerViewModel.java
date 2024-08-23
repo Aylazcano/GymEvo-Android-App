@@ -12,7 +12,6 @@ import com.example.gymevo.models.Workout;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class WorkoutTrackerViewModel extends ViewModel {
     private final MutableLiveData<List<Workout>> workoutsLiveData = new MutableLiveData<>();
@@ -21,34 +20,41 @@ public class WorkoutTrackerViewModel extends ViewModel {
     private final MutableLiveData<List<Exercise>> allExercisesLiveData = new MutableLiveData<>();
 
     public WorkoutTrackerViewModel() {
-        loadSeedData();
+        loadData();
     }
 
-    private void loadSeedData() {
-        List<Workout> seedWorkouts = WorkoutSeed.generateWorkouts();
-        if (seedWorkouts != null && !seedWorkouts.isEmpty()) {
-            workoutsLiveData.setValue(seedWorkouts);
-            currentWorkoutLiveData.setValue(seedWorkouts.get(0)); // Set the first workout as default
-        } else {
-            workoutsLiveData.setValue(new ArrayList<>());
-            currentWorkoutLiveData.setValue(new Workout()); // Initialize with an empty workout if seed data is empty
+    private void loadData() {
+        // Check if there are any existing workouts
+        List<Workout> existingWorkouts = workoutsLiveData.getValue();
+
+        if (existingWorkouts == null || existingWorkouts.isEmpty()) {
+            // If no existing workouts, generate seed data
+            List<Workout> seedWorkouts = WorkoutSeed.generateWorkouts();
+            if (seedWorkouts != null && !seedWorkouts.isEmpty()) {
+                workoutsLiveData.setValue(seedWorkouts);
+                currentWorkoutLiveData.setValue(seedWorkouts.get(0)); // Set the first workout as default
+            } else {
+                workoutsLiveData.setValue(new ArrayList<>());
+                currentWorkoutLiveData.setValue(new Workout()); // Initialize with an empty workout if seed data is empty
+            }
         }
     }
 
     public LiveData<List<ExerciseInWorkout>> getExercisesForWorkoutOnDate(LocalDate date) {
-        List<ExerciseInWorkout> exercisesForDate = new ArrayList<>();
+        List<Workout> workouts = workoutsLiveData.getValue();
+        List<ExerciseInWorkout> exerciseInWorkout = new ArrayList<>();
 
         // Get all workouts and find the one matching the date
-        Workout currentWorkout = workoutsLiveData.getValue().stream()
-                .filter(workout -> workout.getDate().equals(date))
+        Workout currentWorkout = workouts.stream()
+                .filter(w -> w.getDate().equals(date))
                 .findFirst()
                 .orElse(null);
 
         if (currentWorkout != null && currentWorkout.getExercises() != null) {
-            exercisesForDate = new ArrayList<>(currentWorkout.getExercises());
+            exerciseInWorkout = new ArrayList<>(currentWorkout.getExercises());
         }
 
-        exercisesOnDateLiveData.setValue(exercisesForDate);
+        exercisesOnDateLiveData.setValue(exerciseInWorkout);
         return exercisesOnDateLiveData;
     }
 }

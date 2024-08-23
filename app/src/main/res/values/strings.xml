@@ -9,13 +9,12 @@
 
     <string name="menu_workout_tracker">Wourkout Traker</string>
     <string name="menu_statistics">Statistics</string>
-    <string name="menu_exercices_list">Exercices List</string>
+    <string name="menu_exercises_list">Exercises List</string>
     <string name="menu_slideshow">Slideshow</string>
     <string name="menu_userSwitch">Change User</string>
-    <string name="menu_exercices_gallery">Exercices List</string>
     <string name="menu_gym_calender">Gym Calender</string>
-    <string name="menu_exercice_creation">Exercice Creation</string>
-    <string name="menu_add_exercice_in_workout">Add Exercice In Workout (DATE)</string>
+    <string name="menu_exercise_creation">Exercise Creation</string>
+    <string name="menu_workout_creation">Workout Creation</string>
     <string name="calendar_text_sun">SUN</string>
     <string name="calendar_text_mon">MON</string>
     <string name="calendar_text_tue">TUE</string>

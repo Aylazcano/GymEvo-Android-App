@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.WorkoutCreation.WorkoutCreationFragment"
+    tools:context=".ui.workoutCreation.WorkoutCreationFragment"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -15,30 +15,39 @@
         android:layout_height="wrap_content"
         android:hint="Workout Name"
         android:padding="16dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginVertical="8dp"
         android:minHeight="48dp"
         android:importantForAccessibility="yes"
         android:contentDescription="@string/edit_text_workout_name_desc" />
 
     <!-- Workout Date -->
-    <TextView
-        android:id="@+id/textViewWorkoutDate"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Date" />
+        android:layout_marginBottom="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/buttonPickDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pick Date" />
+        <Button
+            android:id="@+id/buttonPickDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="16dp"
+            android:text="Pick Date" />
+
+        <TextView
+            android:id="@+id/textViewWorkoutDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22dp"
+            android:text="Date" />
+    </LinearLayout>
 
     <!-- Workout Selection -->
     <Spinner
         android:id="@+id/spinnerWorkoutSelection"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginBottom="8dp" />
 
     <!-- Exercises List -->
@@ -46,28 +55,36 @@
         android:id="@+id/textViewExercises"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Exercises" />
+        android:text="Exercises In Workout" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewExercises"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:layout_marginBottom="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/item_exercise_in_workout" />
 
     <!-- Buttons -->
-
-    <Button
-        android:id="@+id/addExerciseButton"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Exercise" />
+        android:gravity="center"
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/saveButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Save Workout" />
+        <Button
+            android:id="@+id/addExerciseButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="16dp"
+            android:text="Add Exercise" />
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save Workout" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -1,10 +1,5 @@
-package com.example.gymevo.ui.WorkoutCreation;
+package com.example.gymevo.ui.workoutCreation;
 
-import android.app.DatePickerDialog;
-import android.content.Context;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -16,22 +11,21 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@RequiresApi(api = Build.VERSION_CODES.O)
 public class WorkoutCreationViewModel extends ViewModel {
     private final MutableLiveData<List<Workout>> workoutsLiveData = new MutableLiveData<>();
     private final MutableLiveData<Workout> currentWorkoutLiveData = new MutableLiveData<>();
     private final MutableLiveData<List<ExerciseInWorkout>> exercisesOnDateLiveData = new MutableLiveData<>();
 
     public WorkoutCreationViewModel() {
-        loadSeedData();
+        loadData();
     }
 
-    private void loadSeedData() {
-        List<Workout> seedWorkouts = WorkoutSeed.generateWorkouts();
+    private void loadData() {
+        List<Workout> seedWorkouts = new ArrayList<>(); // Replace with your actual data source
         workoutsLiveData.setValue(seedWorkouts != null ? seedWorkouts : new ArrayList<>());
 
-        // Initialize currentWorkoutLiveData with the first workout or an empty workout
-        setCurrentWorkout(!seedWorkouts.isEmpty() ? seedWorkouts.get(0) : new Workout());
+        // Initialize currentWorkoutLiveData with an empty workout
+        setCurrentWorkout(new Workout());
     }
 
     public LiveData<List<Workout>> getWorkoutsLiveData() {
@@ -64,20 +58,46 @@ public class WorkoutCreationViewModel extends ViewModel {
 
     public LiveData<List<ExerciseInWorkout>> getExercisesForWorkoutOnDate(LocalDate date) {
         List<Workout> workouts = workoutsLiveData.getValue();
-        List<ExerciseInWorkout> exercises = new ArrayList<>();
+        List<ExerciseInWorkout> exerciseInWorkout = new ArrayList<>();
 
         if (workouts != null) {
-            Workout filteredWorkout = workouts.stream()
+            Workout currentWorkout = workouts.stream()
                     .filter(w -> w.getDate().equals(date))
                     .findFirst()
                     .orElse(null);
 
-            if (filteredWorkout != null) {
-                exercises = filteredWorkout.getExercisesList();
+            if (currentWorkout != null && currentWorkout.getExercises() != null) {
+                exerciseInWorkout = new ArrayList<>(currentWorkout.getExercises());
+                setCurrentWorkout(currentWorkout);
+            } else {
+                // No workout found for the selected date, create a new one
+                Workout newWorkout = new Workout();
+                newWorkout.setDate(date);
+                setCurrentWorkout(newWorkout);
             }
         }
 
-        exercisesOnDateLiveData.setValue(exercises);
+        exercisesOnDateLiveData.setValue(exerciseInWorkout);
         return exercisesOnDateLiveData;
+    }
+
+    public void saveWorkout() {
+        Workout currentWorkout = currentWorkoutLiveData.getValue();
+        if (currentWorkout != null) {
+            List<Workout> workouts = workoutsLiveData.getValue();
+            if (workouts == null) {
+                workouts = new ArrayList<>();
+            }
+
+            // Check if workout already exists on the date
+            boolean exists = workouts.stream()
+                    .anyMatch(w -> w.getDate().equals(currentWorkout.getDate()));
+
+            if (!exists) {
+                workouts.add(currentWorkout);
+            }
+
+            workoutsLiveData.setValue(workouts);
+        }
     }
 }

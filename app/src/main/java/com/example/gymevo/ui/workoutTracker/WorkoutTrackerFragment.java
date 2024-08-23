@@ -24,8 +24,7 @@ import com.example.gymevo.CalendarAdapter;
 import com.example.gymevo.R;
 import com.example.gymevo.WorkoutAdapter;
 import com.example.gymevo.databinding.FragmentWorkoutTrackerBinding;
-import com.example.gymevo.models.Exercise;
-import com.example.gymevo.models.ExerciseInWorkout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -42,6 +41,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private boolean isMonthView = true;
     private TextView oneMonthText;
     private TextView oneYearText;
+    private FloatingActionButton fab;
 
     public static WorkoutTrackerFragment newInstance() {
         return new WorkoutTrackerFragment();

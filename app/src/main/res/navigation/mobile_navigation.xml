@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_workout_traker">
+    app:startDestination="@+id/nav_workout_tracker">
 
     <fragment
-        android:id="@+id/nav_workout_traker"
+        android:id="@+id/nav_workout_tracker"
         android:name="com.example.gymevo.ui.workoutTracker.WorkoutTrackerFragment"
         android:label="@string/menu_workout_tracker"
         tools:layout="@layout/fragment_workout_tracker" />
@@ -19,19 +19,19 @@
 
     <fragment
         android:id="@+id/nav_exercices_list"
-        android:name="com.example.gymevo.ui.exercicesList.ExercicesListFragment"
-        android:label="@string/menu_exercices_list"
-        tools:layout="@layout/fragment_exercices_list" />
+        android:name="com.example.gymevo.ui.exercisesList.ExercisesListFragment"
+        android:label="@string/menu_exercises_list"
+        tools:layout="@layout/fragment_exercises_list" />
 
     <fragment
         android:id="@+id/nav_exercice_creation"
         android:name="com.example.gymevo.ui.exerciseCreation.ExerciseCreationFragment"
-        android:label="@string/menu_exercice_creation"
-        tools:layout="@layout/fragment_statictics" />
+        android:label="@string/menu_exercise_creation"
+        tools:layout="@layout/fragment_exercice_creation" />
 
     <fragment
-        android:id="@+id/nav_add_exercice_in_workout"
-        android:name="com.example.gymevo.ui.WorkoutCreation.WorkoutCreationFragment"
-        android:label="@string/menu_add_exercice_in_workout"
-        tools:layout="@layout/fragment_statictics" />
+        android:id="@+id/nav_workout_creation"
+        android:name="com.example.gymevo.ui.workoutCreation.WorkoutCreationFragment"
+        android:label="@string/menu_workout_creation"
+        tools:layout="@layout/fragment_workout_creation" />
 </navigation>
