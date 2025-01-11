@@ -31,4 +31,8 @@ public interface ExerciseDao {
 
     @Query("SELECT * FROM exercise")
     LiveData<List<Exercise>> getAllExercises();
+
+    // Nouvelle méthode pour récupérer les exercices favoris (marqués comme 'isStar' = true)
+    @Query("SELECT * FROM exercise WHERE isStar = 1")
+    LiveData<List<Exercise>> getStarredExercises();
 }

@@ -36,5 +36,5 @@ public interface WorkoutDao {
     void deleteWorkoutById(Long workoutId);
 
     @Query("DELETE FROM workout")
-    void deleteAllWorkouts();
+    void deleteAllWorkouts();  // Cette méthode supprime tous les workouts
 }

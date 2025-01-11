@@ -4,84 +4,49 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.example.gymevo.models.Exercise;
+import com.example.gymevo.R;
 import com.example.gymevo.models.ExerciseInWorkout;
 
 import java.util.List;
 
-public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.ExerciseViewHolder> {
-    private List<ExerciseInWorkout> exerciseInWorkoutList;
-    private List<Exercise> exerciseList; // List of all exercises to get details
+public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutViewHolder> {
+
     private Context context;
+    private List<ExerciseInWorkout> exercises;
 
-    public WorkoutAdapter(Context context, List<ExerciseInWorkout> exerciseInWorkoutList, List<Exercise> exerciseList) {
+    public WorkoutAdapter(Context context, List<ExerciseInWorkout> exercises) {
         this.context = context;
-        this.exerciseInWorkoutList = exerciseInWorkoutList;
-        this.exerciseList = exerciseList;
+        this.exercises = exercises;
     }
 
     @Override
-    public ExerciseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public WorkoutViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        // Inflate the layout for each item
         View view = LayoutInflater.from(context).inflate(R.layout.item_exercise_in_workout, parent, false);
-        return new ExerciseViewHolder(view);
+        return new WorkoutViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(ExerciseViewHolder holder, int position) {
-        ExerciseInWorkout exerciseInWorkout = exerciseInWorkoutList.get(position);
-        Exercise exercise = findExerciseById(exerciseInWorkout.getExerciseId());
+    public void onBindViewHolder(WorkoutViewHolder holder, int position) {
+        // Get the exercise at the current position
+        ExerciseInWorkout exercise = exercises.get(position);
 
-        if (exercise != null) {
-            holder.ExerciseNameTV.setText(exercise.getName());
-            holder.MusclesTargetsTV.setText(exercise.getTargetedMuscle());
-            holder.SeriesQtyTV.setText(String.valueOf(exerciseInWorkout.getSeries()));
-            holder.RepetitionsQtyTV.setText(String.valueOf(exerciseInWorkout.getRepetitions()));
-            holder.WeightNumTV.setText(String.valueOf(exerciseInWorkout.getWeight()));
-
-            // Charger les images avec Glide
-            Glide.with(context).load(exercise.getStartImage()).into(holder.ExerciseIV);
-        }
-    }
-
-    // Find exercise by ID from the list
-    private Exercise findExerciseById(Long exerciseId) {
-        for (Exercise exercise : exerciseList) {
-            if (exercise.getId().equals(exerciseId)) {
-                return exercise;
-            }
-        }
-        return null; // Exercise not found
-    }
-
-    // Méthode pour mettre à jour les données de l'adaptateur
-    public void setExercises(List<ExerciseInWorkout> exercises) {
-        this.exerciseInWorkoutList = exercises;
-        notifyDataSetChanged();
+        // Bind the data to the views
+        holder.bindData(exercise);
     }
 
     @Override
     public int getItemCount() {
-        return exerciseInWorkoutList.size();
+        return exercises.size();
     }
 
-    public class ExerciseViewHolder extends RecyclerView.ViewHolder {
-        TextView ExerciseNameTV, MusclesTargetsTV, SeriesQtyTV, RepetitionsQtyTV, WeightNumTV;
-        ImageView ExerciseIV;
-
-        public ExerciseViewHolder(View itemView) {
-            super(itemView);
-            ExerciseIV = itemView.findViewById(R.id.ExerciseIV);
-            ExerciseNameTV = itemView.findViewById(R.id.ExerciseNameTV);
-            MusclesTargetsTV = itemView.findViewById(R.id.MusclesTargetsTV);
-            SeriesQtyTV = itemView.findViewById(R.id.SeriesQtyTV);
-            RepetitionsQtyTV = itemView.findViewById(R.id.RepetitionsQtyTV);
-            WeightNumTV = itemView.findViewById(R.id.WeightNumTV);
-        }
+    public void setExercises(List<ExerciseInWorkout> exercises) {
+        this.exercises = exercises;
+        notifyDataSetChanged();
     }
 }

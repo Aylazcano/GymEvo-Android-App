@@ -14,9 +14,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @Database(entities = {Workout.class, Exercise.class, ExerciseInWorkout.class}, version = 1, exportSchema = false)
-@TypeConverters(LocalDateConverter.class)
+@TypeConverters(LocalDateConverter.class)  // Indique à Room d'utiliser le LocalDateConverter pour gérer LocalDate
 public abstract class AppDatabase extends RoomDatabase {
-    public static Executor databaseWriteExecutor = Executors.newFixedThreadPool(4);
+
+    public static final Executor databaseWriteExecutor = Executors.newFixedThreadPool(4);
 
     public abstract WorkoutDao workoutDao();
     public abstract ExerciseInWorkoutDao exerciseInWorkoutDao();
@@ -31,6 +32,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "gym_evo_database")
+                            .fallbackToDestructiveMigration()
                             .build();
                 }
             }

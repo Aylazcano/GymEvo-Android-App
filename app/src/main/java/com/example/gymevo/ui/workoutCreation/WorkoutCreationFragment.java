@@ -69,7 +69,7 @@ public class WorkoutCreationFragment extends Fragment {
         workoutRecyclerView = binding.recyclerViewExercises;
         workoutSpinner = binding.spinnerWorkoutSelection;
 
-        initWorkoutRecyclerView();
+//        initWorkoutRecyclerView();
         setupWorkoutSpinner();
 
         // Handle "Pick Date" button click
@@ -92,7 +92,7 @@ public class WorkoutCreationFragment extends Fragment {
         datePickerDialog.setOnDateSetListener((view, year, month, dayOfMonth) -> {
             selectedDate = LocalDate.of(year, month + 1, dayOfMonth);
             workoutCreationViewModel.getExercisesForWorkoutOnDate(selectedDate);
-            initWorkoutRecyclerView(); // Update RecyclerView with new date
+//            initWorkoutRecyclerView(); // Update RecyclerView with new date
         });
         datePickerDialog.show();
     }
@@ -127,23 +127,23 @@ public class WorkoutCreationFragment extends Fragment {
         });
     }
 
-    private void initWorkoutRecyclerView() {
-        Context context = getContext();
-        if (context == null) return;
-
-        // Create an empty adapter with placeholder lists
-        WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, new ArrayList<>(), new ArrayList<>());
-        workoutRecyclerView.setLayoutManager(new LinearLayoutManager(context));
-        workoutRecyclerView.setAdapter(workoutAdapter);
-        workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
-
-        // Observe LiveData to update the adapter
-        workoutCreationViewModel.getExercisesForWorkoutOnDate(selectedDate).observe(getViewLifecycleOwner(), exercisesInWorkout -> {
-            if (exercisesInWorkout != null && !exercisesInWorkout.isEmpty()) {
-                workoutAdapter.setExercises(exercisesInWorkout);
-            } else {
-                workoutAdapter.setExercises(new ArrayList<>());
-            }
-        });
-    }
+//    private void initWorkoutRecyclerView() {
+//        Context context = getContext();
+//        if (context == null) return;
+//
+//        // Create an empty adapter with placeholder lists
+//        WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, new ArrayList<>(), new ArrayList<>());
+//        workoutRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+//        workoutRecyclerView.setAdapter(workoutAdapter);
+//        workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
+//
+//        // Observe LiveData to update the adapter
+//        workoutCreationViewModel.getExercisesForWorkoutOnDate(selectedDate).observe(getViewLifecycleOwner(), exercisesInWorkout -> {
+//            if (exercisesInWorkout != null && !exercisesInWorkout.isEmpty()) {
+//                workoutAdapter.setExercises(exercisesInWorkout);
+//            } else {
+//                workoutAdapter.setExercises(new ArrayList<>());
+//            }
+//        });
+//    }
 }

@@ -14,39 +14,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WorkoutTrackerViewModel extends ViewModel {
-    private final MutableLiveData<List<Workout>> workoutsLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<Workout>> workoutsLiveData = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Workout> currentWorkoutLiveData = new MutableLiveData<>();
-    private final MutableLiveData<List<ExerciseInWorkout>> exercisesOnDateLiveData = new MutableLiveData<>();
-    private final MutableLiveData<List<Exercise>> allExercisesLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<ExerciseInWorkout>> exercisesOnDateLiveData = new MutableLiveData<>(new ArrayList<>());
 
     public WorkoutTrackerViewModel() {
         loadData();
     }
 
     private void loadData() {
-        // Check if there are any existing workouts
-        List<Workout> existingWorkouts = workoutsLiveData.getValue();
+        // Effacer tous les workouts existants
+        workoutsLiveData.setValue(new ArrayList<>());  // Vider la liste des workouts
 
-        if (existingWorkouts == null || existingWorkouts.isEmpty()) {
-            // If no existing workouts, generate seed data
-            List<Workout> seedWorkouts = WorkoutSeed.generateWorkouts();
-            if (seedWorkouts != null && !seedWorkouts.isEmpty()) {
-                workoutsLiveData.setValue(seedWorkouts);
-                currentWorkoutLiveData.setValue(seedWorkouts.get(0)); // Set the first workout as default
-            } else {
-                workoutsLiveData.setValue(new ArrayList<>());
-                currentWorkoutLiveData.setValue(new Workout()); // Initialize with an empty workout if seed data is empty
-            }
+        // Générer de nouveaux entraînements de seed
+        List<Workout> seedWorkouts = WorkoutSeed.generateWorkouts();
+
+        // Si des données de seed valides sont générées, les appliquer
+        if (seedWorkouts != null && !seedWorkouts.isEmpty()) {
+            workoutsLiveData.setValue(seedWorkouts);  // Remplacer par les nouveaux workouts générés
+            currentWorkoutLiveData.setValue(seedWorkouts.get(0));  // Mettre à jour l'entraînement actuel
         }
     }
+
 
     public LiveData<List<ExerciseInWorkout>> getExercisesForWorkoutOnDate(LocalDate date) {
         List<Workout> workouts = workoutsLiveData.getValue();
         List<ExerciseInWorkout> exerciseInWorkout = new ArrayList<>();
 
-        // Get all workouts and find the one matching the date
         Workout currentWorkout = workouts.stream()
-                .filter(w -> w.getDate().equals(date))
+                .filter(w -> w.getDate() != null && w.getDate().equals(date))
                 .findFirst()
                 .orElse(null);
 

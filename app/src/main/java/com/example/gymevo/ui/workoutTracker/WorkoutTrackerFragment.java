@@ -24,6 +24,7 @@ import com.example.gymevo.CalendarAdapter;
 import com.example.gymevo.R;
 import com.example.gymevo.WorkoutAdapter;
 import com.example.gymevo.databinding.FragmentWorkoutTrackerBinding;
+import com.example.gymevo.models.ExerciseInWorkout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.time.LocalDate;
@@ -77,8 +78,8 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         Context context = getContext();
         if (context == null) return;
 
-        // Create an empty adapter with placeholder lists
-        WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, new ArrayList<>(), new ArrayList<>());
+        // Create an empty adapter with an empty list of ExerciseInWorkout
+        WorkoutAdapter workoutAdapter = new WorkoutAdapter(context, new ArrayList<ExerciseInWorkout>());
         workoutRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         workoutRecyclerView.setAdapter(workoutAdapter);
         workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -86,14 +87,13 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         // Observe exercises for the selected date
         workoutTrackerViewModel.getExercisesForWorkoutOnDate(selectedDate).observe(getViewLifecycleOwner(), exercisesInWorkout -> {
             if (exercisesInWorkout != null && !exercisesInWorkout.isEmpty()) {
-                // Mettre à jour les données de l'adaptateur
                 workoutAdapter.setExercises(exercisesInWorkout);
             } else {
-                // Gérer le cas où il n'y a pas d'exercices pour la date sélectionnée
                 workoutAdapter.setExercises(new ArrayList<>());
             }
         });
     }
+
 
     @SuppressLint("ClickableViewAccessibility")
     private void initGestureDetector() {
@@ -183,7 +183,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         params.height = (int) (240 * getResources().getDisplayMetrics().density);
         calendarRecyclerView.setLayoutParams(params);
 
-        // Update month and year texts
         oneMonthText.setText(monthFromDateString(selectedDate));
         oneYearText.setText(String.valueOf(selectedDate.getYear()));
 
@@ -200,7 +199,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         params.height = (int) (40 * getResources().getDisplayMetrics().density);
         calendarRecyclerView.setLayoutParams(params);
 
-        // You may also want to update the TextViews for week view if applicable
         oneMonthText.setText(monthFromDateString(selectedDate));
         oneYearText.setText(String.valueOf(selectedDate.getYear()));
 
