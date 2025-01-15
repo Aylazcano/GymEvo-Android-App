@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -11,7 +12,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.CalendarAdapter;
-import com.example.gymevo.ui.workoutTracker.WorkoutTrackerFragment;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -59,8 +59,17 @@ public class CalendarUtils {
         calendarRecyclerView.setLayoutParams(params);
     }
 
-    public static GestureDetector createGestureDetector(Context context, CalendarAdapter.OnItemListener listener, LocalDate selectedDate, RecyclerView calendarRecyclerView, boolean isMonthView, WorkoutTrackerFragment workoutTrackerFragment) {
-        return new GestureDetector(context, new GestureListener(context, listener, selectedDate, calendarRecyclerView, isMonthView, workoutTrackerFragment));
+    public static void updateCalendarHeader(LocalDate selectedDate, TextView monthText, TextView yearText) {
+        if (monthText != null) {
+            monthText.setText(monthFromDateString(selectedDate));
+        }
+        if (yearText != null) {
+            yearText.setText(String.valueOf(selectedDate.getYear()));
+        }
+    }
+
+    public static GestureDetector createGestureDetector(Context context, CalendarAdapter.OnItemListener listener, LocalDate selectedDate, RecyclerView calendarRecyclerView, boolean isMonthView, TextView monthText, TextView yearText) {
+        return new GestureDetector(context, new GestureListener(context, listener, selectedDate, calendarRecyclerView, isMonthView, monthText, yearText));
     }
 
     public static class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -71,27 +80,17 @@ public class CalendarUtils {
         private LocalDate selectedDate;
         private final RecyclerView calendarRecyclerView;
         private boolean isMonthView;
-        private final WorkoutTrackerFragment workoutTrackerFragment;
+        private final TextView monthText;
+        private final TextView yearText;
 
-        public GestureListener(Context context, CalendarAdapter.OnItemListener listener, LocalDate selectedDate, RecyclerView calendarRecyclerView, boolean isMonthView, WorkoutTrackerFragment workoutTrackerFragment) {
+        public GestureListener(Context context, CalendarAdapter.OnItemListener listener, LocalDate selectedDate, RecyclerView calendarRecyclerView, boolean isMonthView, TextView monthText, TextView yearText) {
             this.context = context;
             this.listener = listener;
             this.selectedDate = selectedDate;
             this.calendarRecyclerView = calendarRecyclerView;
             this.isMonthView = isMonthView;
-            this.workoutTrackerFragment = workoutTrackerFragment;
-        }
-
-        public void onItemClick(int position, @NonNull String dayText) {
-            if (dayText.isEmpty()) return;
-
-            int day = Integer.parseInt(dayText);
-            selectedDate = LocalDate.of(selectedDate.getYear(), selectedDate.getMonthValue(), day);
-
-            String message = String.format("Selected date %d %s %d", day, selectedDate.getMonth().toString(), selectedDate.getYear());
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-
-            workoutTrackerFragment.initWorkoutRecyclerView(selectedDate);
+            this.monthText = monthText;
+            this.yearText = yearText;
         }
 
         @Override
@@ -100,22 +99,17 @@ public class CalendarUtils {
 
             float diffX = e2.getX() - e1.getX();
             float diffY = e2.getY() - e1.getY();
+
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffX > 0) {
-                        onSwipeRight();
-                    } else {
-                        onSwipeLeft();
-                    }
+                    if (diffX > 0) onSwipeRight();
+                    else onSwipeLeft();
                     return true;
                 }
             } else {
                 if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffY > 0) {
-                        onSwipeDown();
-                    } else {
-                        onSwipeUp();
-                    }
+                    if (diffY > 0) onSwipeDown();
+                    else onSwipeUp();
                     return true;
                 }
             }
@@ -123,27 +117,19 @@ public class CalendarUtils {
         }
 
         private void onSwipeLeft() {
-            if (isMonthView) {
-                selectedDate = selectedDate.plusMonths(1);
-            } else {
-                selectedDate = selectedDate.plusWeeks(1);
-            }
-            updateView();
+            selectedDate = isMonthView ? selectedDate.plusMonths(1) : selectedDate.plusWeeks(1);
+            updateCalendarView();
         }
 
         private void onSwipeRight() {
-            if (isMonthView) {
-                selectedDate = selectedDate.minusMonths(1);
-            } else {
-                selectedDate = selectedDate.minusWeeks(1);
-            }
-            updateView();
+            selectedDate = isMonthView ? selectedDate.minusMonths(1) : selectedDate.minusWeeks(1);
+            updateCalendarView();
         }
 
         private void onSwipeUp() {
             if (isMonthView) {
                 isMonthView = false;
-                setCalendarView(context, calendarRecyclerView, selectedDate, isMonthView, listener);
+                updateCalendarView();
                 Toast.makeText(context, "Swipe Up - Switch to Week View", Toast.LENGTH_SHORT).show();
             }
         }
@@ -151,15 +137,14 @@ public class CalendarUtils {
         private void onSwipeDown() {
             if (!isMonthView) {
                 isMonthView = true;
-                setCalendarView(context, calendarRecyclerView, selectedDate, isMonthView, listener);
-                Toast.makeText(context,"Swipe Down - Switch to Month View", Toast.LENGTH_SHORT).show();
+                updateCalendarView();
+                Toast.makeText(context, "Swipe Down - Switch to Month View", Toast.LENGTH_SHORT).show();
             }
         }
 
-        private void updateView() {
+        private void updateCalendarView() {
             CalendarUtils.setCalendarView(context, calendarRecyclerView, selectedDate, isMonthView, listener);
-            workoutTrackerFragment.oneMonthText.setText(monthFromDateString(selectedDate));
-            workoutTrackerFragment.oneYearText.setText(String.valueOf(selectedDate.getYear()));
+            CalendarUtils.updateCalendarHeader(selectedDate, monthText, yearText);
         }
     }
 }

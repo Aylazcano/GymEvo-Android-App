@@ -4,10 +4,10 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,7 +21,7 @@ import com.example.gymevo.CalendarAdapter;
 import com.example.gymevo.R;
 import com.example.gymevo.WorkoutAdapter;
 import com.example.gymevo.databinding.FragmentWorkoutTrackerBinding;
-import com.example.gymevo.models.ExerciseInWorkout;
+import com.example.gymevo.databinding.CalendarHeaderBinding;
 import com.example.gymevo.utils.CalendarUtils;
 
 import java.time.LocalDate;
@@ -35,9 +35,8 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private RecyclerView workoutRecyclerView;
     private LocalDate selectedDate;
     private boolean isMonthView = true;
-    public TextView oneMonthText;
-    public TextView oneYearText;
     private GestureDetector gestureDetector;
+    private CalendarHeaderBinding calendarHeaderBinding;
 
     public static WorkoutTrackerFragment newInstance() {
         return new WorkoutTrackerFragment();
@@ -46,42 +45,53 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        selectedDate = LocalDate.now();
         binding = FragmentWorkoutTrackerBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
+        selectedDate = LocalDate.now();
 
-        initWidgets(root);
-        workoutTrackerViewModel = new ViewModelProvider(this).get(WorkoutTrackerViewModel.class);
-        initWorkoutRecyclerView(selectedDate);
+        // Access the included layout binding manually
+        calendarHeaderBinding = CalendarHeaderBinding.bind(binding.getRoot().findViewById(R.id.calendarLayout));
 
-        // Initialize GestureDetector for swipe detection
-        gestureDetector = CalendarUtils.createGestureDetector(getContext(), this, selectedDate, calendarRecyclerView, isMonthView, this);
+        initializeViews(binding.getRoot());
+        initializeViewModel();
+        initializeGestureDetector();
 
-        // Attach the OnTouchListener to detect gestures
-        calendarRecyclerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+        setupCalendar();
 
-        // Set the calendar view
-        CalendarUtils.setCalendarView(getContext(), calendarRecyclerView, selectedDate, true, this);
-
-        // TODO: Refactor this to use the new CalendarUtils class
-        // Set the month and year text
-        oneMonthText.setText(CalendarUtils.monthFromDateString(selectedDate));
-        oneYearText.setText(String.valueOf(selectedDate.getYear()));
-
-        return root;
+        return binding.getRoot();
     }
 
-    private void initWidgets(View root) {
+    private void initializeViews(View root) {
         calendarRecyclerView = root.findViewById(R.id.calendarRecyclerView);
         workoutRecyclerView = binding.WorkoutRecyclerView;
-
-        // TODO: Refactor this to use the new CalendarUtils class
-        // Set the month and year text
-        oneMonthText = root.findViewById(R.id.oneMonthText);
-        oneYearText = root.findViewById(R.id.oneYearText);
     }
 
-    public void initWorkoutRecyclerView(LocalDate selectedDate) {
+    private void initializeViewModel() {
+        workoutTrackerViewModel = new ViewModelProvider(this).get(WorkoutTrackerViewModel.class);
+        updateWorkoutRecyclerView(selectedDate);
+    }
+
+    private void initializeGestureDetector() {
+        gestureDetector = CalendarUtils.createGestureDetector(
+                getContext(),
+                this,
+                selectedDate,
+                calendarRecyclerView,
+                isMonthView,
+                calendarHeaderBinding.oneMonthText,
+                calendarHeaderBinding.oneYearText
+        );
+        calendarRecyclerView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+    }
+
+    private void setupCalendar() {
+        Context context = getContext();
+        if (context == null) return;
+
+        CalendarUtils.setCalendarView(context, calendarRecyclerView, selectedDate, isMonthView, this);
+        CalendarUtils.updateCalendarHeader(selectedDate, calendarHeaderBinding.oneMonthText, calendarHeaderBinding.oneYearText);
+    }
+
+    private void updateWorkoutRecyclerView(LocalDate selectedDate) {
         Context context = getContext();
         if (context == null) return;
 
@@ -90,13 +100,14 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         workoutRecyclerView.setAdapter(workoutAdapter);
         workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        workoutTrackerViewModel.getExercisesForWorkoutOnDate(selectedDate).observe(getViewLifecycleOwner(), exercisesInWorkout -> {
-            if (exercisesInWorkout != null && !exercisesInWorkout.isEmpty()) {
-                workoutAdapter.setExercises(exercisesInWorkout);
-            } else {
-                workoutAdapter.setExercises(new ArrayList<>());
-            }
-        });
+        workoutTrackerViewModel.getExercisesForWorkoutOnDate(selectedDate)
+                .observe(getViewLifecycleOwner(), exercises -> {
+                    if (exercises != null && !exercises.isEmpty()) {
+                        workoutAdapter.setExercises(exercises);
+                    } else {
+                        workoutAdapter.setExercises(new ArrayList<>());
+                    }
+                });
     }
 
     @Override
@@ -106,6 +117,28 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         int day = Integer.parseInt(dayText);
         selectedDate = LocalDate.of(selectedDate.getYear(), selectedDate.getMonthValue(), day);
 
-        initWorkoutRecyclerView(selectedDate);
+        showCustomToast(String.format("Selected date %d %s %d",
+                day,
+                selectedDate.getMonth(),
+                selectedDate.getYear())
+        );
+
+        updateWorkoutRecyclerView(selectedDate);
+    }
+
+    private void showCustomToast(String message) {
+        LayoutInflater inflater = getLayoutInflater();
+        View layout = inflater.inflate(
+                R.layout.custom_toast,
+                (ViewGroup) requireView().findViewById(R.id.custom_toast_container)
+        );
+
+        TextView text = layout.findViewById(R.id.text);
+        text.setText(message);
+
+        Toast toast = new Toast(getContext());
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setView(layout);
+        toast.show();
     }
 }

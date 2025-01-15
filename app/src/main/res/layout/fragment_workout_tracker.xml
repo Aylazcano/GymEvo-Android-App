@@ -9,8 +9,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/oneAppBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    </com.google.android.material.appbar.AppBarLayout>
+        android:layout_height="wrap_content"/>
 
     <LinearLayout
         android:id="@+id/calendarLayout"
@@ -31,23 +30,9 @@
             android:background="#03DAC5"/>
     </LinearLayout>
 
-<!--TODO: SWIPEREFRESHLAYOUT qui refresh la liste des exercices-->
-<!--    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
-<!--        android:id="@+id/swipeRefreshLayout"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_margin="8dp">-->
-
-<!--        <androidx.recyclerview.widget.RecyclerView-->
-<!--            android:id="@+id/WorkoutRecyclerView"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"/>-->
-<!--    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>-->
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/WorkoutRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="8dp"/>
-
 </LinearLayout>
