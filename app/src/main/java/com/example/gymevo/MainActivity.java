@@ -4,19 +4,19 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.navigation.NavigationView;
-
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.example.gymevo.R;
 import com.example.gymevo.databinding.ActivityMainBinding;
 import com.example.gymevo.ui.workoutCreation.WorkoutCreationFragment;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.time.LocalDate;
 

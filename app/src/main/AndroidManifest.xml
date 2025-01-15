@@ -15,7 +15,7 @@
         android:theme="@style/Theme.GymEvo"
         tools:targetApi="31" >
         <activity
-            android:name=".WeekViewActiviy"
+            android:name=".WeekViewActivity"
             android:exported="false" />
         <activity
             android:name=".WorkoutAdapter$WeekViewActivity"
