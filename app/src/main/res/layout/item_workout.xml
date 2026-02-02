@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardUseCompatPadding="true"
+    app:strokeColor="@android:color/transparent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:orientation="vertical">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="6dp">
+
+            <ImageView
+                android:id="@+id/image_drag_handle"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:contentDescription="@string/action_move"
+                android:src="@drawable/ic_drag_handle_24"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/input_workout_name"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/input_workout_name" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/input_workout_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/workout_name_hint"
+                android:textColor="@android:color/white"
+                android:textColorHint="@android:color/white"
+                android:importantForAccessibility="yes"
+                android:inputType="textCapWords"
+                android:textAppearance="?attr/textAppearanceSubtitle1"
+                app:layout_constraintEnd_toStartOf="@+id/image_star"
+                app:layout_constraintStart_toEndOf="@+id/image_drag_handle"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Upper Body Strength" />
+
+            <ImageView
+                android:id="@+id/image_star"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:contentDescription="@string/exercise_starred_label"
+                android:src="@android:drawable/btn_star_big_off"
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="@+id/input_workout_name"
+                app:layout_constraintEnd_toStartOf="@+id/image_remove"
+                app:layout_constraintTop_toTopOf="@+id/input_workout_name"
+                app:tint="@color/star_off" />
+
+            <ImageView
+                android:id="@+id/image_remove"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="8dp"
+                android:contentDescription="@string/action_delete"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/input_workout_name"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/input_workout_name" />
+
+            <TextView
+                android:id="@+id/text_workout_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/workout_item_date_placeholder"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="@android:color/darker_gray"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/input_workout_name"
+                tools:text="2024-05-12" />
+
+            <TextView
+                android:id="@+id/text_workout_exercise_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/workout_item_exercise_count"
+                android:textAppearance="?attr/textAppearanceBody2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_workout_date"
+                tools:text="5 exercises" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_workout_expand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            android:visibility="gone">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_workout_exercises"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingBottom="8dp"
+                tools:listitem="@layout/item_exercise_in_workout" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_add_exercise"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:contentDescription="@string/exercise_add"
+                android:text="@string/exercise_add"
+                app:icon="@android:drawable/ic_input_add" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

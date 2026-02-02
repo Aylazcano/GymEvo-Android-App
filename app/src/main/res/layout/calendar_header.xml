@@ -3,15 +3,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#03DAC5">
+    android:background="#03DAC5"
+    android:id="@+id/calendarHeaderRoot">
 
-    <LinearLayout
+    <com.example.gymevo.ui.workoutTracker.CalendarHeaderSwipeLayout
+        android:id="@+id/calendarHeaderSwipeArea"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="top"
         android:paddingHorizontal="10dp"
-        android:paddingVertical="2dp">
+        android:paddingVertical="2dp"
+        android:clickable="true">
 
         <TextView
             android:id="@+id/oneMonthText"
@@ -33,7 +36,22 @@
             android:textSize="24sp"
             android:text="2019" />
 
-    </LinearLayout>
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/buttonToday"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/calendar_jump_today"
+            android:src="@android:drawable/ic_menu_today"
+            android:tint="@color/white" />
+
+    </com.example.gymevo.ui.workoutTracker.CalendarHeaderSwipeLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"

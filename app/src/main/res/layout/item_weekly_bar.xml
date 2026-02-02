@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="64dp"
+    android:layout_height="wrap_content"
+    android:gravity="bottom|center_horizontal"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/weekly_bar_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:text="0"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+
+    <View
+        android:id="@+id/weekly_bar_fill"
+        android:layout_width="20dp"
+        android:layout_height="12dp"
+        android:background="?attr/colorPrimary" />
+
+    <TextView
+        android:id="@+id/weekly_bar_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Jan 1"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+</LinearLayout>
