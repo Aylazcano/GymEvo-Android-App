@@ -1,17 +1,10 @@
 package com.example.gymevo.ui.exercisesList;
 
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.ActionMode;
 import androidx.annotation.NonNull;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -25,18 +18,27 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.gymevo.R;
 import com.example.gymevo.databinding.FragmentExercisesListBinding;
 import com.example.gymevo.model.Exercise;
+import com.example.gymevo.data.repository.UserPreferencesRepository;
 import com.example.gymevo.ui.common.ConfirmDeleteDialog;
 import com.example.gymevo.ui.common.DragDropItemTouchHelper;
 import com.example.gymevo.ui.common.ExerciseFormDialog;
 import com.example.gymevo.ui.common.FilterUi;
-import com.example.gymevo.ui.common.ItemSpacingDecoration;
+import com.example.gymevo.ui.common.SectionHeaderDecoration;
+import com.example.gymevo.ui.common.sort.SortBottomSheet;
+import com.example.gymevo.ui.common.sort.SortField;
+import com.example.gymevo.ui.common.sort.SortOrder;
+import com.example.gymevo.ui.main.MainActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class ExerciseListFragment extends Fragment {
+public class ExerciseListFragment extends Fragment implements MainActivity.MainHeaderDelegate {
 
     public static final String ARG_OPEN_ADD_EXERCISE = "OPEN_ADD_EXERCISE";
 
@@ -45,51 +47,18 @@ public class ExerciseListFragment extends Fragment {
     private ExerciseListViewModel viewModel;
     private ActivityResultLauncher<String> imagePickerLauncher;
     private ExerciseFormDialog.OnImagePicked pendingImagePicked;
-    private ActionMode selectionActionMode;
     private androidx.activity.OnBackPressedCallback backPressedCallback;
     private final List<Exercise> allExercises = new ArrayList<>();
     private String searchQuery = "";
     private String muscleFilter = null;
-    private SortField sortField = SortField.NAME;
-    private SortOrder sortOrder = SortOrder.ASC;
+    private String typeFilter = null;
+    private SortField sortField = SortField.RECENT;
+    private SortOrder sortOrder = SortOrder.DESC;
     private boolean starPriorityEnabled;
-    private final ActionMode.Callback selectionCallback = new ActionMode.Callback() {
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            MenuInflater inflater = mode.getMenuInflater();
-            inflater.inflate(R.menu.menu_multi_select, menu);
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            int id = item.getItemId();
-            if (id == R.id.action_delete) {
-                onDeleteSelectedExercises();
-                return true;
-            } else if (id == R.id.action_move_up) {
-                onMoveSelectedExercisesTop();
-                return true;
-            } else if (id == R.id.action_move_down) {
-                onMoveSelectedExercisesBottom();
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            selectionActionMode = null;
-            if (adapter != null) {
-                adapter.clearSelection();
-            }
-        }
-    };
+    private List<Long> customOrderIds = new ArrayList<>();
+    private SectionHeaderDecoration muscleHeaderDecoration;
+    private UserPreferencesRepository userPreferencesRepository;
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,9 +66,24 @@ public class ExerciseListFragment extends Fragment {
         initImagePicker();
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        exitSelectionMode();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (isAdded()) {
+            requireActivity().invalidateOptionsMenu();
+        }
+    }
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(ExerciseListViewModel.class);
+        userPreferencesRepository = UserPreferencesRepository.getInstance(requireContext());
 
         binding = FragmentExercisesListBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -107,7 +91,7 @@ public class ExerciseListFragment extends Fragment {
         adapter = new ExerciseListAdapter(this::showEditDialog, viewModel::toggleExerciseStar);
         binding.recyclerExercises.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerExercises.setAdapter(adapter);
-        binding.recyclerExercises.addItemDecoration(new ItemSpacingDecoration(dpToPx(4), true));
+        adapter.setRecyclerView(binding.recyclerExercises);
 
         adapter.setSelectionListener(this::updateSelectionUi);
         adapter.setDeleteListener(this::onDeleteSingleExercise);
@@ -127,62 +111,67 @@ public class ExerciseListFragment extends Fragment {
             applyExerciseFilters();
         });
 
-        setupFilters();
+        loadExercisePreferences();
+
         observeFabAddRequests();
         setupBackNavigation();
         return root;
     }
 
-    private void setupFilters() {
-        if (binding == null) {
-            return;
+    private boolean exitSelectionMode() {
+        if (adapter != null && adapter.isSelectionModeActive()) {
+            adapter.clearSelection();
+            updateSelectionUi(0);
+            maybePromptSaveCustomOrder();
+            return true;
         }
-
-        binding.filterHeader.inputSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                searchQuery = s != null ? s.toString() : "";
-                applyExerciseFilters();
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
-
-        binding.filterHeader.buttonFilter.setOnClickListener(v -> showMuscleFilterDialog());
-        binding.filterHeader.buttonSort.setOnClickListener(v -> showSortDialog());
-        binding.filterHeader.buttonStar.setOnClickListener(v -> toggleStarPriority());
-        binding.filterHeader.buttonClear.setOnClickListener(v -> {
-            if (binding.filterHeader.inputSearch.getText() != null) {
-                binding.filterHeader.inputSearch.getText().clear();
-            }
-            searchQuery = "";
-            applyExerciseFilters();
-        });
-        updateStarButton();
+        return false;
     }
 
-    private void showMuscleFilterDialog() {
+    private void showExerciseFilterDialog() {
         if (!isAdded()) {
             return;
         }
-        List<String> labels = FilterUi.getMuscleLabels(getString(R.string.filter_all));
-        String selected = muscleFilter != null ? muscleFilter : getString(R.string.filter_all);
-        int selectedIndex = Math.max(0, labels.indexOf(selected));
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_filter_exercise, null, false);
+
+        MaterialAutoCompleteTextView muscleInput = dialogView.findViewById(R.id.filter_exercise_muscle);
+        MaterialAutoCompleteTextView typeInput = dialogView.findViewById(R.id.filter_exercise_type);
+        String allLabel = getString(R.string.filter_all);
+
+        final String[] selectedMuscle = {muscleFilter != null ? muscleFilter : allLabel};
+        final String[] selectedType = {typeFilter != null ? typeFilter : allLabel};
+
+        FilterUi.setupMuscleFilter(muscleInput, requireContext(), allLabel, (value, isAll) -> {
+            selectedMuscle[0] = isAll ? allLabel : value;
+        });
+        FilterUi.setupExerciseTypeFilter(typeInput, requireContext(), allLabel, (value, isAll) -> {
+            selectedType[0] = isAll ? allLabel : value;
+        });
+
+        if (muscleInput != null) {
+            muscleInput.setText(muscleFilter != null ? muscleFilter : allLabel, false);
+        }
+        if (typeInput != null) {
+            typeInput.setText(typeFilter != null ? typeFilter : allLabel, false);
+        }
 
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.filter_title)
-                .setSingleChoiceItems(labels.toArray(new String[0]), selectedIndex, (dialog, which) -> {
-                    String value = labels.get(which);
-                    muscleFilter = FilterUi.isAllFilter(value, getString(R.string.filter_all))
-                            ? null : value;
+                .setView(dialogView)
+                .setPositiveButton(R.string.action_apply, (dialog, which) -> {
+                    muscleFilter = FilterUi.isAllFilter(selectedMuscle[0], allLabel)
+                            ? null : selectedMuscle[0];
+                    typeFilter = FilterUi.isAllFilter(selectedType[0], allLabel)
+                            ? null : selectedType[0];
                     applyExerciseFilters();
-                    dialog.dismiss();
+                    persistExercisePreferences();
+                })
+                .setNeutralButton(R.string.action_reset, (dialog, which) -> {
+                    muscleFilter = null;
+                    typeFilter = null;
+                    applyExerciseFilters();
+                    persistExercisePreferences();
                 })
                 .setNegativeButton(R.string.action_cancel, null)
                 .show();
@@ -192,63 +181,43 @@ public class ExerciseListFragment extends Fragment {
         if (!isAdded()) {
             return;
         }
-        List<SortOption> options = buildSortOptions();
-        CharSequence[] labels = new CharSequence[options.size()];
-        for (int i = 0; i < options.size(); i++) {
-            labels[i] = getString(options.get(i).labelRes);
-        }
-        int selectedIndex = findSelectedSortIndex(options);
-
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.sort_title)
-                .setSingleChoiceItems(labels, selectedIndex, (dialog, which) -> {
-                    SortOption option = options.get(which);
-                    sortField = option.field;
-                    sortOrder = option.order;
+        SortBottomSheet sheet = new SortBottomSheet();
+        sheet.setOptions(buildSortGroups(),
+                normalizeSortField(sortField),
+                sortOrder,
+                (field, order) -> {
+                    sortField = normalizeSortField(field);
+                    sortOrder = order;
                     applyExerciseFilters();
-                    dialog.dismiss();
-                })
-                .setNegativeButton(R.string.action_cancel, null)
-                .show();
+                    persistExercisePreferences();
+                });
+        sheet.show(getParentFragmentManager(), "SortBottomSheet");
     }
 
     private void toggleStarPriority() {
         starPriorityEnabled = !starPriorityEnabled;
-        updateStarButton();
         applyExerciseFilters();
+        persistExercisePreferences();
     }
 
-    private void updateStarButton() {
-        if (binding == null) {
-            return;
-        }
-        int icon = starPriorityEnabled
-                ? android.R.drawable.btn_star_big_on
-                : android.R.drawable.btn_star_big_off;
-        binding.filterHeader.buttonStar.setImageResource(icon);
-    }
+    private List<SortBottomSheet.SortGroup> buildSortGroups() {
+        List<SortBottomSheet.SortGroup> groups = new ArrayList<>();
+        List<SortBottomSheet.SortOption> smart = new ArrayList<>();
+        smart.add(new SortBottomSheet.SortOption(R.string.sort_recent, SortField.RECENT, SortOrder.DESC));
+        smart.add(new SortBottomSheet.SortOption(R.string.sort_popular, SortField.POPULAR, SortOrder.DESC));
+        groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_smart, smart));
 
-    private List<SortOption> buildSortOptions() {
-        List<SortOption> options = new ArrayList<>();
-        options.add(new SortOption(R.string.sort_name_asc, SortField.NAME, SortOrder.ASC));
-        options.add(new SortOption(R.string.sort_name_desc, SortField.NAME, SortOrder.DESC));
-        options.add(new SortOption(R.string.sort_muscle_asc, SortField.MUSCLE, SortOrder.ASC));
-        options.add(new SortOption(R.string.sort_muscle_desc, SortField.MUSCLE, SortOrder.DESC));
-        options.add(new SortOption(R.string.sort_created_new, SortField.CREATED, SortOrder.DESC));
-        options.add(new SortOption(R.string.sort_created_old, SortField.CREATED, SortOrder.ASC));
-        options.add(new SortOption(R.string.sort_updated_new, SortField.UPDATED, SortOrder.DESC));
-        options.add(new SortOption(R.string.sort_updated_old, SortField.UPDATED, SortOrder.ASC));
-        return options;
-    }
+        List<SortBottomSheet.SortOption> anatomical = new ArrayList<>();
+        anatomical.add(new SortBottomSheet.SortOption(R.string.sort_muscle_asc, SortField.MUSCLE_GROUP, SortOrder.ASC));
+        groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_anatomical, anatomical));
 
-    private int findSelectedSortIndex(List<SortOption> options) {
-        for (int i = 0; i < options.size(); i++) {
-            SortOption option = options.get(i);
-            if (option.field == sortField && option.order == sortOrder) {
-                return i;
-            }
-        }
-        return 0;
+        List<SortBottomSheet.SortOption> basic = new ArrayList<>();
+        basic.add(new SortBottomSheet.SortOption(R.string.sort_name_asc, SortField.NAME, SortOrder.ASC));
+        basic.add(new SortBottomSheet.SortOption(R.string.sort_name_desc, SortField.NAME, SortOrder.DESC));
+        basic.add(new SortBottomSheet.SortOption(R.string.sort_custom, SortField.CUSTOM, SortOrder.ASC));
+        groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_basic, basic));
+
+        return groups;
     }
 
     private void applyExerciseFilters() {
@@ -267,10 +236,67 @@ public class ExerciseListFragment extends Fragment {
         Comparator<Exercise> comparator = buildExerciseComparator();
         filtered.sort(comparator);
         adapter.setExercises(filtered);
+        updateExerciseHeaders();
 
         boolean isEmpty = filtered.isEmpty();
         binding.textExercisesEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
         binding.recyclerExercises.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+    }
+
+    private void loadExercisePreferences() {
+        if (userPreferencesRepository == null) {
+            return;
+        }
+        disposables.add(userPreferencesRepository.getExerciseListPreferences()
+                .subscribeOn(Schedulers.io())
+                .subscribe(preferences -> {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    requireActivity().runOnUiThread(() -> applyExercisePreferences(preferences));
+                }, throwable -> {
+                    // Ignore preference load errors
+                }));
+    }
+
+    private void applyExercisePreferences(UserPreferencesRepository.ExerciseListPreferences preferences) {
+        if (preferences == null) {
+            return;
+        }
+        muscleFilter = preferences.muscleFilter != null && !preferences.muscleFilter.trim().isEmpty()
+                ? preferences.muscleFilter
+                : null;
+        typeFilter = preferences.typeFilter != null && !preferences.typeFilter.trim().isEmpty()
+            ? preferences.typeFilter
+            : null;
+        sortField = normalizeSortField(SortField.from(preferences.sortField, SortField.RECENT));
+        sortOrder = SortOrder.from(preferences.sortOrder, SortOrder.DESC);
+        starPriorityEnabled = preferences.starPriorityEnabled;
+        customOrderIds = parseIdList(preferences.customOrder);
+        applyExerciseFilters();
+        requireActivity().invalidateOptionsMenu();
+    }
+
+    private void persistExercisePreferences() {
+        if (userPreferencesRepository == null) {
+            return;
+        }
+        String filterValue = muscleFilter != null ? muscleFilter : "";
+        String typeValue = typeFilter != null ? typeFilter : "";
+        UserPreferencesRepository.ExerciseListPreferences preferences =
+                new UserPreferencesRepository.ExerciseListPreferences(
+                filterValue,
+                typeValue,
+                        sortField.name(),
+                        sortOrder.name(),
+                starPriorityEnabled,
+                encodeIdList(customOrderIds)
+                );
+        disposables.add(userPreferencesRepository.setExerciseListPreferences(preferences)
+                .subscribeOn(Schedulers.io())
+                .subscribe(() -> {
+                }, throwable -> {
+                }));
     }
 
     private boolean matchesExercise(Exercise exercise, String query) {
@@ -283,18 +309,39 @@ public class ExerciseListFragment extends Fragment {
                 return false;
             }
         }
+        if (typeFilter != null) {
+            String typeLabel = FilterUi.normalize(exercise.getTypeLabel());
+            if (!typeLabel.equals(FilterUi.normalize(typeFilter))) {
+                return false;
+            }
+        }
         if (query.isEmpty()) {
             return true;
         }
         String name = FilterUi.normalize(exercise.getName());
         String muscleLabel = FilterUi.normalize(exercise.getTargetedMusclesLabel());
-        return name.contains(query) || muscleLabel.contains(query);
+        String typeLabel = FilterUi.normalize(exercise.getTypeLabel());
+        return name.contains(query) || muscleLabel.contains(query) || typeLabel.contains(query);
     }
 
     private Comparator<Exercise> buildExerciseComparator() {
         Comparator<Exercise> base;
         switch (sortField) {
+            case RECENT:
+                base = Comparator.comparingLong(Exercise::getUpdatedAt)
+                        .thenComparingLong(Exercise::getCreatedAt)
+                        .reversed();
+                break;
+            case POPULAR:
+                base = Comparator.comparing(Exercise::isStar).reversed()
+                        .thenComparingLong(Exercise::getUpdatedAt).reversed()
+                        .thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
+                break;
+            case CUSTOM:
+                base = buildCustomExerciseComparator();
+                break;
             case MUSCLE:
+            case MUSCLE_GROUP:
                 base = Comparator.comparing(
                     (Exercise exercise) -> FilterUi.normalize(exercise.getTargetedMusclesLabel())
                 ).thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
@@ -311,13 +358,122 @@ public class ExerciseListFragment extends Fragment {
                 break;
         }
 
-        if (sortOrder == SortOrder.DESC) {
+        if (sortField != SortField.RECENT
+                && sortField != SortField.POPULAR
+                && sortField != SortField.CUSTOM
+                && sortOrder == SortOrder.DESC) {
             base = base.reversed();
         }
-        if (starPriorityEnabled) {
+        if (starPriorityEnabled && sortField != SortField.CUSTOM) {
             base = Comparator.comparing(Exercise::isStar).reversed().thenComparing(base);
         }
         return base;
+    }
+
+    private Comparator<Exercise> buildCustomExerciseComparator() {
+        java.util.Map<Long, Integer> orderMap = buildOrderMap(customOrderIds);
+        return (a, b) -> {
+            // First priority: star status (starred items first)
+            if (starPriorityEnabled) {
+                boolean starA = a != null && a.isStar();
+                boolean starB = b != null && b.isStar();
+                if (starA != starB) {
+                    return starA ? -1 : 1; // starred first
+                }
+            }
+            // Second priority: custom order
+            int indexA = orderMap.getOrDefault(a != null ? a.getId() : null, Integer.MAX_VALUE);
+            int indexB = orderMap.getOrDefault(b != null ? b.getId() : null, Integer.MAX_VALUE);
+            if (indexA != indexB) {
+                return Integer.compare(indexA, indexB);
+            }
+            // Third priority: name as tiebreaker
+            String nameA = a != null ? FilterUi.normalize(a.getName()) : "";
+            String nameB = b != null ? FilterUi.normalize(b.getName()) : "";
+            return nameA.compareTo(nameB);
+        };
+    }
+
+    private void updateExerciseHeaders() {
+        boolean shouldShow = sortField == SortField.MUSCLE_GROUP || sortField == SortField.MUSCLE;
+        if (!shouldShow) {
+            if (muscleHeaderDecoration != null && binding != null) {
+                binding.recyclerExercises.removeItemDecoration(muscleHeaderDecoration);
+                muscleHeaderDecoration = null;
+            }
+            return;
+        }
+        if (binding == null || adapter == null) {
+            return;
+        }
+        if (muscleHeaderDecoration == null) {
+            muscleHeaderDecoration = new SectionHeaderDecoration(requireContext(), position -> {
+                Exercise item = adapter.getItemAt(position);
+                if (item == null) {
+                    return null;
+                }
+                String label = item.getTargetedMusclesLabel();
+                if (label == null || label.trim().isEmpty()) {
+                    return getString(R.string.stats_unknown_muscle);
+                }
+                return label;
+            });
+            binding.recyclerExercises.addItemDecoration(muscleHeaderDecoration);
+        }
+    }
+
+    private SortField normalizeSortField(SortField field) {
+        if (field == SortField.MUSCLE) {
+            return SortField.MUSCLE_GROUP;
+        }
+        return field != null ? field : SortField.RECENT;
+    }
+
+    private java.util.List<Long> parseIdList(String value) {
+        java.util.List<Long> ids = new ArrayList<>();
+        if (value == null || value.trim().isEmpty()) {
+            return ids;
+        }
+        String[] parts = value.split(",");
+        for (String part : parts) {
+            try {
+                ids.add(Long.parseLong(part.trim()));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return ids;
+    }
+
+    private String encodeIdList(java.util.List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            Long id = ids.get(i);
+            if (id == null) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(',');
+            }
+            builder.append(id);
+        }
+        return builder.toString();
+    }
+
+    private java.util.Map<Long, Integer> buildOrderMap(java.util.List<Long> ids) {
+        java.util.Map<Long, Integer> map = new java.util.HashMap<>();
+        if (ids == null) {
+            return map;
+        }
+        for (int i = 0; i < ids.size(); i++) {
+            Long id = ids.get(i);
+            if (id != null && !map.containsKey(id)) {
+                map.put(id, i);
+            }
+        }
+        return map;
     }
 
     private void setupBackNavigation() {
@@ -327,12 +483,15 @@ public class ExerciseListFragment extends Fragment {
         backPressedCallback = new androidx.activity.OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (selectionActionMode != null) {
-                    selectionActionMode.finish();
+                if (exitSelectionMode()) {
                     return;
                 }
                 setEnabled(false);
-                requireActivity().onBackPressed();
+                try {
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                } finally {
+                    setEnabled(true);
+                }
             }
         };
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backPressedCallback);
@@ -385,20 +544,18 @@ public class ExerciseListFragment extends Fragment {
         if (!isAdded()) {
             return;
         }
-        if (selectedCount > 0) {
-            if (selectionActionMode == null) {
-                AppCompatActivity activity = (AppCompatActivity) requireActivity();
-                selectionActionMode = activity.startSupportActionMode(selectionCallback);
-            }
-            if (selectionActionMode != null) {
-                selectionActionMode.setTitle(getString(R.string.selection_count, selectedCount));
-            }
-        } else if (selectionActionMode != null) {
-            if (adapter != null && adapter.isSelectionModeActive()) {
-                selectionActionMode.setTitle(getString(R.string.selection_count, 0));
-            } else {
-                selectionActionMode.finish();
-            }
+        boolean selectionMode = adapter != null && adapter.isSelectionModeActive();
+        boolean show = selectedCount > 0 || selectionMode;
+        MainActivity activity = (MainActivity) requireActivity();
+        if (show) {
+            activity.showSelectionBar(
+                    selectedCount,
+                    v -> onMoveSelectedExercisesTop(),
+                    v -> onMoveSelectedExercisesBottom(),
+                    v -> onDeleteSelectedExercises()
+            );
+        } else {
+            activity.hideSelectionBar();
         }
     }
 
@@ -414,7 +571,6 @@ public class ExerciseListFragment extends Fragment {
                     for (Exercise exercise : adapter.getSelectedItems()) {
                         viewModel.deleteExercise(exercise);
                     }
-                    adapter.clearSelection();
                 }
         );
     }
@@ -424,7 +580,6 @@ public class ExerciseListFragment extends Fragment {
             return;
         }
         adapter.moveSelectedToTop();
-        adapter.clearSelection();
     }
 
     private void onMoveSelectedExercisesBottom() {
@@ -432,7 +587,6 @@ public class ExerciseListFragment extends Fragment {
             return;
         }
         adapter.moveSelectedToBottom();
-        adapter.clearSelection();
     }
 
     private void onDeleteSingleExercise(Exercise exercise) {
@@ -449,6 +603,87 @@ public class ExerciseListFragment extends Fragment {
         );
     }
 
+    private void maybePromptSaveCustomOrder() {
+        if (!isAdded() || adapter == null) {
+            return;
+        }
+        if (!adapter.consumeOrderChangedInSelection()) {
+            return;
+        }
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.sort_custom_save_title)
+                .setMessage(R.string.sort_custom_save_message)
+                .setPositiveButton(R.string.action_save, (dialog, which) -> saveCustomOrder())
+                .setNegativeButton(R.string.action_cancel, (dialog, which) -> applyExerciseFilters())
+                .show();
+    }
+
+    private void saveCustomOrder() {
+        if (adapter == null) {
+            return;
+        }
+        customOrderIds = extractExerciseIds(adapter.getItems());
+        sortField = SortField.CUSTOM;
+        sortOrder = SortOrder.ASC;
+        persistExercisePreferences();
+        applyExerciseFilters();
+    }
+
+    private List<Long> extractExerciseIds(List<Exercise> items) {
+        List<Long> ids = new ArrayList<>();
+        if (items == null) {
+            return ids;
+        }
+        for (Exercise exercise : items) {
+            if (exercise != null && exercise.getId() != null) {
+                ids.add(exercise.getId());
+            }
+        }
+        return ids;
+    }
+
+    @Override
+    public void onSearchQueryChanged(String query) {
+        searchQuery = query != null ? query : "";
+        applyExerciseFilters();
+    }
+
+    @Override
+    public void onSearchClosed() {
+        searchQuery = "";
+        applyExerciseFilters();
+    }
+
+    @Override
+    public void onFilterRequested() {
+        showExerciseFilterDialog();
+    }
+
+    @Override
+    public void onSortRequested() {
+        showSortDialog();
+    }
+
+    @Override
+    public void onStarToggleRequested() {
+        toggleStarPriority();
+    }
+
+    @Override
+    public boolean isStarPriorityEnabled() {
+        return starPriorityEnabled;
+    }
+
+    @Override
+    public String getSearchQuery() {
+        return searchQuery;
+    }
+
+    @Override
+    public int getSearchHintResId() {
+        return R.string.exercise_search_hint;
+    }
+
     private Exercise copyExercise(Exercise exercise) {
         if (exercise == null) {
             return null;
@@ -461,6 +696,14 @@ public class ExerciseListFragment extends Fragment {
                 exercise.isStar()
         );
         copy.setId(exercise.getId());
+        copy.setType(exercise.getType());
+        copy.setShowSeries(exercise.isShowSeries());
+        copy.setShowRepetitions(exercise.isShowRepetitions());
+        copy.setShowWeight(exercise.isShowWeight());
+        copy.setShowTime(exercise.isShowTime());
+        copy.setShowHeartRate(exercise.isShowHeartRate());
+        copy.setCreatedAt(exercise.getCreatedAt());
+        copy.setUpdatedAt(exercise.getUpdatedAt());
         return copy;
     }
 
@@ -479,6 +722,7 @@ public class ExerciseListFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        disposables.clear();
         binding = null;
     }
 
@@ -486,27 +730,4 @@ public class ExerciseListFragment extends Fragment {
         return Math.round(dp * requireContext().getResources().getDisplayMetrics().density);
     }
 
-    private enum SortField {
-        NAME,
-        MUSCLE,
-        CREATED,
-        UPDATED
-    }
-
-    private enum SortOrder {
-        ASC,
-        DESC
-    }
-
-    private static class SortOption {
-        final int labelRes;
-        final SortField field;
-        final SortOrder order;
-
-        SortOption(int labelRes, SortField field, SortOrder order) {
-            this.labelRes = labelRes;
-            this.field = field;
-            this.order = order;
-        }
-    }
 }

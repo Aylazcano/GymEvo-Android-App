@@ -221,9 +221,6 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
             return -1;
         }
         Long targetId = target.getId();
-        Long targetExerciseId = target.getExerciseId();
-        String targetName = target.getName() != null ? target.getName() : "";
-        String targetMuscles = target.getTargetedMusclesLabel() != null ? target.getTargetedMusclesLabel() : "";
         for (int i = 0; i < exercises.size(); i++) {
             ExerciseInWorkout existing = exercises.get(i);
             if (existing == target) {
@@ -231,18 +228,6 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
             }
             if (existing != null && targetId != null && targetId.equals(existing.getId())) {
                 return i;
-            }
-            if (existing != null && targetExerciseId != null
-                    && targetExerciseId.equals(existing.getExerciseId())) {
-                return i;
-            }
-            if (existing != null) {
-                String existingName = existing.getName() != null ? existing.getName() : "";
-                String existingMuscles = existing.getTargetedMusclesLabel() != null ? existing.getTargetedMusclesLabel() : "";
-                if (targetName.equalsIgnoreCase(existingName)
-                        && targetMuscles.equalsIgnoreCase(existingMuscles)) {
-                    return i;
-                }
             }
         }
         return -1;
@@ -271,7 +256,7 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
         if (workout == null || workout.getExercises() == null) {
             return new ArrayList<>();
         }
-        return new ArrayList<>(workout.getExercises());
+        return sortExercises(workout.getExercises());
     }
 
     private List<LocalDate> safeDates(List<LocalDate> dates) {
@@ -279,7 +264,7 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
     }
 
     private ExerciseInWorkout cloneExercise(ExerciseInWorkout source) {
-        return new ExerciseInWorkout(
+        ExerciseInWorkout copy = new ExerciseInWorkout(
                 null,
                 source.getName(),
                 source.getTargetedMusclesLabel(),
@@ -293,6 +278,15 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
                 source.getExerciseId(),
                 null
         );
+        copy.setType(source.getType());
+        copy.setShowSeries(source.isShowSeries());
+        copy.setShowRepetitions(source.isShowRepetitions());
+        copy.setShowWeight(source.isShowWeight());
+        copy.setShowTime(source.isShowTime());
+        copy.setShowHeartRate(source.isShowHeartRate());
+        copy.setWeightInKg(source.isWeightInKg());
+        copy.setOrderIndex(source.getOrderIndex());
+        return copy;
     }
 
     private List<Workout> mapToWorkouts(List<WorkoutWithExercises> items) {
@@ -305,9 +299,22 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
                 continue;
             }
             Workout workout = item.workout;
-            workout.setExercises(item.exercises != null ? item.exercises : new ArrayList<>());
+            workout.setExercises(sortExercises(item.exercises != null
+                    ? item.exercises
+                    : new ArrayList<>()));
             workouts.add(workout);
         }
         return workouts;
+    }
+
+    private List<ExerciseInWorkout> sortExercises(List<ExerciseInWorkout> exercises) {
+        if (exercises == null || exercises.isEmpty()) {
+            return exercises != null ? exercises : new ArrayList<>();
+        }
+        List<ExerciseInWorkout> sorted = new ArrayList<>(exercises);
+        sorted.sort((a, b) -> Integer.compare(
+                a != null ? a.getOrderIndex() : 0,
+                b != null ? b.getOrderIndex() : 0));
+        return sorted;
     }
 }

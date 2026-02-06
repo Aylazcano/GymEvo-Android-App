@@ -53,6 +53,10 @@ public class ExerciseRepository {
             return;
         }
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            Exercise existing = null;
+            if (exercise.getId() != null) {
+                existing = exerciseDao.getByIdNow(exercise.getId());
+            }
             exercise.setUpdatedAt(System.currentTimeMillis());
             exerciseDao.update(exercise);
             if (exercise.getId() != null) {
@@ -61,10 +65,40 @@ public class ExerciseRepository {
                         exercise.getName(),
                         exercise.getTargetedMuscles(),
                         exercise.getImageA(),
-                        exercise.getImageB()
+                        exercise.getImageB(),
+                        exercise.getType(),
+                        exercise.isShowSeries(),
+                        exercise.isShowRepetitions(),
+                        exercise.isShowWeight(),
+                        exercise.isShowTime(),
+                        exercise.isShowHeartRate()
+                );
+            }
+            if (existing != null) {
+                exerciseInWorkoutDao.updateExerciseDetailsByLegacyKey(
+                        existing.getName(),
+                        existing.getTargetedMuscles(),
+                        exercise.getName(),
+                        exercise.getTargetedMuscles(),
+                        exercise.getImageA(),
+                        exercise.getImageB(),
+                        exercise.getType(),
+                        exercise.isShowSeries(),
+                        exercise.isShowRepetitions(),
+                        exercise.isShowWeight(),
+                        exercise.isShowTime(),
+                        exercise.isShowHeartRate()
                 );
             }
         });
+    }
+
+    public void updateExerciseStar(Exercise exercise) {
+        if (exercise == null || exercise.getId() == null) {
+            return;
+        }
+        AppDatabase.databaseWriteExecutor.execute(() ->
+                exerciseDao.updateStar(exercise.getId(), exercise.isStar()));
     }
 
     public void deleteExercise(Exercise exercise) {

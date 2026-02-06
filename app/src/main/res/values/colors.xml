@@ -15,4 +15,36 @@
     <color name="white">#FFFFFFFF</color>
     <color name="star_on">#FFC107</color>
     <color name="star_off">#9E9E9E</color>
+
+    <!-- Default (light) theme colors -->
+    <color name="gym_primary">#FF6200EE</color>
+    <color name="gym_primary_variant">#FF3700B3</color>
+    <color name="gym_on_primary">#FFFFFFFF</color>
+    <color name="gym_secondary">#FF03DAC5</color>
+    <color name="gym_secondary_variant">#FF018786</color>
+    <color name="gym_on_secondary">#FF000000</color>
+
+    <!-- Red theme colors -->
+    <color name="gym_red_primary">#FFD32F2F</color>
+    <color name="gym_red_primary_variant">#FFB71C1C</color>
+    <color name="gym_red_on_primary">#FFFFFFFF</color>
+    <color name="gym_red_secondary">#FFFF8A80</color>
+    <color name="gym_red_secondary_variant">#FFFF5252</color>
+    <color name="gym_red_on_secondary">#FF000000</color>
+
+    <!-- Green theme colors -->
+    <color name="gym_green_primary">#FF2E7D32</color>
+    <color name="gym_green_primary_variant">#FF1B5E20</color>
+    <color name="gym_green_on_primary">#FFFFFFFF</color>
+    <color name="gym_green_secondary">#FFA5D6A7</color>
+    <color name="gym_green_secondary_variant">#FF66BB6A</color>
+    <color name="gym_green_on_secondary">#FF000000</color>
+
+    <!-- Blue theme colors -->
+    <color name="gym_blue_primary">#FF1565C0</color>
+    <color name="gym_blue_primary_variant">#FF0D47A1</color>
+    <color name="gym_blue_on_primary">#FFFFFFFF</color>
+    <color name="gym_blue_secondary">#FF90CAF9</color>
+    <color name="gym_blue_secondary_variant">#FF42A5F5</color>
+    <color name="gym_blue_on_secondary">#FF000000</color>
 </resources>

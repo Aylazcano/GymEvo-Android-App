@@ -23,6 +23,9 @@ public interface ExerciseDao {
     @Update
     void update(Exercise exercise);
 
+    @Query("UPDATE exercise SET isStar = :isStar WHERE id = :id")
+    void updateStar(Long id, boolean isStar);
+
     @Delete
     void delete(Exercise exercise);
 
@@ -31,5 +34,8 @@ public interface ExerciseDao {
 
     @Query("SELECT * FROM exercise")
     List<Exercise> getAllExercisesNow();
+
+    @Query("SELECT * FROM exercise WHERE id = :id LIMIT 1")
+    Exercise getByIdNow(Long id);
 
 }

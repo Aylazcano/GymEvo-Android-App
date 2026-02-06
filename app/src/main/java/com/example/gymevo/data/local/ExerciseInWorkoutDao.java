@@ -5,6 +5,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 import com.example.gymevo.model.ExerciseInWorkout;
+import com.example.gymevo.model.ExerciseType;
 import com.example.gymevo.model.MuscleGroup;
 
 import java.util.List;
@@ -17,10 +18,30 @@ public interface ExerciseInWorkoutDao {
     @Query("DELETE FROM exercise_in_workout WHERE workoutId = :workoutId")
     void deleteByWorkoutId(Long workoutId);
 
-    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB WHERE exerciseId = :exerciseId")
+    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate WHERE exerciseId = :exerciseId")
     void updateExerciseDetailsByExerciseId(Long exerciseId,
                                            String name,
                                            MuscleGroup targetedMuscles,
                                            String imageA,
-                                           String imageB);
+                                           String imageB,
+                                           ExerciseType type,
+                                           boolean showSeries,
+                                           boolean showRepetitions,
+                                           boolean showWeight,
+                                           boolean showTime,
+                                           boolean showHeartRate);
+
+    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate WHERE exerciseId IS NULL AND name = :oldName AND targetedMuscles IS :oldTargetedMuscles")
+    void updateExerciseDetailsByLegacyKey(String oldName,
+                                          MuscleGroup oldTargetedMuscles,
+                                          String name,
+                                          MuscleGroup targetedMuscles,
+                                          String imageA,
+                                          String imageB,
+                                          ExerciseType type,
+                                          boolean showSeries,
+                                          boolean showRepetitions,
+                                          boolean showWeight,
+                                          boolean showTime,
+                                          boolean showHeartRate);
 }

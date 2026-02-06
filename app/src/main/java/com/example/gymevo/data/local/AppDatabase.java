@@ -14,8 +14,8 @@ import com.example.gymevo.model.Workout;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@Database(entities = {Workout.class, Exercise.class, ExerciseInWorkout.class}, version = 5, exportSchema = false)
-@TypeConverters({LocalDateConverter.class, WorkoutTypeConverter.class, MuscleGroupConverter.class})
+@Database(entities = {Workout.class, Exercise.class, ExerciseInWorkout.class}, version = 9, exportSchema = false)
+@TypeConverters({LocalDateConverter.class, WorkoutTypeConverter.class, MuscleGroupConverter.class, ExerciseTypeConverter.class})
 public abstract class AppDatabase extends RoomDatabase {
 
     private static final int DB_THREAD_COUNT = 4;

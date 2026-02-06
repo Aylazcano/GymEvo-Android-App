@@ -42,6 +42,7 @@ public class StatisticsFragment extends Fragment {
         binding = FragmentStatisticsBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
+        setupStatSummaryLabels();
         setupWeeklyRangeSelector();
         configureWeeklyTrendChart();
 
@@ -56,18 +57,18 @@ public class StatisticsFragment extends Fragment {
 
         binding.statsDateRange.setText(model.getDateRange());
 
-        binding.statSessionsValue.setText(model.getTotalSessions());
-        binding.statExercisesValue.setText(model.getTotalExercises());
-        binding.statSetsValue.setText(model.getTotalSets());
-        binding.statRepsValue.setText(model.getTotalReps());
-        binding.statVolumeValue.setText(model.getTotalVolume());
-        binding.statTimeValue.setText(model.getTotalTime());
-        binding.statAvgHrValue.setText(model.getAverageHeartRate());
-        binding.statBest1rmValue.setText(model.getBest1RM());
-        binding.statUniqueExercisesValue.setText(model.getUniqueExercises());
-        binding.statAvgVolumeValue.setText(model.getAvgVolumePerSession());
-        binding.statCurrentStreakValue.setText(model.getCurrentStreak());
-        binding.statBestStreakValue.setText(model.getBestStreak());
+        binding.statSessionsCard.statValue.setText(model.getTotalSessions());
+        binding.statExercisesCard.statValue.setText(model.getTotalExercises());
+        binding.statSetsCard.statValue.setText(model.getTotalSets());
+        binding.statRepsCard.statValue.setText(model.getTotalReps());
+        binding.statVolumeCard.statValue.setText(model.getTotalVolume());
+        binding.statTimeCard.statValue.setText(model.getTotalTime());
+        binding.statAvgHrCard.statValue.setText(model.getAverageHeartRate());
+        binding.statBest1rmCard.statValue.setText(model.getBest1RM());
+        binding.statUniqueExercisesCard.statValue.setText(model.getUniqueExercises());
+        binding.statAvgVolumeCard.statValue.setText(model.getAvgVolumePerSession());
+        binding.statCurrentStreakCard.statValue.setText(model.getCurrentStreak());
+        binding.statBestStreakCard.statValue.setText(model.getBestStreak());
 
         updateStatRows(binding.topExercisesContainer, model.getTopExercises());
         updateStatRows(binding.topMuscleGroupsContainer, model.getTopMuscleGroups());
@@ -94,6 +95,24 @@ public class StatisticsFragment extends Fragment {
             }
             renderWeeklyFrequency();
         });
+    }
+
+    private void setupStatSummaryLabels() {
+        if (binding == null) {
+            return;
+        }
+        binding.statSessionsCard.statLabel.setText(R.string.stats_sessions_label);
+        binding.statExercisesCard.statLabel.setText(R.string.stats_exercise_entries_label);
+        binding.statSetsCard.statLabel.setText(R.string.stats_sets_label);
+        binding.statRepsCard.statLabel.setText(R.string.stats_reps_label);
+        binding.statVolumeCard.statLabel.setText(R.string.stats_volume_label);
+        binding.statTimeCard.statLabel.setText(R.string.stats_time_label);
+        binding.statAvgHrCard.statLabel.setText(R.string.stats_avg_hr_label);
+        binding.statBest1rmCard.statLabel.setText(R.string.stats_best_1rm_label);
+        binding.statUniqueExercisesCard.statLabel.setText(R.string.stats_unique_exercises_label);
+        binding.statAvgVolumeCard.statLabel.setText(R.string.stats_avg_volume_label);
+        binding.statCurrentStreakCard.statLabel.setText(R.string.stats_current_streak_label);
+        binding.statBestStreakCard.statLabel.setText(R.string.stats_best_streak_label);
     }
 
     private void configureWeeklyTrendChart() {

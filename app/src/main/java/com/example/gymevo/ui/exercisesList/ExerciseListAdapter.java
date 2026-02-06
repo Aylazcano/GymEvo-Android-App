@@ -13,12 +13,14 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.R;
 import com.example.gymevo.model.Exercise;
 import com.example.gymevo.ui.common.ImageUi;
 import com.example.gymevo.ui.common.StarUi;
+import com.google.android.material.R.attr;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -27,7 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapter.ViewHolder> {
+public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapter.ViewHolder> {
 
     public interface OnExerciseClickListener {
         void onExerciseClick(Exercise exercise);
@@ -45,7 +47,6 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
         void onExerciseDelete(Exercise exercise);
     }
 
-    private final List<Exercise> exercises = new ArrayList<>();
     private final OnExerciseClickListener onExerciseClickListener;
     private final OnExerciseStarToggleListener onExerciseStarToggleListener;
     private final Set<String> selectedKeys = new HashSet<>();
@@ -53,47 +54,32 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
     private ItemTouchHelper itemTouchHelper;
     private OnExerciseDeleteListener deleteListener;
     private boolean selectionModeActive;
+    private boolean orderChangedInSelection;
+    private RecyclerView recyclerView;
+
+    private static final DiffUtil.ItemCallback<Exercise> EXERCISE_DIFF =
+            new DiffUtil.ItemCallback<Exercise>() {
+                @Override
+                public boolean areItemsTheSame(@NonNull Exercise oldItem, @NonNull Exercise newItem) {
+                    return areSameExercise(oldItem, newItem);
+                }
+
+                @Override
+                public boolean areContentsTheSame(@NonNull Exercise oldItem, @NonNull Exercise newItem) {
+                    return areExerciseContentsSame(oldItem, newItem);
+                }
+            };
 
     public ExerciseListAdapter(OnExerciseClickListener onExerciseClickListener,
                                OnExerciseStarToggleListener onExerciseStarToggleListener) {
+        super(EXERCISE_DIFF);
         this.onExerciseClickListener = onExerciseClickListener;
         this.onExerciseStarToggleListener = onExerciseStarToggleListener;
     }
 
     public void setExercises(List<Exercise> items) {
         List<Exercise> newItems = copyExercises(items);
-        List<Exercise> oldItems = copyExercises(exercises);
-
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
-            @Override
-            public int getOldListSize() {
-                return oldItems.size();
-            }
-
-            @Override
-            public int getNewListSize() {
-                return newItems.size();
-            }
-
-            @Override
-            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                Exercise oldItem = oldItems.get(oldItemPosition);
-                Exercise newItem = newItems.get(newItemPosition);
-                return areSameExercise(oldItem, newItem);
-            }
-
-            @Override
-            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                Exercise oldItem = oldItems.get(oldItemPosition);
-                Exercise newItem = newItems.get(newItemPosition);
-                return areExerciseContentsSame(oldItem, newItem);
-            }
-        });
-
-        exercises.clear();
-        exercises.addAll(newItems);
-        reconcileSelection(newItems);
-        diffResult.dispatchUpdatesTo(this);
+        submitList(newItems, () -> reconcileSelection(newItems));
     }
 
     public void setSelectionListener(OnSelectionChangedListener listener) {
@@ -104,18 +90,24 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
         this.itemTouchHelper = helper;
     }
 
+    public void setRecyclerView(RecyclerView recyclerView) {
+        this.recyclerView = recyclerView;
+    }
+
     public void setDeleteListener(OnExerciseDeleteListener listener) {
         this.deleteListener = listener;
     }
 
     public boolean onItemMove(int fromPosition, int toPosition) {
+        List<Exercise> current = new ArrayList<>(getCurrentList());
         if (fromPosition < 0 || toPosition < 0
-                || fromPosition >= exercises.size() || toPosition >= exercises.size()) {
+                || fromPosition >= current.size() || toPosition >= current.size()) {
             return false;
         }
-        Exercise moved = exercises.remove(fromPosition);
-        exercises.add(toPosition, moved);
-        notifyItemMoved(fromPosition, toPosition);
+        Exercise moved = current.remove(fromPosition);
+        current.add(toPosition, moved);
+        submitList(current);
+        markOrderChangedIfNeeded();
         return true;
     }
 
@@ -123,44 +115,65 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
         if (selectedKeys.isEmpty()) {
             return;
         }
+        List<Exercise> current = new ArrayList<>(getCurrentList());
         List<Exercise> selected = getSelectedItems();
         List<Exercise> remaining = new ArrayList<>();
-        for (Exercise exercise : exercises) {
+        for (Exercise exercise : current) {
             if (!isSelected(exercise)) {
                 remaining.add(exercise);
             }
         }
-        exercises.clear();
-        exercises.addAll(selected);
-        exercises.addAll(remaining);
-        notifyDataSetChanged();
+        List<Exercise> merged = new ArrayList<>(selected);
+        merged.addAll(remaining);
+        submitList(merged);
+        markOrderChangedIfNeeded();
+        // Auto-scroll to top to focus the moved selected items
+        if (recyclerView != null && !selected.isEmpty()) {
+            recyclerView.smoothScrollToPosition(0);
+        }
     }
 
     public void moveSelectedToBottom() {
         if (selectedKeys.isEmpty()) {
             return;
         }
+        List<Exercise> current = new ArrayList<>(getCurrentList());
         List<Exercise> selected = getSelectedItems();
         List<Exercise> remaining = new ArrayList<>();
-        for (Exercise exercise : exercises) {
+        for (Exercise exercise : current) {
             if (!isSelected(exercise)) {
                 remaining.add(exercise);
             }
         }
-        exercises.clear();
-        exercises.addAll(remaining);
-        exercises.addAll(selected);
-        notifyDataSetChanged();
+        List<Exercise> merged = new ArrayList<>(remaining);
+        merged.addAll(selected);
+        submitList(merged);
+        markOrderChangedIfNeeded();
+        // Auto-scroll to bottom to focus the moved selected items
+        if (recyclerView != null && !selected.isEmpty()) {
+            recyclerView.smoothScrollToPosition(merged.size() - 1);
+        }
     }
 
     public List<Exercise> getSelectedItems() {
         List<Exercise> selected = new ArrayList<>();
-        for (Exercise exercise : exercises) {
+        for (Exercise exercise : getCurrentList()) {
             if (isSelected(exercise)) {
                 selected.add(exercise);
             }
         }
         return selected;
+    }
+
+    public List<Exercise> getItems() {
+        return new ArrayList<>(getCurrentList());
+    }
+
+    public Exercise getItemAt(int position) {
+        if (position < 0 || position >= getCurrentList().size()) {
+            return null;
+        }
+        return getItem(position);
     }
 
     public void clearSelection() {
@@ -192,6 +205,12 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
         return selectionModeActive;
     }
 
+    public boolean consumeOrderChangedInSelection() {
+        boolean changed = orderChangedInSelection;
+        orderChangedInSelection = false;
+        return changed;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -202,7 +221,10 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Exercise exercise = exercises.get(position);
+        Exercise exercise = getItem(position);
+        if (exercise == null) {
+            return;
+        }
         holder.bind(exercise);
         boolean selected = isSelected(exercise);
         holder.applySelection(selected);
@@ -248,11 +270,6 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
     }
 
     @Override
-    public int getItemCount() {
-        return exercises.size();
-    }
-
-    @Override
     public void onViewRecycled(@NonNull ViewHolder holder) {
         holder.clearImageLoop();
         super.onViewRecycled(holder);
@@ -295,10 +312,14 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
             if (cardView == null) {
                 return;
             }
-            int strokeWidth = selected ? dpToPx(cardView, 2) : 0;
-            int strokeColor = ContextCompat.getColor(cardView.getContext(), R.color.example_1_selection_color);
+            int defaultStrokeWidth = dpToPx(cardView, 1);
+            int defaultStrokeColor = resolveThemeColor(cardView, attr.colorPrimary);
+            int strokeWidth = selected ? dpToPx(cardView, 2) : defaultStrokeWidth;
+            int strokeColor = selected
+                    ? ContextCompat.getColor(cardView.getContext(), R.color.example_1_selection_color)
+                    : defaultStrokeColor;
             cardView.setStrokeWidth(strokeWidth);
-            cardView.setStrokeColor(selected ? strokeColor : Color.TRANSPARENT);
+            cardView.setStrokeColor(strokeColor);
         }
 
         void applySelectionMode(boolean selectionMode) {
@@ -318,6 +339,17 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
                     TypedValue.COMPLEX_UNIT_DIP,
                     dp,
                     view.getResources().getDisplayMetrics()));
+        }
+
+        private int resolveThemeColor(View view, int attrResId) {
+            TypedValue typedValue = new TypedValue();
+            if (view.getContext().getTheme().resolveAttribute(attrResId, typedValue, true)) {
+                if (typedValue.resourceId != 0) {
+                    return ContextCompat.getColor(view.getContext(), typedValue.resourceId);
+                }
+                return typedValue.data;
+            }
+            return Color.TRANSPARENT;
         }
     }
 
@@ -343,6 +375,12 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
             && Objects.equals(oldItem.getImageA(), newItem.getImageA())
             && Objects.equals(oldItem.getImageB(), newItem.getImageB())
                 && oldItem.isStar() == newItem.isStar()
+                && Objects.equals(oldItem.getType(), newItem.getType())
+                && oldItem.isShowSeries() == newItem.isShowSeries()
+                && oldItem.isShowRepetitions() == newItem.isShowRepetitions()
+                && oldItem.isShowWeight() == newItem.isShowWeight()
+                && oldItem.isShowTime() == newItem.isShowTime()
+                && oldItem.isShowHeartRate() == newItem.isShowHeartRate()
                 && oldItem.getCreatedAt() == newItem.getCreatedAt()
                 && oldItem.getUpdatedAt() == newItem.getUpdatedAt();
     }
@@ -364,6 +402,12 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
                     item.isStar()
             );
             copy.setId(item.getId());
+            copy.setType(item.getType());
+            copy.setShowSeries(item.isShowSeries());
+            copy.setShowRepetitions(item.isShowRepetitions());
+            copy.setShowWeight(item.isShowWeight());
+            copy.setShowTime(item.isShowTime());
+            copy.setShowHeartRate(item.isShowHeartRate());
             copy.setCreatedAt(item.getCreatedAt());
             copy.setUpdatedAt(item.getUpdatedAt());
             copies.add(copy);
@@ -423,6 +467,12 @@ public class ExerciseListAdapter extends RecyclerView.Adapter<ExerciseListAdapte
     private void notifySelectionChanged() {
         if (selectionChangedListener != null) {
             selectionChangedListener.onSelectionChanged(selectedKeys.size());
+        }
+    }
+
+    private void markOrderChangedIfNeeded() {
+        if (selectionModeActive) {
+            orderChangedInSelection = true;
         }
     }
 }

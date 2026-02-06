@@ -14,24 +14,34 @@ public class Exercise {
     private String imageA;
     private String imageB;
     private boolean isStar;
+    private ExerciseType type;
+    private boolean showSeries;
+    private boolean showRepetitions;
+    private boolean showWeight;
+    private boolean showTime;
+    private boolean showHeartRate;
     private long createdAt;
     private long updatedAt;
 
     @Ignore
     public Exercise(String name, String targetedMuscles, String imageA, String imageB, boolean isStar) {
-        this.name = normalizeName(name);
-        this.targetedMuscles = parseMuscleGroup(targetedMuscles);
-        this.imageA = imageA;
-        this.imageB = imageB;
-        this.isStar = isStar;
+        this(name, parseMuscleGroup(targetedMuscles), imageA, imageB, isStar, ExerciseType.ANAEROBIC);
     }
 
+    @Ignore
     public Exercise(String name, MuscleGroup targetedMuscles, String imageA, String imageB, boolean isStar) {
+        this(name, targetedMuscles, imageA, imageB, isStar, ExerciseType.ANAEROBIC);
+    }
+
+    public Exercise(String name, MuscleGroup targetedMuscles, String imageA, String imageB,
+                    boolean isStar, ExerciseType type) {
         this.name = normalizeName(name);
         this.targetedMuscles = targetedMuscles != null ? targetedMuscles : MuscleGroup.OTHER;
         this.imageA = imageA;
         this.imageB = imageB;
         this.isStar = isStar;
+        this.type = type != null ? type : ExerciseType.ANAEROBIC;
+        applyDefaultMetricsForType(this.type);
         this.createdAt = System.currentTimeMillis();
         this.updatedAt = this.createdAt;
     }
@@ -82,6 +92,82 @@ public class Exercise {
 
     public boolean isStar() { return isStar; }
     public void setStar(boolean isStar) { this.isStar = isStar; }
+
+    public ExerciseType getType() {
+        return type != null ? type : ExerciseType.ANAEROBIC;
+    }
+
+    public void setType(ExerciseType type) {
+        this.type = type != null ? type : ExerciseType.ANAEROBIC;
+    }
+
+    @Ignore
+    public String getTypeLabel() {
+        return getType().getLabel();
+    }
+
+    public boolean isShowSeries() {
+        return showSeries;
+    }
+
+    public void setShowSeries(boolean showSeries) {
+        this.showSeries = showSeries;
+    }
+
+    public boolean isShowRepetitions() {
+        return showRepetitions;
+    }
+
+    public void setShowRepetitions(boolean showRepetitions) {
+        this.showRepetitions = showRepetitions;
+    }
+
+    public boolean isShowWeight() {
+        return showWeight;
+    }
+
+    public void setShowWeight(boolean showWeight) {
+        this.showWeight = showWeight;
+    }
+
+    public boolean isShowTime() {
+        return showTime;
+    }
+
+    public void setShowTime(boolean showTime) {
+        this.showTime = showTime;
+    }
+
+    public boolean isShowHeartRate() {
+        return showHeartRate;
+    }
+
+    public void setShowHeartRate(boolean showHeartRate) {
+        this.showHeartRate = showHeartRate;
+    }
+
+    @Ignore
+    public boolean hasAnyDisplayMetric() {
+        return showSeries || showRepetitions || showWeight || showTime || showHeartRate;
+    }
+
+    @Ignore
+    public void applyDefaultMetricsForType(ExerciseType type) {
+        ExerciseType safeType = type != null ? type : ExerciseType.ANAEROBIC;
+        if (safeType == ExerciseType.AEROBIC) {
+            showSeries = false;
+            showRepetitions = false;
+            showWeight = false;
+            showTime = true;
+            showHeartRate = true;
+        } else {
+            showSeries = true;
+            showRepetitions = true;
+            showWeight = true;
+            showTime = false;
+            showHeartRate = false;
+        }
+    }
 
     public long getCreatedAt() {
         return createdAt;

@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.R;
@@ -24,16 +25,25 @@ import com.example.gymevo.model.Workout;
 import com.example.gymevo.ui.common.adapter.WorkoutExerciseAdapter;
 import com.example.gymevo.ui.common.DragDropItemTouchHelper;
 import com.example.gymevo.ui.common.StarUi;
+import com.google.android.material.R.attr;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.card.MaterialCardView;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
-public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.WorkoutViewHolder> {
+public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.WorkoutViewHolder> {
+
+    private static final DateTimeFormatter UPDATED_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault());
 
     public interface OnWorkoutStarToggleListener {
         void onStarToggled(Workout workout);
@@ -62,7 +72,6 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
 
     private final OnWorkoutStarToggleListener onWorkoutStarToggleListener;
     private final WorkoutActionListener workoutActionListener;
-    private List<Workout> workouts = new ArrayList<>();
     private ExpandedWorkoutState expandedState;
     private final Set<String> selectedKeys = new HashSet<>();
     private OnSelectionChangedListener selectionChangedListener;
@@ -73,46 +82,32 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
     private ItemTouchHelper itemTouchHelper;
     private boolean selectionModeActive;
     private WorkoutExerciseAdapter expandedExerciseAdapter;
+    private boolean orderChangedInSelection;
+    private RecyclerView recyclerView;
+
+    private static final DiffUtil.ItemCallback<Workout> WORKOUT_DIFF =
+            new DiffUtil.ItemCallback<Workout>() {
+                @Override
+                public boolean areItemsTheSame(@NonNull Workout oldItem, @NonNull Workout newItem) {
+                    return areSameWorkout(oldItem, newItem);
+                }
+
+                @Override
+                public boolean areContentsTheSame(@NonNull Workout oldItem, @NonNull Workout newItem) {
+                    return areWorkoutContentsSame(oldItem, newItem);
+                }
+            };
 
     public WorkoutListAdapter(OnWorkoutStarToggleListener starListener,
                               WorkoutActionListener actionListener) {
+        super(WORKOUT_DIFF);
         this.onWorkoutStarToggleListener = starListener;
         this.workoutActionListener = actionListener;
     }
 
     public void setWorkouts(List<Workout> items) {
         List<Workout> newItems = copyWorkouts(items);
-        List<Workout> oldItems = copyWorkouts(workouts);
-
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
-            @Override
-            public int getOldListSize() {
-                return oldItems.size();
-            }
-
-            @Override
-            public int getNewListSize() {
-                return newItems.size();
-            }
-
-            @Override
-            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                Workout oldItem = oldItems.get(oldItemPosition);
-                Workout newItem = newItems.get(newItemPosition);
-                return areSameWorkout(oldItem, newItem);
-            }
-
-            @Override
-            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                Workout oldItem = oldItems.get(oldItemPosition);
-                Workout newItem = newItems.get(newItemPosition);
-                return areWorkoutContentsSame(oldItem, newItem);
-            }
-        });
-
-        workouts = newItems;
-        reconcileSelection(newItems);
-        diffResult.dispatchUpdatesTo(this);
+        submitList(newItems, () -> reconcileSelection(newItems));
     }
 
     public void setSelectionListener(OnSelectionChangedListener listener) {
@@ -148,14 +143,20 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
         this.itemTouchHelper = helper;
     }
 
+    public void setRecyclerView(RecyclerView recyclerView) {
+        this.recyclerView = recyclerView;
+    }
+
     public boolean onItemMove(int fromPosition, int toPosition) {
+        List<Workout> current = new ArrayList<>(getCurrentList());
         if (fromPosition < 0 || toPosition < 0
-                || fromPosition >= workouts.size() || toPosition >= workouts.size()) {
+                || fromPosition >= current.size() || toPosition >= current.size()) {
             return false;
         }
-        Workout moved = workouts.remove(fromPosition);
-        workouts.add(toPosition, moved);
-        notifyItemMoved(fromPosition, toPosition);
+        Workout moved = current.remove(fromPosition);
+        current.add(toPosition, moved);
+        submitList(current);
+        markOrderChangedIfNeeded();
         return true;
     }
 
@@ -163,44 +164,65 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
         if (selectedKeys.isEmpty()) {
             return;
         }
+        List<Workout> current = new ArrayList<>(getCurrentList());
         List<Workout> selected = getSelectedItems();
         List<Workout> remaining = new ArrayList<>();
-        for (Workout workout : workouts) {
+        for (Workout workout : current) {
             if (!isSelected(workout)) {
                 remaining.add(workout);
             }
         }
-        workouts.clear();
-        workouts.addAll(selected);
-        workouts.addAll(remaining);
-        notifyDataSetChanged();
+        List<Workout> merged = new ArrayList<>(selected);
+        merged.addAll(remaining);
+        submitList(merged);
+        markOrderChangedIfNeeded();
+        // Auto-scroll to top to focus the moved selected items
+        if (recyclerView != null && !selected.isEmpty()) {
+            recyclerView.smoothScrollToPosition(0);
+        }
     }
 
     public void moveSelectedToBottom() {
         if (selectedKeys.isEmpty()) {
             return;
         }
+        List<Workout> current = new ArrayList<>(getCurrentList());
         List<Workout> selected = getSelectedItems();
         List<Workout> remaining = new ArrayList<>();
-        for (Workout workout : workouts) {
+        for (Workout workout : current) {
             if (!isSelected(workout)) {
                 remaining.add(workout);
             }
         }
-        workouts.clear();
-        workouts.addAll(remaining);
-        workouts.addAll(selected);
-        notifyDataSetChanged();
+        List<Workout> merged = new ArrayList<>(remaining);
+        merged.addAll(selected);
+        submitList(merged);
+        markOrderChangedIfNeeded();
+        // Auto-scroll to bottom to focus the moved selected items
+        if (recyclerView != null && !selected.isEmpty()) {
+            recyclerView.smoothScrollToPosition(merged.size() - 1);
+        }
     }
 
     public List<Workout> getSelectedItems() {
         List<Workout> selected = new ArrayList<>();
-        for (Workout workout : workouts) {
+        for (Workout workout : getCurrentList()) {
             if (isSelected(workout)) {
                 selected.add(workout);
             }
         }
         return selected;
+    }
+
+    public List<Workout> getItems() {
+        return new ArrayList<>(getCurrentList());
+    }
+
+    public Workout getItemAt(int position) {
+        if (position < 0 || position >= getCurrentList().size()) {
+            return null;
+        }
+        return getItem(position);
     }
 
     public void clearSelection() {
@@ -232,6 +254,12 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
         return selectionModeActive;
     }
 
+    public boolean consumeOrderChangedInSelection() {
+        boolean changed = orderChangedInSelection;
+        orderChangedInSelection = false;
+        return changed;
+    }
+
     public WorkoutExerciseAdapter getExpandedExerciseAdapter() {
         return expandedExerciseAdapter;
     }
@@ -245,12 +273,14 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull WorkoutViewHolder holder, int position) {
-        Workout workout = workouts.get(position);
+        Workout workout = getItem(position);
+        if (workout == null) {
+            return;
+        }
         boolean isExpanded = isExpandedWorkout(workout);
         holder.bind(workout, expandedState, isExpanded, selectionModeActive);
         holder.applySelection(isSelected(workout));
         holder.applySelectionMode(selectionModeActive);
-
         holder.itemView.setOnClickListener(v -> {
             if (selectionModeActive) {
                 toggleSelection(workout);
@@ -294,11 +324,6 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
                 return false;
             });
         }
-    }
-
-    @Override
-    public int getItemCount() {
-        return workouts.size();
     }
 
     public void setExpandedState(Workout workoutRef, Workout workoutCopy,
@@ -387,7 +412,17 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
             if (workout.getDate() != null) {
                 workoutDate.setText(workout.getDate().toString());
             } else {
-                workoutDate.setText(R.string.workout_item_date_placeholder);
+                long updatedAt = workout.getUpdatedAt();
+                if (updatedAt > 0L) {
+                    LocalDate updatedDate = Instant.ofEpochMilli(updatedAt)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate();
+                    String templateLabel = itemView.getResources()
+                            .getString(R.string.workout_item_date_placeholder);
+                    workoutDate.setText(templateLabel + " • " + UPDATED_DATE_FORMATTER.format(updatedDate));
+                } else {
+                    workoutDate.setText(R.string.workout_item_date_placeholder);
+                }
             }
 
             int count = workout.getExercises() != null ? workout.getExercises().size() : 0;
@@ -481,10 +516,14 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
                 return;
             }
             MaterialCardView cardView = (MaterialCardView) itemView;
-            int strokeWidth = selected ? dpToPx(cardView, 2) : 0;
-            int strokeColor = ContextCompat.getColor(cardView.getContext(), R.color.example_1_selection_color);
+            int defaultStrokeWidth = dpToPx(cardView, 1);
+            int defaultStrokeColor = resolveThemeColor(cardView, attr.colorPrimary);
+            int strokeWidth = selected ? dpToPx(cardView, 2) : defaultStrokeWidth;
+            int strokeColor = selected
+                    ? ContextCompat.getColor(cardView.getContext(), R.color.example_1_selection_color)
+                    : defaultStrokeColor;
             cardView.setStrokeWidth(strokeWidth);
-            cardView.setStrokeColor(selected ? strokeColor : Color.TRANSPARENT);
+            cardView.setStrokeColor(strokeColor);
         }
 
         void applySelectionMode(boolean selectionMode) {
@@ -505,6 +544,18 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
                     dp,
                     view.getResources().getDisplayMetrics()));
         }
+
+        private int resolveThemeColor(View view, int attrResId) {
+            TypedValue typedValue = new TypedValue();
+            if (view.getContext().getTheme().resolveAttribute(attrResId, typedValue, true)) {
+                if (typedValue.resourceId != 0) {
+                    return ContextCompat.getColor(view.getContext(), typedValue.resourceId);
+                }
+                return typedValue.data;
+            }
+            return Color.TRANSPARENT;
+        }
+
     }
 
     private static boolean areSameWorkout(Workout oldItem, Workout newItem) {
@@ -541,6 +592,10 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
         List<Workout> copies = new ArrayList<>();
         for (Workout item : items) {
             if (item == null) {
+                continue;
+            }
+            if (item.getId() == null) {
+                copies.add(item);
                 continue;
             }
             Workout copy = new Workout(
@@ -599,6 +654,12 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
         }
     }
 
+    private void markOrderChangedIfNeeded() {
+        if (selectionModeActive) {
+            orderChangedInSelection = true;
+        }
+    }
+
     private void onStarClicked(WorkoutViewHolder holder, Workout workout) {
         workout.setStar(!workout.isStar());
         holder.applyStarState(workout);
@@ -610,6 +671,7 @@ public class WorkoutListAdapter extends RecyclerView.Adapter<WorkoutListAdapter.
             notifyItemChanged(adapterPosition);
         }
     }
+
 
     private static class ExpandedWorkoutState {
         private final Workout workoutRef;

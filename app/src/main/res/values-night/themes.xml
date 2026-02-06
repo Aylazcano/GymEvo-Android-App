@@ -1,16 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.GymEvo" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/black</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
+    <!-- Base application theme (dark mode). -->
+    <style name="Theme.GymEvo" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/gym_primary</item>
+        <item name="colorPrimaryVariant">@color/gym_primary_variant</item>
+        <item name="colorOnPrimary">@color/gym_on_primary</item>
+        <item name="colorSecondary">@color/gym_secondary</item>
+        <item name="colorSecondaryVariant">@color/gym_secondary_variant</item>
+        <item name="colorOnSecondary">@color/gym_on_secondary</item>
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
     </style>
 </resources>

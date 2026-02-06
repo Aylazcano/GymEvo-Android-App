@@ -1,6 +1,7 @@
 package com.example.gymevo.ui.common.adapter;
 
 import android.graphics.Color;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.R;
 import com.example.gymevo.model.ExerciseInWorkout;
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,6 +49,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
     private OnExerciseDeleteListener deleteListener;
     private ItemTouchHelper itemTouchHelper;
     private boolean selectionModeActive;
+    private RecyclerView recyclerView;
 
     public WorkoutExerciseAdapter(List<ExerciseInWorkout> exercises) {
         this(exercises, null);
@@ -167,6 +170,10 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         this.itemTouchHelper = helper;
     }
 
+    public void setRecyclerView(RecyclerView recyclerView) {
+        this.recyclerView = recyclerView;
+    }
+
     public boolean onItemMove(int fromPosition, int toPosition) {
         if (fromPosition < 0 || toPosition < 0
                 || fromPosition >= exercises.size() || toPosition >= exercises.size()) {
@@ -199,6 +206,10 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         if (orderChangedListener != null) {
             orderChangedListener.onOrderChanged(new ArrayList<>(exercises));
         }
+        // Auto-scroll to top to focus the moved selected items
+        if (recyclerView != null && !selected.isEmpty()) {
+            recyclerView.smoothScrollToPosition(0);
+        }
     }
 
     public void moveSelectedToBottom() {
@@ -218,6 +229,10 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         notifyDataSetChanged();
         if (orderChangedListener != null) {
             orderChangedListener.onOrderChanged(new ArrayList<>(exercises));
+        }
+        // Auto-scroll to bottom to focus the moved selected items
+        if (recyclerView != null && !selected.isEmpty()) {
+            recyclerView.smoothScrollToPosition(exercises.size() - 1);
         }
     }
 
@@ -271,9 +286,15 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
     }
 
     private void applySelection(WorkoutExerciseViewHolder holder, boolean selected) {
-        int color = ContextCompat.getColor(holder.itemView.getContext(), R.color.example_1_selection_color);
-        int background = selected ? ColorUtils.setAlphaComponent(color, 50) : Color.TRANSPARENT;
-        holder.itemView.setBackgroundColor(background);
+        if (!(holder.itemView instanceof MaterialCardView)) {
+            return;
+        }
+        MaterialCardView card = (MaterialCardView) holder.itemView;
+        int selectedColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.example_1_selection_color);
+        TypedValue typedValue = new TypedValue();
+        holder.itemView.getContext().getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true);
+        int defaultColor = typedValue.data;
+        card.setStrokeColor(selected ? selectedColor : defaultColor);
     }
 
     private void applySelectionMode(WorkoutExerciseViewHolder holder, boolean selectionMode) {
@@ -300,16 +321,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         if (id != null) {
             return "id:" + id;
         }
-        Long exerciseId = exercise.getExerciseId();
-        if (exerciseId != null) {
-            return "ex:" + exerciseId;
-        }
-        String name = exercise.getName() != null ? exercise.getName() : "";
-        String muscles = exercise.getTargetedMusclesLabel() != null ? exercise.getTargetedMusclesLabel() : "";
-        if (name.isEmpty() && muscles.isEmpty()) {
-            return "mem:" + System.identityHashCode(exercise);
-        }
-        return "name:" + name + "|" + muscles;
+        return "mem:" + System.identityHashCode(exercise);
     }
 
     private void reconcileSelection(List<ExerciseInWorkout> newItems) {
@@ -343,10 +355,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         if (oldId != null && newId != null) {
             return oldId.equals(newId);
         }
-        return Objects.equals(oldItem.getName(), newItem.getName())
-            && Objects.equals(oldItem.getTargetedMusclesLabel(), newItem.getTargetedMusclesLabel())
-            && Objects.equals(oldItem.getExerciseId(), newItem.getExerciseId())
-            && Objects.equals(oldItem.getWorkoutId(), newItem.getWorkoutId());
+        return oldItem == newItem;
     }
 
     private static boolean areExerciseContentsSame(ExerciseInWorkout oldItem, ExerciseInWorkout newItem) {
@@ -360,6 +369,12 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
             && Objects.equals(oldItem.getWeight(), newItem.getWeight())
             && Objects.equals(oldItem.getTime(), newItem.getTime())
             && Objects.equals(oldItem.getHeartRates(), newItem.getHeartRates())
+            && oldItem.isWeightInKg() == newItem.isWeightInKg()
+            && oldItem.isShowSeries() == newItem.isShowSeries()
+            && oldItem.isShowRepetitions() == newItem.isShowRepetitions()
+            && oldItem.isShowWeight() == newItem.isShowWeight()
+            && oldItem.isShowTime() == newItem.isShowTime()
+            && oldItem.isShowHeartRate() == newItem.isShowHeartRate()
             && Objects.equals(oldItem.getExerciseId(), newItem.getExerciseId())
             && Objects.equals(oldItem.getWorkoutId(), newItem.getWorkoutId());
     }

@@ -20,11 +20,14 @@ import java.io.InputStream;
 
 import com.example.gymevo.R;
 import com.example.gymevo.model.Exercise;
+import com.example.gymevo.model.ExerciseType;
 import com.example.gymevo.model.MuscleGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import android.provider.OpenableColumns;
 
 import java.util.ArrayList;
@@ -76,11 +79,18 @@ public final class ExerciseFormDialog {
 
         TextInputEditText nameInput = dialogView.findViewById(R.id.edit_exercise_name);
         AutoCompleteTextView musclesInput = dialogView.findViewById(R.id.edit_exercise_muscles);
+        AutoCompleteTextView typeInput = dialogView.findViewById(R.id.edit_exercise_type);
         TextInputEditText startImageInput = dialogView.findViewById(R.id.edit_exercise_start_image);
         TextInputEditText endImageInput = dialogView.findViewById(R.id.edit_exercise_end_image);
         TextInputLayout startImageLayout = dialogView.findViewById(R.id.layout_exercise_start_image);
         TextInputLayout endImageLayout = dialogView.findViewById(R.id.layout_exercise_end_image);
         SwitchMaterial starSwitch = dialogView.findViewById(R.id.switch_exercise_star);
+        ChipGroup metricsGroup = dialogView.findViewById(R.id.chip_group_metrics);
+        Chip chipSeries = dialogView.findViewById(R.id.chip_metric_series);
+        Chip chipReps = dialogView.findViewById(R.id.chip_metric_reps);
+        Chip chipWeight = dialogView.findViewById(R.id.chip_metric_weight);
+        Chip chipTime = dialogView.findViewById(R.id.chip_metric_time);
+        Chip chipHr = dialogView.findViewById(R.id.chip_metric_hr);
         ImageView startPreview = dialogView.findViewById(R.id.image_exercise_start_preview);
         ImageView endPreview = dialogView.findViewById(R.id.image_exercise_end_preview);
         android.widget.ImageButton removeStartButton = dialogView.findViewById(R.id.button_remove_start_image);
@@ -93,6 +103,8 @@ public final class ExerciseFormDialog {
         setTextIfNotNull(nameInput, target.getName());
         setupMuscleDropdown(context, musclesInput);
         setTextIfNotNull(musclesInput, target.getTargetedMusclesLabel());
+        setupTypeDropdown(context, typeInput);
+        setTextIfNotNull(typeInput, target.getTypeLabel());
         setTextIfNotNull(startImageInput, target.getImageA());
         setTextIfNotNull(endImageInput, target.getImageB());
         updatePreview(context, startPreview, startFilename, target.getImageA());
@@ -100,6 +112,8 @@ public final class ExerciseFormDialog {
         if (starSwitch != null) {
             starSwitch.setChecked(target.isStar());
         }
+        applyMetricChips(target, chipSeries, chipReps, chipWeight, chipTime, chipHr);
+        configureMetricSelection(context, metricsGroup, chipSeries, chipReps, chipWeight, chipTime, chipHr);
 
         boolean hasStartImage = !isNullOrEmpty(target.getImageA());
         setVisible(endImageLayout, false);
@@ -174,18 +188,22 @@ public final class ExerciseFormDialog {
             .setPositiveButton(R.string.action_save, (dialog, which) -> {
                     String name = readText(nameInput);
                     String muscles = readText(musclesInput);
+                    String typeLabel = readText(typeInput);
                     if (name.isEmpty()) {
                         name = buildDefaultName(context);
                     }
                     if (muscles.isEmpty()) {
                         muscles = DEFAULT_MUSCLES_LABEL;
                     }
+                    ExerciseType type = ExerciseType.fromLabel(typeLabel);
 
                     target.setName(name);
                     target.setTargetedMusclesLabel(muscles);
                     target.setImageA(readTextOrNull(startImageInput));
                     target.setImageB(readTextOrNull(endImageInput));
                     target.setStar(starSwitch != null && starSwitch.isChecked());
+                    target.setType(type != null ? type : ExerciseType.ANAEROBIC);
+                    applyMetricSelection(target, chipSeries, chipReps, chipWeight, chipTime, chipHr);
 
                     if (onSaved != null) {
                         onSaved.onSaved(target, isNew);
@@ -265,6 +283,27 @@ public final class ExerciseFormDialog {
         input.setOnClickListener(v -> input.showDropDown());
     }
 
+    private static void setupTypeDropdown(Context context, AutoCompleteTextView input) {
+        if (context == null || input == null) {
+            return;
+        }
+        List<String> labels = new ArrayList<>();
+        for (ExerciseType type : ExerciseType.values()) {
+            labels.add(type.getLabel());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                context,
+                android.R.layout.simple_dropdown_item_1line,
+                labels
+        );
+        input.setAdapter(adapter);
+        if (!labels.isEmpty()) {
+            input.setText(labels.get(0), false);
+        }
+        input.setKeyListener(null);
+        input.setOnClickListener(v -> input.showDropDown());
+    }
+
     private static void setVisible(View view, boolean visible) {
         if (view != null) {
             view.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -272,7 +311,79 @@ public final class ExerciseFormDialog {
     }
 
     private static Exercise createEmptyExercise() {
-        return new Exercise("", "", null, null, false);
+        Exercise exercise = new Exercise("", "", null, null, false);
+        exercise.setType(ExerciseType.ANAEROBIC);
+        exercise.applyDefaultMetricsForType(ExerciseType.ANAEROBIC);
+        return exercise;
+    }
+
+    private static void applyMetricChips(Exercise exercise,
+                                         Chip series,
+                                         Chip reps,
+                                         Chip weight,
+                                         Chip time,
+                                         Chip hr) {
+        if (exercise == null) {
+            return;
+        }
+        if (!exercise.hasAnyDisplayMetric()) {
+            exercise.applyDefaultMetricsForType(exercise.getType());
+        }
+        if (series != null) series.setChecked(exercise.isShowSeries());
+        if (reps != null) reps.setChecked(exercise.isShowRepetitions());
+        if (weight != null) weight.setChecked(exercise.isShowWeight());
+        if (time != null) time.setChecked(exercise.isShowTime());
+        if (hr != null) hr.setChecked(exercise.isShowHeartRate());
+    }
+
+    private static void applyMetricSelection(Exercise exercise,
+                                             Chip series,
+                                             Chip reps,
+                                             Chip weight,
+                                             Chip time,
+                                             Chip hr) {
+        if (exercise == null) {
+            return;
+        }
+        exercise.setShowSeries(series != null && series.isChecked());
+        exercise.setShowRepetitions(reps != null && reps.isChecked());
+        exercise.setShowWeight(weight != null && weight.isChecked());
+        exercise.setShowTime(time != null && time.isChecked());
+        exercise.setShowHeartRate(hr != null && hr.isChecked());
+    }
+
+    private static void configureMetricSelection(Context context,
+                                                 ChipGroup group,
+                                                 Chip series,
+                                                 Chip reps,
+                                                 Chip weight,
+                                                 Chip time,
+                                                 Chip hr) {
+        if (group == null) {
+            return;
+        }
+        View.OnClickListener limiter = v -> enforceMaxSelection(context, group, 3);
+        if (series != null) series.setOnClickListener(limiter);
+        if (reps != null) reps.setOnClickListener(limiter);
+        if (weight != null) weight.setOnClickListener(limiter);
+        if (time != null) time.setOnClickListener(limiter);
+        if (hr != null) hr.setOnClickListener(limiter);
+    }
+
+    private static void enforceMaxSelection(Context context, ChipGroup group, int max) {
+        if (group == null) {
+            return;
+        }
+        int count = group.getCheckedChipIds().size();
+        if (count <= max) {
+            return;
+        }
+        int lastId = group.getCheckedChipIds().get(count - 1);
+        Chip chip = group.findViewById(lastId);
+        if (chip != null) {
+            chip.setChecked(false);
+        }
+        Toast.makeText(context, context.getString(R.string.exercise_display_params), Toast.LENGTH_SHORT).show();
     }
 
     private static void updatePreview(Context context, ImageView preview, TextView filename, String uri) {

@@ -15,6 +15,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="?attr/colorSurface"
+            app:boxStrokeColor="?attr/colorPrimary"
             android:hint="@string/exercise_name">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -30,6 +32,8 @@
             android:layout_marginBottom="12dp"
             app:endIconMode="dropdown_menu"
             app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="?attr/colorSurface"
+            app:boxStrokeColor="?attr/colorPrimary"
             android:hint="@string/exercise_targeted_muscles">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -42,6 +46,78 @@
                 android:padding="16dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:endIconMode="dropdown_menu"
+                app:boxBackgroundMode="outline"
+                app:boxBackgroundColor="?attr/colorSurface"
+                app:boxStrokeColor="?attr/colorPrimary"
+                android:hint="@string/exercise_type_label">
+
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/edit_exercise_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:minHeight="56dp"
+                android:textSize="16sp"
+                android:padding="16dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/exercise_display_params"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_metrics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:singleSelection="false"
+            app:selectionRequired="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_metric_series"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_series" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_metric_reps"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_repetitions" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_metric_weight"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_weight_lbs" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_metric_time"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_time_sec" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_metric_hr"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_heart_rate_bpm" />
+        </com.google.android.material.chip.ChipGroup>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layout_exercise_start_image"
             android:layout_width="match_parent"
@@ -49,6 +125,8 @@
             android:layout_marginBottom="12dp"
             android:visibility="gone"
             app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="?attr/colorSurface"
+            app:boxStrokeColor="?attr/colorPrimary"
             android:hint="@string/exercise_start_image">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -65,6 +143,8 @@
             android:layout_marginBottom="12dp"
             android:visibility="gone"
             app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="?attr/colorSurface"
+            app:boxStrokeColor="?attr/colorPrimary"
             android:hint="@string/exercise_end_image">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -102,6 +182,7 @@
                         android:contentDescription="@string/exercise_start_image"
                         android:scaleType="centerCrop"
                         android:src="@android:drawable/ic_menu_camera"
+                        android:tint="?attr/colorOnSurface"
                         android:foreground="@null"
                         android:clickable="true"
                         android:focusable="true" />
@@ -114,7 +195,7 @@
                         android:background="@drawable/bg_close_circle"
                         android:contentDescription="@string/exercise_remove_image"
                         android:src="@android:drawable/ic_menu_close_clear_cancel"
-                        android:tint="@android:color/white"
+                        android:tint="?attr/colorOnSecondary"
                         android:padding="4dp"
                         android:visibility="gone" />
                 </FrameLayout>
@@ -126,6 +207,8 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    android:textColor="?attr/colorOnSurface"
+                    android:alpha="0.8"
                     android:text="" />
             </LinearLayout>
 
@@ -152,6 +235,7 @@
                         android:contentDescription="@string/exercise_end_image"
                         android:scaleType="centerCrop"
                         android:src="@android:drawable/ic_menu_camera"
+                        android:tint="?attr/colorOnSurface"
                         android:foreground="@null"
                         android:clickable="true"
                         android:focusable="true" />
@@ -164,7 +248,7 @@
                         android:background="@drawable/bg_close_circle"
                         android:contentDescription="@string/exercise_remove_image"
                         android:src="@android:drawable/ic_menu_close_clear_cancel"
-                        android:tint="@android:color/white"
+                        android:tint="?attr/colorOnSecondary"
                         android:padding="4dp"
                         android:visibility="gone" />
                 </FrameLayout>
@@ -177,6 +261,8 @@
                     android:maxLines="1"
                     android:textAlignment="viewEnd"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                    android:textColor="?attr/colorOnSurface"
+                    android:alpha="0.8"
                     android:text="" />
             </LinearLayout>
         </LinearLayout>

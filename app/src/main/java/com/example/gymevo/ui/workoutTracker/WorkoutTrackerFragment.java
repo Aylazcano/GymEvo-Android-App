@@ -5,20 +5,16 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.SavedStateHandle;
@@ -31,19 +27,24 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.gymevo.ui.common.calendar.CalendarAdapter;
 import com.example.gymevo.R;
-import com.example.gymevo.ui.common.adapter.WorkoutExerciseAdapter;
 import com.example.gymevo.databinding.FragmentWorkoutTrackerBinding;
 import com.example.gymevo.databinding.CalendarHeaderBinding;
 import com.example.gymevo.model.ExerciseInWorkout;
+import com.example.gymevo.model.ExerciseType;
 import com.example.gymevo.model.Workout;
 import com.example.gymevo.ui.common.ConfirmDeleteDialog;
 import com.example.gymevo.ui.common.ExerciseEditDialog;
 import com.example.gymevo.ui.common.DragDropItemTouchHelper;
+import com.example.gymevo.data.repository.UserPreferencesRepository;
+import com.example.gymevo.ui.common.adapter.WorkoutExerciseAdapter;
+import com.example.gymevo.ui.common.calendar.CalendarAdapter;
 import com.example.gymevo.ui.common.calendar.CalendarUtils;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
+import com.example.gymevo.ui.main.MainActivity;
+import com.google.android.material.snackbar.Snackbar;
+
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.OnItemListener {
+public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.OnItemListener, MainActivity.WorkoutTrackerMenuDelegate {
 
     public static final String ARG_SELECTED_DATE = "SELECTED_DATE";
     public static final String ARG_OPEN_ADD_EXERCISE = "OPEN_ADD_EXERCISE_TRACKER";
@@ -68,6 +69,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private List<ExerciseInWorkout> currentExercises = new ArrayList<>();
     private boolean isMonthView = true;
     private GestureDetector gestureDetector;
+    private GestureDetector workoutSwipeDetector;
     private CalendarHeaderBinding calendarHeaderBinding;
     private final List<Workout> availableWorkouts = new ArrayList<>();
     private final Set<LocalDate> workoutDatesWithExercises = new HashSet<>();
@@ -78,57 +80,13 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private int headerTouchSlop;
     private int headerStepPx;
     private boolean headerDragging;
-    private int workoutSwipeMinDistancePx;
-    private int workoutSwipeMaxOffPathPx;
     private float workoutSwipeStartX;
     private float workoutSwipeStartY;
-    private boolean workoutSwipeTracking;
-    private boolean workoutSwipeConsumed;
-    private ActionMode selectionActionMode;
+    private int workoutTouchSlop;
+    private boolean workoutSwipeInProgress;
     private androidx.activity.OnBackPressedCallback backPressedCallback;
-    private final ActionMode.Callback selectionCallback = new ActionMode.Callback() {
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            MenuInflater inflater = mode.getMenuInflater();
-            inflater.inflate(R.menu.menu_multi_select, menu);
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            int id = item.getItemId();
-            if (id == R.id.action_delete) {
-                onDeleteSelectedExercises();
-                return true;
-            } else if (id == R.id.action_move_up) {
-                onMoveSelectedExercisesTop();
-                return true;
-            } else if (id == R.id.action_move_down) {
-                onMoveSelectedExercisesBottom();
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            selectionActionMode = null;
-            if (workoutAdapter != null) {
-                workoutAdapter.clearSelection();
-            }
-        }
-    };
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
+    private UserPreferencesRepository userPreferencesRepository;
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -138,34 +96,48 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         displayDate = selectedDate;
 
         calendarHeaderBinding = CalendarHeaderBinding.bind(binding.getRoot().findViewById(R.id.calendarLayout));
+        userPreferencesRepository = UserPreferencesRepository.getInstance(requireContext());
 
         initializeViews(binding.getRoot());
         initializeViewModel();
         initializeWorkoutRecyclerView();
-        initializeGestureDetector();
         initializeHeaderSwipe();
-        setupCalendar();
         observeAddExerciseRequests();
         observeAvailableWorkouts();
-        updateSelectedDate(selectedDate, false);
+        loadCalendarPreferences(() -> {
+            initializeGestureDetector();
+            setupCalendar();
+            updateSelectedDate(selectedDate, false);
+        });
         setupBackNavigation();
-
         return binding.getRoot();
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_workout_tracker, menu);
-        super.onCreateOptionsMenu(menu, inflater);
+    public void onPause() {
+        super.onPause();
+        if (workoutAdapter != null && workoutAdapter.isSelectionModeActive()) {
+            workoutAdapter.clearSelection();
+            updateSelectionUi(0);
+        }
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_export_workout) {
-            showSaveWorkoutDialog();
-            return true;
+    public void onDestroyView() {
+        super.onDestroyView();
+        disposables.clear();
+        binding = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (isAdded()) {
+            requireActivity().invalidateOptionsMenu();
         }
-        return super.onOptionsItemSelected(item);
+        if (selectedDate != null) {
+            workoutTrackerViewModel.getExercisesForWorkoutOnDate(selectedDate);
+        }
     }
 
     private void setupBackNavigation() {
@@ -175,12 +147,17 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         backPressedCallback = new androidx.activity.OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (selectionActionMode != null) {
-                    selectionActionMode.finish();
+                if (workoutAdapter != null && workoutAdapter.isSelectionModeActive()) {
+                    workoutAdapter.clearSelection();
+                    updateSelectionUi(0);
                     return;
                 }
                 setEnabled(false);
-                requireActivity().onBackPressed();
+                try {
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                } finally {
+                    setEnabled(true);
+                }
             }
         };
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backPressedCallback);
@@ -205,8 +182,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         calendarRecyclerView.setItemAnimator(null);
         headerTouchSlop = ViewConfiguration.get(requireContext()).getScaledTouchSlop();
         headerStepPx = Math.round(HEADER_STEP_DP * getResources().getDisplayMetrics().density);
-        workoutSwipeMinDistancePx = dpToPx(96);
-        workoutSwipeMaxOffPathPx = dpToPx(48);
+        workoutTouchSlop = ViewConfiguration.get(requireContext()).getScaledTouchSlop();
     }
 
     private void initializeViewModel() {
@@ -236,7 +212,10 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
                 isMonthView,
                 calendarHeaderBinding.oneMonthText,
                 calendarHeaderBinding.oneYearText,
-                viewMode -> isMonthView = viewMode,
+                viewMode -> {
+                    isMonthView = viewMode;
+                    persistCalendarViewMode(viewMode);
+                },
                 workoutDatesWithExercises,
                 date -> displayDate = date,
                 () -> selectedDate,
@@ -271,6 +250,37 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         CalendarUtils.setCalendarView(context, calendarRecyclerView, displayDate, isMonthView,
             this, workoutDatesWithExercises, selectedDate);
         CalendarUtils.updateCalendarHeader(displayDate, calendarHeaderBinding.oneMonthText, calendarHeaderBinding.oneYearText);
+    }
+
+    private void loadCalendarPreferences(@NonNull Runnable onComplete) {
+        if (userPreferencesRepository == null) {
+            onComplete.run();
+            return;
+        }
+        disposables.add(userPreferencesRepository.getCalendarPreferences()
+                .subscribeOn(Schedulers.io())
+                .subscribe(preferences -> {
+                    isMonthView = preferences != null && preferences.isMonthView;
+                    if (!isAdded()) {
+                        return;
+                    }
+                    requireActivity().runOnUiThread(onComplete);
+                }, throwable -> {
+                    if (isAdded()) {
+                        requireActivity().runOnUiThread(onComplete);
+                    }
+                }));
+    }
+
+    private void persistCalendarViewMode(boolean isMonthView) {
+        if (userPreferencesRepository == null) {
+            return;
+        }
+        disposables.add(userPreferencesRepository.setCalendarViewMode(isMonthView)
+                .subscribeOn(Schedulers.io())
+                .subscribe(() -> {
+                }, throwable -> {
+                }));
     }
 
     private void initializeHeaderSwipe() {
@@ -347,6 +357,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         workoutAdapter = new WorkoutExerciseAdapter(new ArrayList<>(), this::showEditExerciseDialog);
         workoutRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         workoutRecyclerView.setAdapter(workoutAdapter);
+        workoutAdapter.setRecyclerView(workoutRecyclerView);
         workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         workoutAdapter.setSelectionListener(this::updateSelectionUi);
@@ -357,65 +368,45 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         helper.attachToRecyclerView(workoutRecyclerView);
         workoutAdapter.setItemTouchHelper(helper);
 
-        setupWorkoutSwipeNavigation();
-    }
+        workoutSwipeDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            private static final int SWIPE_THRESHOLD_PX = 80;
+            private static final int SWIPE_VELOCITY_PX = 200;
 
-    private void setupWorkoutSwipeNavigation() {
-        if (workoutRecyclerView == null) {
-            return;
-        }
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if (e1 == null || e2 == null) {
+                    return false;
+                }
+                float dx = e2.getX() - e1.getX();
+                float dy = e2.getY() - e1.getY();
+                if (Math.abs(dx) <= Math.abs(dy)) {
+                    return false;
+                }
+                if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(velocityX) < SWIPE_VELOCITY_PX) {
+                    return false;
+                }
+                int delta = dx < 0 ? 1 : -1;
+                changeSelectedDateByDays(delta);
+                return true;
+            }
+        });
+
         workoutRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                if (selectionActionMode != null
-                        || (workoutAdapter != null && workoutAdapter.isSelectionModeActive())) {
-                    workoutSwipeTracking = false;
-                    workoutSwipeConsumed = false;
-                    return false;
-                }
-                switch (e.getActionMasked()) {
-                    case MotionEvent.ACTION_DOWN:
-                        workoutSwipeStartX = e.getX();
-                        workoutSwipeStartY = e.getY();
-                        workoutSwipeTracking = true;
-                        workoutSwipeConsumed = false;
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if (workoutSwipeTracking && !workoutSwipeConsumed) {
-                            float dx = e.getX() - workoutSwipeStartX;
-                            float dy = e.getY() - workoutSwipeStartY;
-                            if (Math.abs(dx) > workoutSwipeMinDistancePx
-                                    && Math.abs(dy) < workoutSwipeMaxOffPathPx) {
-                                workoutSwipeConsumed = true;
-                                rv.getParent().requestDisallowInterceptTouchEvent(true);
-                                return true;
-                            }
-                        }
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        if (workoutSwipeTracking) {
-                            handleWorkoutSwipe(e.getX(), e.getY());
-                        }
-                        workoutSwipeTracking = false;
-                        workoutSwipeConsumed = false;
-                        break;
-                    default:
-                        break;
-                }
-                return workoutSwipeConsumed;
+                forwardWorkoutSwipeEvent(e);
+                return shouldInterceptWorkoutTouch(e);
             }
 
             @Override
             public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                if (!workoutSwipeTracking) {
-                    return;
-                }
-                if (e.getActionMasked() == MotionEvent.ACTION_UP) {
-                    handleWorkoutSwipe(e.getX(), e.getY());
-                    workoutSwipeTracking = false;
-                    workoutSwipeConsumed = false;
-                }
+                forwardWorkoutSwipeEvent(e);
+                resetWorkoutSwipeOnFinish(e);
             }
 
             @Override
@@ -425,17 +416,51 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         });
     }
 
-    private void handleWorkoutSwipe(float endX, float endY) {
-        float dx = endX - workoutSwipeStartX;
-        float dy = endY - workoutSwipeStartY;
-        if (Math.abs(dx) <= Math.abs(dy)) {
+    private void forwardWorkoutSwipeEvent(@NonNull MotionEvent event) {
+        if (workoutSwipeDetector != null) {
+            workoutSwipeDetector.onTouchEvent(event);
+        }
+    }
+
+    private boolean shouldInterceptWorkoutTouch(@NonNull MotionEvent event) {
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                workoutSwipeStartX = event.getX();
+                workoutSwipeStartY = event.getY();
+                workoutSwipeInProgress = false;
+                return false;
+            case MotionEvent.ACTION_MOVE:
+                if (!workoutSwipeInProgress && isHorizontalSwipe(event)) {
+                    workoutSwipeInProgress = true;
+                    return true;
+                }
+                return false;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                return workoutSwipeInProgress;
+            default:
+                return false;
+        }
+    }
+
+    private boolean isHorizontalSwipe(@NonNull MotionEvent event) {
+        float dx = event.getX() - workoutSwipeStartX;
+        float dy = event.getY() - workoutSwipeStartY;
+        return Math.abs(dx) > workoutTouchSlop && Math.abs(dx) > Math.abs(dy);
+    }
+
+    private void resetWorkoutSwipeOnFinish(@NonNull MotionEvent event) {
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            workoutSwipeInProgress = false;
+        }
+    }
+
+    private void changeSelectedDateByDays(int delta) {
+        if (selectedDate == null) {
             return;
         }
-        if (Math.abs(dx) < workoutSwipeMinDistancePx || Math.abs(dy) > workoutSwipeMaxOffPathPx) {
-            return;
-        }
-        LocalDate target = dx < 0 ? selectedDate.plusDays(1) : selectedDate.minusDays(1);
-        updateSelectedDate(target, false);
+        updateSelectedDate(selectedDate.plusDays(delta), false);
     }
 
     private void observeAddExerciseRequests() {
@@ -478,23 +503,14 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     }
 
     private void showCustomToast(String message) {
-        LayoutInflater inflater = getLayoutInflater();
-        View layout = inflater.inflate(
-                R.layout.custom_toast,
-            requireView().findViewById(R.id.custom_toast_container)
-        );
-
-        TextView text = layout.findViewById(R.id.text);
-        text.setText(message);
-
-        Toast toast = new Toast(getContext());
-        toast.setDuration(Toast.LENGTH_SHORT);
-        toast.setView(layout);
-        toast.show();
-    }
-
-    private int dpToPx(int dp) {
-        return Math.round(dp * getResources().getDisplayMetrics().density);
+        if (!isAdded()) {
+            return;
+        }
+        View root = getView();
+        if (root == null) {
+            return;
+        }
+        Snackbar.make(root, message, Snackbar.LENGTH_SHORT).show();
     }
 
     private void persistSelectedDate(@NonNull LocalDate date) {
@@ -602,6 +618,10 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
                 .show();
     }
 
+    private void showToast(String message) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
     private void showSaveWorkoutDialog() {
         if (!isAdded()) {
             return;
@@ -611,45 +631,26 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
             return;
         }
 
-        String defaultName = getString(
-                R.string.workout_export_default_name,
-                selectedDate != null ? selectedDate.toString() : ""
-        );
+        LocalDate baseDate = selectedDate != null ? selectedDate : LocalDate.now();
+        String defaultName = getString(R.string.workout_export_default_name, baseDate);
+        EditText input = new EditText(requireContext());
+        input.setText(defaultName);
+        input.setSelection(defaultName.length());
 
-        View dialogView = LayoutInflater.from(requireContext())
-                .inflate(R.layout.dialog_save_workout, null, false);
-        TextInputEditText nameInput = dialogView.findViewById(R.id.input_workout_export_name);
-        if (nameInput != null) {
-            nameInput.setText(defaultName);
-            if (nameInput.getText() != null) {
-                nameInput.setSelection(nameInput.getText().length());
-            }
-        }
-
-        new MaterialAlertDialogBuilder(requireContext())
+        new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.workout_export_title)
-                .setView(dialogView)
-                .setNegativeButton(R.string.action_cancel, null)
+                .setView(input)
                 .setPositiveButton(R.string.action_save, (dialog, which) -> {
-                    String name = nameInput != null && nameInput.getText() != null
-                            ? nameInput.getText().toString().trim()
-                            : "";
-                    if (name.isEmpty()) {
-                        name = defaultName;
-                    }
-                    boolean saved = workoutTrackerViewModel
-                            .exportWorkoutAsTemplate(name, new ArrayList<>(currentExercises));
+                    String name = input.getText() != null ? input.getText().toString() : "";
+                    boolean saved = workoutTrackerViewModel.exportWorkoutAsTemplate(name, currentExercises);
                     if (saved) {
                         showToast(getString(R.string.workout_export_success));
                     } else {
                         showToast(getString(R.string.workout_export_failed));
                     }
                 })
+                .setNegativeButton(R.string.action_cancel, null)
                 .show();
-    }
-
-    private void showToast(String message) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     private void updateExercisesList(List<ExerciseInWorkout> exercises) {
@@ -662,20 +663,18 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         if (!isAdded()) {
             return;
         }
-        if (selectedCount > 0) {
-            if (selectionActionMode == null) {
-                AppCompatActivity activity = (AppCompatActivity) requireActivity();
-                selectionActionMode = activity.startSupportActionMode(selectionCallback);
-            }
-            if (selectionActionMode != null) {
-                selectionActionMode.setTitle(getString(R.string.selection_count, selectedCount));
-            }
-        } else if (selectionActionMode != null) {
-            if (workoutAdapter != null && workoutAdapter.isSelectionModeActive()) {
-                selectionActionMode.setTitle(getString(R.string.selection_count, 0));
-            } else {
-                selectionActionMode.finish();
-            }
+        boolean selectionMode = workoutAdapter != null && workoutAdapter.isSelectionModeActive();
+        boolean show = selectedCount > 0 || selectionMode;
+        MainActivity activity = (MainActivity) requireActivity();
+        if (show) {
+            activity.showSelectionBar(
+                    selectedCount,
+                    v -> onMoveSelectedExercisesTop(),
+                    v -> onMoveSelectedExercisesBottom(),
+                    v -> onDeleteSelectedExercises()
+            );
+        } else {
+            activity.hideSelectionBar();
         }
     }
 
@@ -699,7 +698,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
                         workoutTrackerViewModel.replaceExercisesForDate(selectedDate, updated);
                         workoutAdapter.setExercises(updated);
                     }
-                    workoutAdapter.clearSelection();
                 }
         );
     }
@@ -713,7 +711,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         }
         workoutAdapter.moveSelectedToTop();
         persistExerciseOrder(workoutAdapter.getItems());
-        workoutAdapter.clearSelection();
     }
 
     private void onMoveSelectedExercisesBottom() {
@@ -725,7 +722,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         }
         workoutAdapter.moveSelectedToBottom();
         persistExerciseOrder(workoutAdapter.getItems());
-        workoutAdapter.clearSelection();
     }
 
     private void onDeleteSingleExercise(ExerciseInWorkout exercise) {
@@ -769,7 +765,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     }
 
     private ExerciseInWorkout createNewExercise() {
-        return new ExerciseInWorkout(
+        ExerciseInWorkout exercise = new ExerciseInWorkout(
             null,
             "",
             "",
@@ -783,6 +779,10 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
             null,
             null
         );
+        exercise.setType(ExerciseType.ANAEROBIC);
+        exercise.applyDefaultMetricsForType(ExerciseType.ANAEROBIC);
+        exercise.setWeightInKg(false);
+        return exercise;
     }
 
     private int findExerciseIndexFromEnd(List<ExerciseInWorkout> exercises, ExerciseInWorkout target) {
@@ -790,7 +790,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
             return -1;
         }
         Long targetId = target.getId();
-        Long targetExerciseId = target.getExerciseId();
         for (int i = exercises.size() - 1; i >= 0; i--) {
             ExerciseInWorkout item = exercises.get(i);
             if (item == target) {
@@ -802,11 +801,17 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
             if (targetId != null && targetId.equals(item.getId())) {
                 return i;
             }
-            if (targetId == null && targetExerciseId != null
-                    && targetExerciseId.equals(item.getExerciseId())) {
-                return i;
-            }
         }
         return -1;
+    }
+
+    @Override
+    public void onSaveWorkoutRequested() {
+        showSaveWorkoutDialog();
+    }
+
+    @Override
+    public boolean isSaveWorkoutVisible() {
+        return true;
     }
 }

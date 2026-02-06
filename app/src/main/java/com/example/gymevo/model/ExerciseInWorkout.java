@@ -26,6 +26,8 @@ public class ExerciseInWorkout extends Exercise {
     private Integer weight;
     private Integer time;
     private Integer heartRates;
+    private boolean weightInKg;
+    private int orderIndex;
 
     @ColumnInfo(index = true)
     private Long exerciseId;
@@ -49,6 +51,8 @@ public class ExerciseInWorkout extends Exercise {
         this.heartRates = heartRates;
         this.exerciseId = exerciseId;
         this.workoutId = workoutId;
+        this.weightInKg = false;
+        this.orderIndex = 0;
     }
 
 
@@ -89,6 +93,14 @@ public class ExerciseInWorkout extends Exercise {
         this.weight = weight;
     }
 
+    public boolean isWeightInKg() {
+        return weightInKg;
+    }
+
+    public void setWeightInKg(boolean weightInKg) {
+        this.weightInKg = weightInKg;
+    }
+
     public Integer getTime() {
         return time;
     }
@@ -122,6 +134,14 @@ public class ExerciseInWorkout extends Exercise {
 
     public void setWorkoutId(Long workoutId) {
         this.workoutId = workoutId;
+    }
+
+    public int getOrderIndex() {
+        return orderIndex;
+    }
+
+    public void setOrderIndex(int orderIndex) {
+        this.orderIndex = Math.max(0, orderIndex);
     }
 
     private void validatePositive(Integer value, String label) {

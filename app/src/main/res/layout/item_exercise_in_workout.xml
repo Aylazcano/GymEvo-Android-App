@@ -1,17 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/WorkoutRecyclerView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="5dp">
+    android:layout_marginVertical="2dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp"
+    app:cardUseCompatPadding="false"
+    app:strokeWidth="1dp"
+    app:strokeColor="?attr/colorPrimary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="72dp"
         android:padding="2dp"
-        android:background="@color/black"
+        android:background="?attr/colorSurface"
         android:orientation="horizontal">
 
         <ImageView
@@ -23,7 +35,8 @@
             android:src="@drawable/ic_drag_handle_24"
             android:scaleType="center"
             android:padding="8dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:tint="?attr/colorOnSurface" />
 
         <ImageView
             android:id="@+id/ExerciseIV"
@@ -31,7 +44,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:padding="1dp"
-            android:background="@color/black"
+            android:background="?attr/colorSurface"
             android:contentDescription="@string/exercise_label"
             android:scaleType="centerCrop"
             tools:srcCompat="@tools:sample/avatars" />
@@ -47,40 +60,44 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="#F4CAC7"
+                android:background="?attr/colorPrimary"
                 android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/ExerciseNameTV"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="2"
+                    android:layout_weight="4"
                     android:paddingStart="4dp"
                     android:autoSizeTextType="uniform"
                     android:lines="1"
+                    android:textColor="?attr/colorOnPrimary"
                     android:text="Bench Press" />
 
                 <TextView
                     android:id="@+id/TargetedMusclesTV"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="3"
+                    android:layout_weight="2"
                     android:gravity="center"
                     android:padding="1dp"
                     android:autoSizeTextType="uniform"
                     android:lines="1"
+                    android:textColor="?attr/colorOnPrimary"
                     android:text="(Pectorales>Tricets>Hombros)" />
 
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/layout_metrics_row"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="2"
-                android:background="#BDF0F6"
+                android:background="?attr/colorSecondary"
                 android:orientation="horizontal">
 
                 <LinearLayout
+                    android:id="@+id/layout_metric_series"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -93,8 +110,9 @@
                         android:layout_weight="4"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="16dp"
+                        android:autoSizeTextType="uniform"
                         android:text="Series"
+                        android:textColor="?attr/colorOnSecondary"
                         android:padding="1dp" />
 
                     <TextView
@@ -104,13 +122,15 @@
                         android:layout_weight="5"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="20dp"
+                        android:autoSizeTextType="uniform"
                         android:text="3"
-                        android:padding="2dp" />
+                        android:textColor="?attr/colorOnSecondary"
+                        android:padding="1dp" />
 
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/layout_metric_reps"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -123,8 +143,9 @@
                         android:layout_weight="4"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="16dp"
-                        android:text="Repetitions"
+                        android:autoSizeTextType="uniform"
+                        android:text="Reps"
+                        android:textColor="?attr/colorOnSecondary"
                         android:padding="1dp" />
 
                     <TextView
@@ -134,14 +155,16 @@
                         android:layout_weight="5"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="20dp"
+                        android:autoSizeTextType="uniform"
                         android:text="10"
+                        android:textColor="?attr/colorOnSecondary"
                         android:padding="1dp" />
 
                 </LinearLayout>
 
 
                 <LinearLayout
+                    android:id="@+id/layout_metric_weight"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -154,8 +177,9 @@
                         android:layout_weight="4"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="16dp"
-                        android:text="Weight (lbs)"
+                        android:autoSizeTextType="uniform"
+                        android:text="@string/exercise_weight_lbs"
+                        android:textColor="?attr/colorOnSecondary"
                         android:padding="1dp" />
 
                     <TextView
@@ -165,8 +189,75 @@
                         android:layout_weight="5"
                         android:textAlignment="center"
                         android:gravity="center"
-                        android:textSize="20dp"
+                        android:autoSizeTextType="uniform"
                         android:text="45"
+                        android:textColor="?attr/colorOnSecondary"
+                        android:padding="1dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_metric_time"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/TimeTV"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="4"
+                        android:textAlignment="center"
+                        android:gravity="center"
+                        android:autoSizeTextType="uniform"
+                        android:text="@string/exercise_time_sec"
+                        android:textColor="?attr/colorOnSecondary"
+                        android:padding="1dp" />
+
+                    <TextView
+                        android:id="@+id/TimeQtyTV"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="5"
+                        android:textAlignment="center"
+                        android:gravity="center"
+                        android:autoSizeTextType="uniform"
+                        android:text="00:45"
+                        android:textColor="?attr/colorOnSecondary"
+                        android:padding="1dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_metric_hr"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/HeartRateTV"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="4"
+                        android:textAlignment="center"
+                        android:gravity="center"
+                        android:autoSizeTextType="uniform"
+                        android:text="@string/exercise_heart_rate_bpm"
+                        android:textColor="?attr/colorOnSecondary"
+                        android:padding="1dp" />
+
+                    <TextView
+                        android:id="@+id/HeartRateQtyTV"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="5"
+                        android:textAlignment="center"
+                        android:gravity="center"
+                        android:autoSizeTextType="uniform"
+                        android:text="120"
+                        android:textColor="?attr/colorOnSecondary"
                         android:padding="1dp" />
 
                 </LinearLayout>
@@ -184,8 +275,11 @@
             android:scaleType="center"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:tint="?attr/colorOnSurface" />
 
     </LinearLayout>
 
-</LinearLayout>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -25,6 +25,9 @@ public interface WorkoutDao {
     @Delete
     void deleteWorkout(Workout workout);
 
+    @Query("UPDATE workout SET isStar = :isStar WHERE id = :id")
+    void updateStar(Long id, boolean isStar);
+
     @Query("SELECT COUNT(*) FROM workout WHERE type = :type")
     int countByType(Workout.WorkoutType type);
 
@@ -35,6 +38,9 @@ public interface WorkoutDao {
     @Transaction
     @Query("SELECT * FROM workout WHERE type = :type AND date = :date LIMIT 1")
     WorkoutWithExercises getWorkoutWithExercisesByTypeAndDateNow(Workout.WorkoutType type, LocalDate date);
+
+    @Query("SELECT * FROM workout WHERE type = :type AND createdAt = :createdAt LIMIT 1")
+    Workout getWorkoutByTypeAndCreatedAtNow(Workout.WorkoutType type, long createdAt);
 
     @Query("SELECT DISTINCT workout.date FROM workout INNER JOIN exercise_in_workout ON workout.id = exercise_in_workout.workoutId WHERE workout.type = :type")
     List<LocalDate> getWorkoutDatesWithExercisesByTypeNow(Workout.WorkoutType type);

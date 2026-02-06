@@ -9,6 +9,7 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.gymevo.data.repository.WorkoutRepository;
+import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.Workout;
 import com.example.gymevo.model.Workout.WorkoutType;
 import com.example.gymevo.model.WorkoutWithExercises;
@@ -30,6 +31,18 @@ public class WorkoutListViewModel extends AndroidViewModel {
 
     public LiveData<List<Workout>> getWorkoutsLiveData() {
         return workoutsLiveData;
+    }
+
+    public Workout createNewTemplateWorkout() {
+        Workout workout = new Workout();
+        applyTemplateDefaults(workout);
+        workout.setDate(null);
+        long now = System.currentTimeMillis();
+        workout.setCreatedAt(now);
+        workout.setUpdatedAt(now);
+        workoutRepository.saveTemplate(workout);
+        currentWorkoutLiveData.postValue(workout);
+        return workout;
     }
 
     public void setCurrentWorkoutWithExercises(Workout workout) {
@@ -62,8 +75,7 @@ public class WorkoutListViewModel extends AndroidViewModel {
 
     public void toggleWorkoutStar(Workout workout) {
         if (workout == null) return;
-        applyTemplateDefaults(workout);
-        workoutRepository.saveTemplate(workout);
+        workoutRepository.updateWorkoutStar(workout);
     }
 
     private List<Workout> mapToWorkouts(List<WorkoutWithExercises> items) {
@@ -76,7 +88,7 @@ public class WorkoutListViewModel extends AndroidViewModel {
                 continue;
             }
             Workout workout = item.workout;
-            workout.setExercises(item.exercises != null ? item.exercises : new ArrayList<>());
+            workout.setExercises(sortExercises(item.exercises != null ? item.exercises : new ArrayList<>()));
             workouts.add(workout);
         }
         if (!workouts.isEmpty()) {
@@ -85,6 +97,17 @@ public class WorkoutListViewModel extends AndroidViewModel {
             currentWorkoutLiveData.setValue(new Workout());
         }
         return workouts;
+    }
+
+    private List<ExerciseInWorkout> sortExercises(List<ExerciseInWorkout> exercises) {
+        if (exercises == null || exercises.isEmpty()) {
+            return exercises != null ? exercises : new ArrayList<>();
+        }
+        List<ExerciseInWorkout> sorted = new ArrayList<>(exercises);
+        sorted.sort((a, b) -> Integer.compare(
+                a != null ? a.getOrderIndex() : 0,
+                b != null ? b.getOrderIndex() : 0));
+        return sorted;
     }
 
     private Workout ensureCurrentWorkout() {
@@ -102,4 +125,5 @@ public class WorkoutListViewModel extends AndroidViewModel {
         }
         workout.setType(WorkoutType.TEMPLATE);
     }
+
 }

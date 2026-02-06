@@ -4,6 +4,7 @@ import android.app.Application;
 
 import androidx.lifecycle.LiveData;
 
+import com.example.gymevo.R;
 import com.example.gymevo.data.local.AppDatabase;
 import com.example.gymevo.data.local.ExerciseInWorkoutDao;
 import com.example.gymevo.data.local.WorkoutDao;
@@ -28,8 +29,10 @@ public class WorkoutRepository {
     private final WorkoutDao workoutDao;
     private final ExerciseInWorkoutDao exerciseInWorkoutDao;
     private final LiveData<List<WorkoutWithExercises>> templatesLiveData;
+    private final Application application;
 
     public WorkoutRepository(Application application) {
+        this.application = application;
         AppDatabase db = AppDatabase.getDatabase(application);
         workoutDao = db.workoutDao();
         exerciseInWorkoutDao = db.exerciseInWorkoutDao();
@@ -88,6 +91,13 @@ public class WorkoutRepository {
         deleteWorkoutInternal(workout);
     }
 
+    public void updateWorkoutStar(Workout workout) {
+        if (workout == null || workout.getId() == null) {
+            return;
+        }
+        runOnDbThread(() -> workoutDao.updateStar(workout.getId(), workout.isStar()));
+    }
+
     private void saveWorkoutInternal(Workout workout, Workout.WorkoutType type) {
         saveWorkoutInternal(workout, type, null);
     }
@@ -104,20 +114,32 @@ public class WorkoutRepository {
                 if (workout.getCreatedAt() <= 0L) {
                     workout.setCreatedAt(now);
                 }
-                workout.setUpdatedAt(now);
-                workoutId = workoutDao.insertWorkout(workout);
-                workout.setId(workoutId);
+                Workout existing = workoutDao.getWorkoutByTypeAndCreatedAtNow(type, workout.getCreatedAt());
+                if (existing != null && existing.getId() != null) {
+                    workoutId = existing.getId();
+                    workout.setId(workoutId);
+                    workout.setUpdatedAt(now);
+                    workoutDao.updateWorkout(workout);
+                } else {
+                    workout.setUpdatedAt(now);
+                    workoutId = workoutDao.insertWorkout(workout);
+                    workout.setId(workoutId);
+                }
             } else {
                 workout.setUpdatedAt(now);
                 workoutDao.updateWorkout(workout);
             }
 
+            applyDefaultNameIfMissing(workout, workoutId, now, type);
+
             exerciseInWorkoutDao.deleteByWorkoutId(workoutId);
             List<ExerciseInWorkout> exercises = safeExercises(workout.getExercises());
             if (!exercises.isEmpty()) {
+                applyExerciseOrder(exercises);
                 for (ExerciseInWorkout exercise : exercises) {
                     if (exercise != null) {
                         exercise.setWorkoutId(workoutId);
+                        exercise.setId(null); // Clear ID so it gets auto-generated on insert
                     }
                 }
                 exerciseInWorkoutDao.insertAll(exercises);
@@ -166,6 +188,7 @@ public class WorkoutRepository {
                         inserts.add(exercise);
                     }
                     if (!inserts.isEmpty()) {
+                        applyExerciseOrder(inserts);
                         exerciseInWorkoutDao.insertAll(inserts);
                     }
                 }
@@ -178,8 +201,31 @@ public class WorkoutRepository {
             return null;
         }
         Workout workout = data.workout;
-        workout.setExercises(safeExercises(data.exercises));
+        workout.setExercises(sortExercises(safeExercises(data.exercises)));
         return workout;
+    }
+
+    private void applyExerciseOrder(List<ExerciseInWorkout> exercises) {
+        if (exercises == null) {
+            return;
+        }
+        for (int i = 0; i < exercises.size(); i++) {
+            ExerciseInWorkout exercise = exercises.get(i);
+            if (exercise != null) {
+                exercise.setOrderIndex(i);
+            }
+        }
+    }
+
+    private List<ExerciseInWorkout> sortExercises(List<ExerciseInWorkout> exercises) {
+        if (exercises == null || exercises.isEmpty()) {
+            return exercises != null ? exercises : new ArrayList<>();
+        }
+        List<ExerciseInWorkout> sorted = new ArrayList<>(exercises);
+        sorted.sort((a, b) -> Integer.compare(
+                a != null ? a.getOrderIndex() : 0,
+                b != null ? b.getOrderIndex() : 0));
+        return sorted;
     }
 
     private void runOnDbThread(Runnable action) {
@@ -190,6 +236,21 @@ public class WorkoutRepository {
         if (workout != null) {
             workout.setType(type);
         }
+    }
+
+    private void applyDefaultNameIfMissing(Workout workout, Long workoutId, long now,
+                                           Workout.WorkoutType type) {
+        if (workout == null || workoutId == null || type != Workout.WorkoutType.TEMPLATE) {
+            return;
+        }
+        String name = workout.getName() != null ? workout.getName().trim() : "";
+        if (!name.isEmpty()) {
+            return;
+        }
+        String defaultName = application.getString(R.string.workout_default_name, workoutId);
+        workout.setName(defaultName);
+        workout.setUpdatedAt(now);
+        workoutDao.updateWorkout(workout);
     }
 
     private List<ExerciseInWorkout> safeExercises(List<ExerciseInWorkout> exercises) {

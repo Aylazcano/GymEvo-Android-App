@@ -48,6 +48,6 @@ public class ExerciseListViewModel extends AndroidViewModel {
         if (exercise == null) {
             return;
         }
-        repository.updateExercise(exercise);
+        repository.updateExerciseStar(exercise);
     }
 }

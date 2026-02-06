@@ -12,13 +12,14 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="6dp"
         android:text="0"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        android:textColor="?attr/colorPrimary" />
 
     <View
         android:id="@+id/weekly_bar_fill"
         android:layout_width="20dp"
         android:layout_height="12dp"
-        android:background="?attr/colorPrimary" />
+        android:background="?attr/colorSecondary" />
 
     <TextView
         android:id="@+id/weekly_bar_label"
@@ -26,5 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:text="Jan 1"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        android:textColor="?attr/colorOnSurface"
+        android:alpha="0.8" />
 </LinearLayout>

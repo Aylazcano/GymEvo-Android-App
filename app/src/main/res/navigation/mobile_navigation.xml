@@ -29,4 +29,10 @@
         android:label="@string/menu_workouts_list"
         tools:layout="@layout/fragment_workouts_list" />
 
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="com.example.gymevo.ui.settings.SettingsFragment"
+        android:label="@string/menu_settings"
+        tools:layout="@layout/fragment_settings" />
+
 </navigation>

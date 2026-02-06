@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -16,7 +18,7 @@
         android:textAllCaps="true"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="?android:attr/textColorSecondary"
+        android:textColor="?attr/colorPrimary"
         android:layout_marginBottom="8dp" />
 
     <ImageView
@@ -29,155 +31,231 @@
         android:scaleType="centerCrop"
         android:src="@drawable/ic_menu_gallery" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <ImageView
+            android:id="@+id/image_filter_all"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/ic_filter_all"
+            android:contentDescription="@string/filter_all"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="8dp" />
+
+        <ImageView
+            android:id="@+id/image_filter_anaerobic"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/ic_filter_anaerobic"
+            android:contentDescription="@string/exercise_type_anaerobic"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="8dp" />
+
+        <ImageView
+            android:id="@+id/image_filter_aerobic"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/ic_filter_aerobic"
+            android:contentDescription="@string/exercise_type_aerobic"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="8dp" />
+
+        <ImageView
+            android:id="@+id/image_sort"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            android:contentDescription="@string/sort_title"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp" />
+
+        <ImageView
+            android:id="@+id/image_star_priority"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@android:drawable/btn_star_big_off"
+            android:contentDescription="@string/star_priority_label"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp" />
+    </LinearLayout>
+
     <NumberPicker
         android:id="@+id/numberPickerExercise"
         android:layout_width="match_parent"
         android:layout_height="100dp"
+        android:layout_marginBottom="8dp"
         android:scaleX="1.0"
         android:scaleY="0.9"
-        android:descendantFocusability="blocksDescendants" />
+        android:descendantFocusability="afterDescendants" />
 
-    <!-- Metric Row 1: Series, Reps, Weight -->
+    <!-- Metrics Row (up to 3 visible) -->
     <LinearLayout
+        android:id="@+id/layout_metrics_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:layout_marginTop="4dp">
 
-        <!-- Headers Row 1 -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/layout_metric_series"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <com.google.android.material.textview.MaterialTextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/exercise_series"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
+
+            <NumberPicker
+                android:id="@+id/numberPickerSeries"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:scaleX="0.9"
+                android:scaleY="0.9" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_metric_reps"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <com.google.android.material.textview.MaterialTextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/exercise_repetitions"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
+
+            <NumberPicker
+                android:id="@+id/numberPickerRepetitions"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:scaleX="0.9"
+                android:scaleY="0.9" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_metric_weight"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <com.google.android.material.textview.MaterialTextView
-                android:layout_width="0dp"
+                android:id="@+id/text_weight_label"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/exercise_weight_lbs"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Pickers Row 1 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <NumberPicker
-                android:id="@+id/numberPickerSeries"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:layout_weight="1"
-                android:scaleX="0.9"
-                android:scaleY="0.9"
-                android:descendantFocusability="blocksDescendants" />
-
-            <NumberPicker
-                android:id="@+id/numberPickerRepetitions"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:layout_weight="1"
-                android:scaleX="0.9"
-                android:scaleY="0.9"
-                android:descendantFocusability="blocksDescendants" />
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
 
             <NumberPicker
                 android:id="@+id/numberPickerWeight"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="100dp"
-                android:layout_weight="1"
                 android:scaleX="0.9"
-                android:scaleY="0.9"
-                android:descendantFocusability="blocksDescendants" />
+                android:scaleY="0.9" />
         </LinearLayout>
-    </LinearLayout>
 
-    <!-- Metric Row 2: Time, Heart Rate -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="0dp">
-
-        <!-- Headers Row 2 -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/layout_metric_time"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <com.google.android.material.textview.MaterialTextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/exercise_time_sec"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <NumberPicker
+                    android:id="@+id/numberPickerTimeMin"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:scaleX="0.9"
+                    android:scaleY="0.9" />
+
+                <NumberPicker
+                    android:id="@+id/numberPickerTimeSec"
+                    android:layout_width="0dp"
+                    android:layout_height="100dp"
+                    android:layout_weight="1"
+                    android:scaleX="0.9"
+                    android:scaleY="0.9" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_metric_hr"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <com.google.android.material.textview.MaterialTextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/exercise_heart_rate_bpm"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Pickers Row 2 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <NumberPicker
-                android:id="@+id/numberPickerTime"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:layout_weight="1"
-                android:scaleX="0.9"
-                android:scaleY="0.9"
-                android:descendantFocusability="blocksDescendants" />
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
 
             <NumberPicker
                 android:id="@+id/numberPickerHeartRate"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="100dp"
-                android:layout_weight="1"
                 android:scaleX="0.9"
-                android:scaleY="0.9"
-                android:descendantFocusability="blocksDescendants" />
+                android:scaleY="0.9" />
         </LinearLayout>
     </LinearLayout>
 

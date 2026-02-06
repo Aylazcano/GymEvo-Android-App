@@ -16,7 +16,8 @@
         app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
-        app:strokeColor="@android:color/darker_gray">
+        app:strokeColor="?attr/colorPrimary"
+        app:cardBackgroundColor="?attr/colorSurface">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -30,7 +31,8 @@
                 android:layout_height="20dp"
                 android:layout_marginEnd="8dp"
                 android:contentDescription="@string/search_hint"
-                android:src="@android:drawable/ic_menu_search" />
+                android:src="@android:drawable/ic_menu_search"
+                android:tint="?attr/colorOnSurface" />
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/input_search"
@@ -41,6 +43,7 @@
                 android:hint="@string/search_hint"
                 android:imeOptions="actionSearch"
                 android:inputType="text"
+                android:textColor="?attr/colorOnSurface"
                 android:textColorHint="?attr/colorOnSurface" />
 
             <ImageButton
@@ -50,7 +53,8 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/action_cancel"
                 android:padding="8dp"
-                android:src="@android:drawable/ic_menu_close_clear_cancel" />
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:tint="?attr/colorOnSurface" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -62,7 +66,8 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/filter_title"
         android:padding="8dp"
-        app:srcCompat="@android:drawable/ic_menu_manage" />
+        app:srcCompat="@android:drawable/ic_menu_manage"
+        app:tint="?attr/colorOnSurface" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/button_sort"
@@ -72,7 +77,8 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/sort_title"
         android:padding="8dp"
-        app:srcCompat="@android:drawable/ic_menu_sort_by_size" />
+        app:srcCompat="@android:drawable/ic_menu_sort_by_size"
+        app:tint="?attr/colorOnSurface" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/button_star"
@@ -82,5 +88,6 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/star_priority_label"
         android:padding="8dp"
-        app:srcCompat="@android:drawable/btn_star_big_off" />
+        app:srcCompat="@android:drawable/btn_star_big_off"
+        app:tint="?attr/colorOnSurface" />
 </LinearLayout>
