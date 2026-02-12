@@ -18,7 +18,7 @@ public interface ExerciseInWorkoutDao {
     @Query("DELETE FROM exercise_in_workout WHERE workoutId = :workoutId")
     void deleteByWorkoutId(Long workoutId);
 
-    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate WHERE exerciseId = :exerciseId")
+    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate, showDistance = :showDistance, showCalories= :showCalories WHERE exerciseId = :exerciseId")
     void updateExerciseDetailsByExerciseId(Long exerciseId,
                                            String name,
                                            MuscleGroup targetedMuscles,
@@ -29,9 +29,11 @@ public interface ExerciseInWorkoutDao {
                                            boolean showRepetitions,
                                            boolean showWeight,
                                            boolean showTime,
-                                           boolean showHeartRate);
+                                           boolean showHeartRate,
+                                           boolean showDistance,
+                                           boolean showCalories);
 
-    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate WHERE exerciseId IS NULL AND name = :oldName AND targetedMuscles IS :oldTargetedMuscles")
+    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate, showDistance = :showDistance, showCalories= :showCalories  WHERE exerciseId IS NULL AND name = :oldName AND targetedMuscles IS :oldTargetedMuscles")
     void updateExerciseDetailsByLegacyKey(String oldName,
                                           MuscleGroup oldTargetedMuscles,
                                           String name,
@@ -43,5 +45,7 @@ public interface ExerciseInWorkoutDao {
                                           boolean showRepetitions,
                                           boolean showWeight,
                                           boolean showTime,
-                                          boolean showHeartRate);
+                                          boolean showHeartRate,
+                                          boolean showDistance,
+                                          boolean showCalories);
 }

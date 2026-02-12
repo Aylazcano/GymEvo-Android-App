@@ -1197,6 +1197,8 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
             exercise.getWeight(),
             exercise.getTime(),
             exercise.getHeartRates(),
+            exercise.getDistance(),
+            exercise.getCalories(),
             exercise.getExerciseId(),
             exercise.getWorkoutId()
         );
@@ -1224,6 +1226,8 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
             null,
             null,
             null,
+            null,
+            null,
             null
         );
         exercise.setType(ExerciseType.ANAEROBIC);
@@ -1244,6 +1248,8 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
                     0,
                     0,
                     0,
+                    null,
+                    null,
                     null,
                     null
         );

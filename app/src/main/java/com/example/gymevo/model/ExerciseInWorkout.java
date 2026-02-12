@@ -26,6 +26,8 @@ public class ExerciseInWorkout extends Exercise {
     private Integer weight;
     private Integer time;
     private Integer heartRates;
+    private Integer distance;
+    private Integer calories;
     private boolean weightInKg;
     private int orderIndex;
 
@@ -41,7 +43,7 @@ public class ExerciseInWorkout extends Exercise {
 
     public ExerciseInWorkout(Long id, String name, String targetedMuscles, String imageA, String imageB,
                              Integer series, Integer repetitions, Integer weight, Integer time, Integer heartRates,
-                             Long exerciseId, Long workoutId) {
+                             Integer distance, Integer calories, Long exerciseId, Long workoutId) {
         super(name, targetedMuscles, imageA, imageB, false);
         this.id = id;
         this.series = series;
@@ -49,6 +51,8 @@ public class ExerciseInWorkout extends Exercise {
         this.weight = weight;
         this.time = time;
         this.heartRates = heartRates;
+        this.distance = distance;
+        this.calories = calories;
         this.exerciseId = exerciseId;
         this.workoutId = workoutId;
         this.weightInKg = false;
@@ -118,6 +122,28 @@ public class ExerciseInWorkout extends Exercise {
 
     public void setHeartRates(Integer heartRates) {
         this.heartRates = heartRates;
+    }
+
+    public Integer getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Integer distance) {
+        if (distance != null && distance < 0) {
+            throw new IllegalArgumentException("Distance cannot be negative.");
+        }
+        this.distance = distance;
+    }
+
+    public Integer getCalories() {
+        return calories;
+    }
+
+    public void setCalories(Integer calories) {
+        if (calories != null && calories < 0) {
+            throw new IllegalArgumentException("Calories cannot be negative.");
+        }
+        this.calories = calories;
     }
 
     public Long getExerciseId() {

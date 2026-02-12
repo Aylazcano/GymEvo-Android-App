@@ -275,6 +275,8 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
                 source.getWeight(),
                 source.getTime(),
                 source.getHeartRates(),
+                source.getDistance(),
+                source.getCalories(),
                 source.getExerciseId(),
                 null
         );

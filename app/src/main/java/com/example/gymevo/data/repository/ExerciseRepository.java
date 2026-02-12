@@ -71,7 +71,9 @@ public class ExerciseRepository {
                         exercise.isShowRepetitions(),
                         exercise.isShowWeight(),
                         exercise.isShowTime(),
-                        exercise.isShowHeartRate()
+                        exercise.isShowHeartRate(),
+                        exercise.isShowDistance(),
+                        exercise.isShowCalories()
                 );
             }
             if (existing != null) {
@@ -87,7 +89,9 @@ public class ExerciseRepository {
                         exercise.isShowRepetitions(),
                         exercise.isShowWeight(),
                         exercise.isShowTime(),
-                        exercise.isShowHeartRate()
+                        exercise.isShowHeartRate(),
+                        exercise.isShowDistance(),
+                        exercise.isShowCalories()
                 );
             }
         });

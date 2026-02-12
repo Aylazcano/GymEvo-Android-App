@@ -732,6 +732,8 @@ public class WorkoutSeed {
                 weight,
                 time,
                 heartRates,
+                null,
+                null,
                 exercise.getId(),
                 workoutId
         );

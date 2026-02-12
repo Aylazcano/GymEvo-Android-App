@@ -86,6 +86,29 @@
                     android:textColor="?attr/colorOnPrimary"
                     android:text="(Pectorales>Tricets>Hombros)" />
 
+                <LinearLayout
+                    android:id="@+id/layout_kcal_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp">
+
+                    <TextView
+                        android:id="@+id/KcalValueTV"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_kcal_badge"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:text="-"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
             <LinearLayout
@@ -257,6 +280,39 @@
                         android:gravity="center"
                         android:autoSizeTextType="uniform"
                         android:text="120"
+                        android:textColor="?attr/colorOnSecondary"
+                        android:padding="1dp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_metric_distance"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/DistanceTV"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="4"
+                        android:textAlignment="center"
+                        android:gravity="center"
+                        android:autoSizeTextType="uniform"
+                        android:text="@string/exercise_distance"
+                        android:textColor="?attr/colorOnSecondary"
+                        android:padding="1dp" />
+
+                    <TextView
+                        android:id="@+id/DistanceQtyTV"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="5"
+                        android:textAlignment="center"
+                        android:gravity="center"
+                        android:autoSizeTextType="uniform"
+                        android:text="-"
                         android:textColor="?attr/colorOnSecondary"
                         android:padding="1dp" />
 

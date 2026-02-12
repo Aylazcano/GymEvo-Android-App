@@ -55,6 +55,8 @@
     <string name="exercise_weight_kg">Weight (kg)</string>
     <string name="exercise_time_sec">Time (mm:ss)</string>
     <string name="exercise_heart_rate_bpm">HR (bpm)</string>
+    <string name="exercise_distance">Distance</string>
+    <string name="exercise_calories">kcal</string>
     <string name="exercise_metrics_hint_strength">Suggested: sets, reps, weight</string>
     <string name="exercise_metrics_hint_cardio">Suggested: time, HR</string>
     <string name="exercise_starred_label">★ Starred</string>
@@ -65,7 +67,7 @@
     <string name="exercise_search_hint">Search exercises</string>
     <string name="exercise_filter_muscle">Filter by muscle</string>
     <string name="exercise_filter_type">Filter by type</string>
-    <string name="exercise_display_params">Display parameters (max 3)</string>
+    <string name="exercise_display_params">Display parameters (max 3 + kcal)</string>
     <string name="search_hint">Search</string>
     <string name="action_save">Save</string>
     <string name="action_back">Back</string>

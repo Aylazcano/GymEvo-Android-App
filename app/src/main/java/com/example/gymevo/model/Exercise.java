@@ -20,6 +20,8 @@ public class Exercise {
     private boolean showWeight;
     private boolean showTime;
     private boolean showHeartRate;
+    private boolean showDistance;
+    private boolean showCalories;
     private long createdAt;
     private long updatedAt;
 
@@ -146,9 +148,25 @@ public class Exercise {
         this.showHeartRate = showHeartRate;
     }
 
+    public boolean isShowDistance() {
+        return showDistance;
+    }
+
+    public void setShowDistance(boolean showDistance) {
+        this.showDistance = showDistance;
+    }
+
+    public boolean isShowCalories() {
+        return showCalories;
+    }
+
+    public void setShowCalories(boolean showCalories) {
+        this.showCalories = showCalories;
+    }
+
     @Ignore
     public boolean hasAnyDisplayMetric() {
-        return showSeries || showRepetitions || showWeight || showTime || showHeartRate;
+        return showSeries || showRepetitions || showWeight || showTime || showHeartRate || showDistance || showCalories;
     }
 
     @Ignore
@@ -159,13 +177,17 @@ public class Exercise {
             showRepetitions = false;
             showWeight = false;
             showTime = true;
-            showHeartRate = true;
+            showHeartRate = false;
+            showDistance = true;
+            showCalories = true;
         } else {
             showSeries = true;
             showRepetitions = true;
             showWeight = true;
             showTime = false;
             showHeartRate = false;
+            showDistance = false;
+            showCalories = true;
         }
     }
 

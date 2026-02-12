@@ -116,6 +116,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/exercise_heart_rate_bpm" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_metric_distance"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_distance" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_metric_calories"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_calories" />
         </com.google.android.material.chip.ChipGroup>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -158,7 +172,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:baselineAligned="false">
 
             <LinearLayout
                 android:id="@+id/layout_exercise_start_block"
@@ -182,7 +197,7 @@
                         android:contentDescription="@string/exercise_start_image"
                         android:scaleType="centerCrop"
                         android:src="@android:drawable/ic_menu_camera"
-                        android:tint="?attr/colorOnSurface"
+                        app:tint="?attr/colorOnSurface"
                         android:foreground="@null"
                         android:clickable="true"
                         android:focusable="true" />
@@ -195,7 +210,7 @@
                         android:background="@drawable/bg_close_circle"
                         android:contentDescription="@string/exercise_remove_image"
                         android:src="@android:drawable/ic_menu_close_clear_cancel"
-                        android:tint="?attr/colorOnSecondary"
+                        app:tint="?attr/colorOnSecondary"
                         android:padding="4dp"
                         android:visibility="gone" />
                 </FrameLayout>
@@ -235,7 +250,7 @@
                         android:contentDescription="@string/exercise_end_image"
                         android:scaleType="centerCrop"
                         android:src="@android:drawable/ic_menu_camera"
-                        android:tint="?attr/colorOnSurface"
+                        app:tint="?attr/colorOnSurface"
                         android:foreground="@null"
                         android:clickable="true"
                         android:focusable="true" />
@@ -248,7 +263,7 @@
                         android:background="@drawable/bg_close_circle"
                         android:contentDescription="@string/exercise_remove_image"
                         android:src="@android:drawable/ic_menu_close_clear_cancel"
-                        android:tint="?attr/colorOnSecondary"
+                        app:tint="?attr/colorOnSecondary"
                         android:padding="4dp"
                         android:visibility="gone" />
                 </FrameLayout>

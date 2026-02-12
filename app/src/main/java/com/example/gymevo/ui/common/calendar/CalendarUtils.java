@@ -5,7 +5,6 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -185,7 +184,6 @@ public class CalendarUtils {
                 isMonthView = false;
                 notifyViewModeChanged();
                 updateCalendarView();
-                Toast.makeText(context, "Swipe Up - Switch to Week View", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -194,7 +192,6 @@ public class CalendarUtils {
                 isMonthView = true;
                 notifyViewModeChanged();
                 updateCalendarView();
-                Toast.makeText(context, "Swipe Down - Switch to Month View", Toast.LENGTH_SHORT).show();
             }
         }
 

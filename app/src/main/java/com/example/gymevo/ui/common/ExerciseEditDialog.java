@@ -56,6 +56,11 @@ public final class ExerciseEditDialog {
     private static final int MIN_HEART_RATE = 0;
     private static final int MAX_HEART_RATE = 220;
 
+    private static final int MIN_DISTANCE = 0;            // meters
+    private static final int MAX_DISTANCE = 100000;       // up to 100 km (as meters)
+    private static final int MIN_CALORIES = 0;            // kcal
+    private static final int MAX_CALORIES = 5000;
+
     private static final double LBS_TO_KG = 0.45359237d;
     private static final double KG_TO_LBS = 2.20462262d;
 
@@ -98,6 +103,8 @@ public final class ExerciseEditDialog {
         NumberPicker timeMinutesPicker = dialogView.findViewById(R.id.numberPickerTimeMin);
         NumberPicker timeSecondsPicker = dialogView.findViewById(R.id.numberPickerTimeSec);
         NumberPicker heartRatePicker = dialogView.findViewById(R.id.numberPickerHeartRate);
+        NumberPicker distancePicker = dialogView.findViewById(R.id.numberPickerDistance);
+        NumberPicker caloriesPicker = dialogView.findViewById(R.id.numberPickerCalories);
         ImageView sortImage = dialogView.findViewById(R.id.image_sort);
         ImageView starPriorityImage = dialogView.findViewById(R.id.image_star_priority);
         TextView weightLabel = dialogView.findViewById(R.id.text_weight_label);
@@ -106,6 +113,8 @@ public final class ExerciseEditDialog {
         View metricWeight = dialogView.findViewById(R.id.layout_metric_weight);
         View metricTime = dialogView.findViewById(R.id.layout_metric_time);
         View metricHr = dialogView.findViewById(R.id.layout_metric_hr);
+        View metricDistance = dialogView.findViewById(R.id.layout_metric_distance);
+        View metricCalories = dialogView.findViewById(R.id.layout_metric_calories);
 
         final WeightUnit[] weightUnit = {exercise.isWeightInKg() ? WeightUnit.KG : WeightUnit.LBS};
         final Exercise[] selectedExercise = {exercise};
@@ -129,6 +138,8 @@ public final class ExerciseEditDialog {
         configurePicker(timeMinutesPicker, MIN_MINUTES, MAX_MINUTES, minutes);
         configurePicker(timeSecondsPicker, MIN_SECONDS, MAX_SECONDS, seconds);
         configurePicker(heartRatePicker, MIN_HEART_RATE, MAX_HEART_RATE, exercise.getHeartRates());
+        configurePicker(distancePicker, MIN_DISTANCE, MAX_DISTANCE, exercise.getDistance());
+        configurePicker(caloriesPicker, MIN_CALORIES, MAX_CALORIES, exercise.getCalories());
 
         setupDirectInput(context, seriesPicker);
         setupDirectInput(context, repetitionsPicker);
@@ -136,9 +147,11 @@ public final class ExerciseEditDialog {
         setupDirectInput(context, timeMinutesPicker);
         setupDirectInput(context, timeSecondsPicker);
         setupDirectInput(context, heartRatePicker);
+        setupDirectInput(context, distancePicker);
+        setupDirectInput(context, caloriesPicker);
         setupExerciseInput(context, exercisePicker, options, filteredOptions,
             selectedExercise, exercise, typeFilter, suppressFilter,
-            exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+            exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
 
         applyWeightLabel(context, weightLabel, weightUnit[0]);
         if (weightLabel != null && weightPicker != null) {
@@ -153,7 +166,7 @@ public final class ExerciseEditDialog {
             });
         }
 
-        applyMetricVisibility(exercise, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+        applyMetricVisibility(exercise, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
 
         updateExercisePreview(exercisePreview, exercise);
         if (exercisePicker != null) {
@@ -163,14 +176,14 @@ public final class ExerciseEditDialog {
                         exercise);
                 selectedExercise[0] = selected != null ? selected : exercise;
                 updateExercisePreview(exercisePreview, selectedExercise[0]);
-                applyMetricVisibility(selectedExercise[0], metricSeries, metricReps, metricWeight, metricTime, metricHr);
+                applyMetricVisibility(selectedExercise[0], metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
             });
         }
 
         // Set up filter image click listeners
-        setupFilterImageClickListener(filterAllImage, null, selectedFilterImage, typeFilter, suppressFilter, context, exercisePicker, options, filteredOptions, selectedExercise, exercise, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr);
-        setupFilterImageClickListener(filterAnaerobicImage, ExerciseType.ANAEROBIC, selectedFilterImage, typeFilter, suppressFilter, context, exercisePicker, options, filteredOptions, selectedExercise, exercise, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr);
-        setupFilterImageClickListener(filterAerobicImage, ExerciseType.AEROBIC, selectedFilterImage, typeFilter, suppressFilter, context, exercisePicker, options, filteredOptions, selectedExercise, exercise, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+        setupFilterImageClickListener(filterAllImage, null, selectedFilterImage, typeFilter, suppressFilter, context, exercisePicker, options, filteredOptions, selectedExercise, exercise, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
+        setupFilterImageClickListener(filterAnaerobicImage, ExerciseType.ANAEROBIC, selectedFilterImage, typeFilter, suppressFilter, context, exercisePicker, options, filteredOptions, selectedExercise, exercise, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
+        setupFilterImageClickListener(filterAerobicImage, ExerciseType.AEROBIC, selectedFilterImage, typeFilter, suppressFilter, context, exercisePicker, options, filteredOptions, selectedExercise, exercise, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
 
         // Initially select all filter
         selectedFilterImage[0] = filterAllImage;
@@ -208,11 +221,11 @@ public final class ExerciseEditDialog {
                     selectedExercise, getPickerQuery(context, exercisePicker), typeFilter[0], suppressFilter);
             Exercise selected = selectedExercise[0];
             updateExercisePreview(exercisePreview, selected);
-            applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+            applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
         });
 
         if (sortImage != null) {
-            sortImage.setOnClickListener(v -> showSortDialog(context, sortField, sortOrder, starPriorityEnabled, customOrderIds, preferencesRepo, options, filteredOptions, exercisePicker, exercise, selectedExercise, suppressFilter, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr));
+            sortImage.setOnClickListener(v -> showSortDialog(context, sortField, sortOrder, starPriorityEnabled, customOrderIds, preferencesRepo, options, filteredOptions, exercisePicker, exercise, selectedExercise, suppressFilter, exercisePreview, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories));
         }
 
         if (starPriorityImage != null) {
@@ -233,7 +246,7 @@ public final class ExerciseEditDialog {
                     selectedExercise, getPickerQuery(context, exercisePicker), null, suppressFilter);
                 Exercise selected = selectedExercise[0];
                 updateExercisePreview(exercisePreview, selected);
-                applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+                applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
                 // Persist preferences
                 persistExerciseListPreferences(preferencesRepo, sortField[0], sortOrder[0], starPriorityEnabled[0], customOrderIds);
             });
@@ -252,7 +265,7 @@ public final class ExerciseEditDialog {
 
                         ExerciseInWorkout updatedExercise = createUpdatedExercise(exercise, selected,
                             seriesPicker, repetitionsPicker, weightPicker,
-                            timeMinutesPicker, timeSecondsPicker, heartRatePicker, weightUnit[0]);
+                            timeMinutesPicker, timeSecondsPicker, heartRatePicker, distancePicker, caloriesPicker, weightUnit[0]);
 
                         if (onUpdated != null) {
                             onUpdated.onUpdated(updatedExercise);
@@ -376,6 +389,8 @@ public final class ExerciseEditDialog {
                                           NumberPicker timeMinutesPicker,
                                           NumberPicker timeSecondsPicker,
                                           NumberPicker heartRatePicker,
+                                          NumberPicker distancePicker,
+                                          NumberPicker caloriesPicker,
                                           WeightUnit weightUnit) {
         if (exercise == null) {
             return;
@@ -386,6 +401,8 @@ public final class ExerciseEditDialog {
         exercise.setWeightInKg(weightUnit == WeightUnit.KG);
         exercise.setTime(toTimeSeconds(timeMinutesPicker, timeSecondsPicker));
         exercise.setHeartRates(toNullableValue(heartRatePicker));
+        exercise.setDistance(toNullableValue(distancePicker));
+        exercise.setCalories(toNullableValue(caloriesPicker));
     }
 
     private static ExerciseInWorkout copyExercise(ExerciseInWorkout source) {
@@ -403,6 +420,8 @@ public final class ExerciseEditDialog {
                 source.getWeight(),
                 source.getTime(),
                 source.getHeartRates(),
+                source.getDistance(),
+                source.getCalories(),
                 source.getExerciseId(),
                 source.getWorkoutId()
         );
@@ -434,6 +453,8 @@ public final class ExerciseEditDialog {
         target.setShowWeight(source.isShowWeight());
         target.setShowTime(source.isShowTime());
         target.setShowHeartRate(source.isShowHeartRate());
+        target.setShowDistance(source.isShowDistance());
+        target.setShowCalories(source.isShowCalories());
     }
 
     private static void updateExercisePreview(ImageView imageView, Exercise exercise) {
@@ -497,6 +518,8 @@ public final class ExerciseEditDialog {
         exercise.setShowWeight(current.isShowWeight());
         exercise.setShowTime(current.isShowTime());
         exercise.setShowHeartRate(current.isShowHeartRate());
+        exercise.setShowDistance(current.isShowDistance());
+        exercise.setShowCalories(current.isShowCalories());
         return exercise;
     }
 
@@ -568,14 +591,16 @@ public final class ExerciseEditDialog {
                                                            NumberPicker seriesPicker,
                                                            NumberPicker repetitionsPicker,
                                                            NumberPicker weightPicker,
-                                   NumberPicker timeMinutesPicker,
-                                   NumberPicker timeSecondsPicker,
+                                                           NumberPicker timeMinutesPicker,
+                                                           NumberPicker timeSecondsPicker,
                                                            NumberPicker heartRatePicker,
+                                                           NumberPicker distancePicker,
+                                                           NumberPicker caloriesPicker,
                                                            WeightUnit weightUnit) {
         ExerciseInWorkout updatedExercise = copyExercise(source);
         applyExerciseSelection(updatedExercise, selected);
         applyPickerValues(updatedExercise, seriesPicker, repetitionsPicker,
-            weightPicker, timeMinutesPicker, timeSecondsPicker, heartRatePicker, weightUnit);
+            weightPicker, timeMinutesPicker, timeSecondsPicker, heartRatePicker, distancePicker, caloriesPicker, weightUnit);
         return updatedExercise;
     }
 
@@ -593,7 +618,9 @@ public final class ExerciseEditDialog {
                                               View reps,
                                               View weight,
                                               View time,
-                                              View hr) {
+                                              View hr,
+                                              View distance,
+                                              View calories) {
         if (exercise == null) {
             return;
         }
@@ -605,6 +632,8 @@ public final class ExerciseEditDialog {
         if (weight != null) weight.setVisibility(exercise.isShowWeight() ? View.VISIBLE : View.GONE);
         if (time != null) time.setVisibility(exercise.isShowTime() ? View.VISIBLE : View.GONE);
         if (hr != null) hr.setVisibility(exercise.isShowHeartRate() ? View.VISIBLE : View.GONE);
+        if (distance != null) distance.setVisibility(exercise.isShowDistance() ? View.VISIBLE : View.GONE);
+        if (calories != null) calories.setVisibility(exercise.isShowCalories() ? View.VISIBLE : View.GONE);
     }
 
     private static int toKg(int lbs) {
@@ -696,7 +725,9 @@ public final class ExerciseEditDialog {
                                            View metricReps,
                                            View metricWeight,
                                            View metricTime,
-                                           View metricHr) {
+                                           View metricHr,
+                                           View metricDistance,
+                                           View metricCalories) {
         if (context == null || picker == null) {
             return;
         }
@@ -742,7 +773,7 @@ public final class ExerciseEditDialog {
                     ? selectedOut[0]
                     : getSelectedExercise(picker, filtered != null && !filtered.isEmpty() ? filtered : options, fallback);
                 updateExercisePreview(exercisePreview, selected);
-                applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+                applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
             }
 
             @Override
@@ -763,7 +794,7 @@ public final class ExerciseEditDialog {
                     }
                 }
                 updateExercisePreview(exercisePreview, selected);
-                applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+                applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
                 hideKeyboard(context, editText);
                 return true;
             }
@@ -1108,7 +1139,7 @@ public final class ExerciseEditDialog {
         }
     }
 
-    private static void showSortDialog(Context context, SortField[] sortField, SortOrder[] sortOrder, boolean[] starPriorityEnabled, List<Long> customOrderIds, UserPreferencesRepository preferencesRepo, List<Exercise> options, List<Exercise> filteredOptions, NumberPicker exercisePicker, ExerciseInWorkout exercise, Exercise[] selectedExercise, boolean[] suppressFilter, ImageView exercisePreview, View metricSeries, View metricReps, View metricWeight, View metricTime, View metricHr) {
+    private static void showSortDialog(Context context, SortField[] sortField, SortOrder[] sortOrder, boolean[] starPriorityEnabled, List<Long> customOrderIds, UserPreferencesRepository preferencesRepo, List<Exercise> options, List<Exercise> filteredOptions, NumberPicker exercisePicker, ExerciseInWorkout exercise, Exercise[] selectedExercise, boolean[] suppressFilter, ImageView exercisePreview, View metricSeries, View metricReps, View metricWeight, View metricTime, View metricHr, View metricDistance, View metricCalories) {
         if (context == null) {
             return;
         }
@@ -1130,7 +1161,7 @@ public final class ExerciseEditDialog {
                 selectedExercise, getPickerQuery(context, exercisePicker), null, suppressFilter);
             Exercise selected = selectedExercise[0];
             updateExercisePreview(exercisePreview, selected);
-            applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+            applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
             // Persist preferences
             persistExerciseListPreferences(preferencesRepo, sortField[0], sortOrder[0], starPriorityEnabled[0], customOrderIds);
         });
@@ -1192,7 +1223,7 @@ public final class ExerciseEditDialog {
         return value != null ? value : "";
     }
 
-    private static void setupFilterImageClickListener(ImageView imageView, ExerciseType filterType, ImageView[] selectedFilterImage, ExerciseType[] typeFilter, boolean[] suppressFilter, Context context, NumberPicker exercisePicker, List<Exercise> options, List<Exercise> filteredOptions, Exercise[] selectedExercise, ExerciseInWorkout exercise, ImageView exercisePreview, View metricSeries, View metricReps, View metricWeight, View metricTime, View metricHr) {
+    private static void setupFilterImageClickListener(ImageView imageView, ExerciseType filterType, ImageView[] selectedFilterImage, ExerciseType[] typeFilter, boolean[] suppressFilter, Context context, NumberPicker exercisePicker, List<Exercise> options, List<Exercise> filteredOptions, Exercise[] selectedExercise, ExerciseInWorkout exercise, ImageView exercisePreview, View metricSeries, View metricReps, View metricWeight, View metricTime, View metricHr, View metricDistance, View metricCalories) {
         if (imageView == null) return;
         imageView.setOnClickListener(v -> {
             if (suppressFilter[0]) return;
@@ -1207,7 +1238,7 @@ public final class ExerciseEditDialog {
                 selectedExercise, getPickerQuery(context, exercisePicker), typeFilter[0], suppressFilter);
             Exercise selected = selectedExercise[0];
             updateExercisePreview(exercisePreview, selected);
-            applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr);
+            applyMetricVisibility(selected, metricSeries, metricReps, metricWeight, metricTime, metricHr, metricDistance, metricCalories);
         });
     }
 

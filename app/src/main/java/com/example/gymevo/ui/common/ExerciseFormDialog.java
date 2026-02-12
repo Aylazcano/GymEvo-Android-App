@@ -91,6 +91,8 @@ public final class ExerciseFormDialog {
         Chip chipWeight = dialogView.findViewById(R.id.chip_metric_weight);
         Chip chipTime = dialogView.findViewById(R.id.chip_metric_time);
         Chip chipHr = dialogView.findViewById(R.id.chip_metric_hr);
+        Chip chipDistance = dialogView.findViewById(R.id.chip_metric_distance);
+        Chip chipCalories = dialogView.findViewById(R.id.chip_metric_calories);
         ImageView startPreview = dialogView.findViewById(R.id.image_exercise_start_preview);
         ImageView endPreview = dialogView.findViewById(R.id.image_exercise_end_preview);
         android.widget.ImageButton removeStartButton = dialogView.findViewById(R.id.button_remove_start_image);
@@ -112,8 +114,8 @@ public final class ExerciseFormDialog {
         if (starSwitch != null) {
             starSwitch.setChecked(target.isStar());
         }
-        applyMetricChips(target, chipSeries, chipReps, chipWeight, chipTime, chipHr);
-        configureMetricSelection(context, metricsGroup, chipSeries, chipReps, chipWeight, chipTime, chipHr);
+        applyMetricChips(target, chipSeries, chipReps, chipWeight, chipTime, chipHr, chipDistance, chipCalories);
+        configureMetricSelection(context, metricsGroup, chipSeries, chipReps, chipWeight, chipTime, chipHr, chipDistance, chipCalories);
 
         boolean hasStartImage = !isNullOrEmpty(target.getImageA());
         setVisible(endImageLayout, false);
@@ -203,7 +205,7 @@ public final class ExerciseFormDialog {
                     target.setImageB(readTextOrNull(endImageInput));
                     target.setStar(starSwitch != null && starSwitch.isChecked());
                     target.setType(type != null ? type : ExerciseType.ANAEROBIC);
-                    applyMetricSelection(target, chipSeries, chipReps, chipWeight, chipTime, chipHr);
+                    applyMetricSelection(target, chipSeries, chipReps, chipWeight, chipTime, chipHr, chipDistance, chipCalories);
 
                     if (onSaved != null) {
                         onSaved.onSaved(target, isNew);
@@ -322,7 +324,9 @@ public final class ExerciseFormDialog {
                                          Chip reps,
                                          Chip weight,
                                          Chip time,
-                                         Chip hr) {
+                                         Chip hr,
+                                         Chip distance,
+                                         Chip calories) {
         if (exercise == null) {
             return;
         }
@@ -334,6 +338,8 @@ public final class ExerciseFormDialog {
         if (weight != null) weight.setChecked(exercise.isShowWeight());
         if (time != null) time.setChecked(exercise.isShowTime());
         if (hr != null) hr.setChecked(exercise.isShowHeartRate());
+        if (distance != null) distance.setChecked(exercise.isShowDistance());
+        if (calories != null) calories.setChecked(exercise.isShowCalories());
     }
 
     private static void applyMetricSelection(Exercise exercise,
@@ -341,7 +347,9 @@ public final class ExerciseFormDialog {
                                              Chip reps,
                                              Chip weight,
                                              Chip time,
-                                             Chip hr) {
+                                             Chip hr,
+                                             Chip distance,
+                                             Chip calories) {
         if (exercise == null) {
             return;
         }
@@ -350,6 +358,8 @@ public final class ExerciseFormDialog {
         exercise.setShowWeight(weight != null && weight.isChecked());
         exercise.setShowTime(time != null && time.isChecked());
         exercise.setShowHeartRate(hr != null && hr.isChecked());
+        exercise.setShowDistance(distance != null && distance.isChecked());
+        exercise.setShowCalories(calories != null && calories.isChecked());
     }
 
     private static void configureMetricSelection(Context context,
@@ -358,32 +368,61 @@ public final class ExerciseFormDialog {
                                                  Chip reps,
                                                  Chip weight,
                                                  Chip time,
-                                                 Chip hr) {
+                                                 Chip hr,
+                                                 Chip distance,
+                                                 Chip calories) {
         if (group == null) {
             return;
         }
-        View.OnClickListener limiter = v -> enforceMaxSelection(context, group, 3);
+        int caloriesId = calories != null ? calories.getId() : View.NO_ID;
+        View.OnClickListener limiter = v -> enforceMaxSelection(context, group, 3, caloriesId);
         if (series != null) series.setOnClickListener(limiter);
         if (reps != null) reps.setOnClickListener(limiter);
         if (weight != null) weight.setOnClickListener(limiter);
         if (time != null) time.setOnClickListener(limiter);
         if (hr != null) hr.setOnClickListener(limiter);
+        if (distance != null) distance.setOnClickListener(limiter);
     }
 
-    private static void enforceMaxSelection(Context context, ChipGroup group, int max) {
+    private static void enforceMaxSelection(Context context, ChipGroup group, int max, int... excludedIds) {
         if (group == null) {
             return;
         }
-        int count = group.getCheckedChipIds().size();
+        List<Integer> checkedIds = group.getCheckedChipIds();
+        int count = 0;
+        for (int id : checkedIds) {
+            if (!isExcluded(id, excludedIds)) {
+                count++;
+            }
+        }
         if (count <= max) {
             return;
         }
-        int lastId = group.getCheckedChipIds().get(count - 1);
-        Chip chip = group.findViewById(lastId);
+        int lastId = View.NO_ID;
+        for (int i = checkedIds.size() - 1; i >= 0; i--) {
+            int id = checkedIds.get(i);
+            if (!isExcluded(id, excludedIds)) {
+                lastId = id;
+                break;
+            }
+        }
+        Chip chip = lastId != View.NO_ID ? group.findViewById(lastId) : null;
         if (chip != null) {
             chip.setChecked(false);
         }
         Toast.makeText(context, context.getString(R.string.exercise_display_params), Toast.LENGTH_SHORT).show();
+    }
+
+    private static boolean isExcluded(int id, int... excludedIds) {
+        if (excludedIds == null) {
+            return false;
+        }
+        for (int excluded : excludedIds) {
+            if (excluded != View.NO_ID && excluded == id) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void updatePreview(Context context, ImageView preview, TextView filename, String uri) {

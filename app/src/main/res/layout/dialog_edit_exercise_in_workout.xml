@@ -257,6 +257,58 @@
                 android:scaleX="0.9"
                 android:scaleY="0.9" />
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_metric_distance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_distance"
+                android:textAlignment="center"
+                android:textSize="14sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
+
+            <NumberPicker
+                android:id="@+id/numberPickerDistance"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:scaleX="0.9"
+                android:scaleY="0.9" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_metric_calories"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/exercise_calories"
+                android:textAlignment="center"
+                android:textSize="14sp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
+
+            <NumberPicker
+                android:id="@+id/numberPickerCalories"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:scaleX="0.9"
+                android:scaleY="0.9" />
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

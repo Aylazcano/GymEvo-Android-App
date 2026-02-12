@@ -107,7 +107,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         loadCalendarPreferences(() -> {
             initializeGestureDetector();
             setupCalendar();
-            updateSelectedDate(selectedDate, false);
+            updateSelectedDate(selectedDate);
         });
         setupBackNavigation();
         return binding.getRoot();
@@ -347,7 +347,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     }
 
     private void jumpToToday(View view) {
-        updateSelectedDate(LocalDate.now(), false);
+        updateSelectedDate(LocalDate.now());
     }
 
     private void initializeWorkoutRecyclerView() {
@@ -460,7 +460,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         if (selectedDate == null) {
             return;
         }
-        updateSelectedDate(selectedDate.plusDays(delta), false);
+        updateSelectedDate(selectedDate.plusDays(delta));
     }
 
     private void observeAddExerciseRequests() {
@@ -483,34 +483,16 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     public void onItemClick(int position, @NonNull String dayText, @NonNull LocalDate date) {
         if (dayText.isEmpty()) return;
 
-        updateSelectedDate(date, true);
+        updateSelectedDate(date);
     }
 
-    private void updateSelectedDate(@NonNull LocalDate date, boolean showToast) {
+    private void updateSelectedDate(@NonNull LocalDate date) {
         selectedDate = date;
         displayDate = date;
         setupCalendar();
 
-        if (showToast) {
-            showCustomToast(String.format(Locale.getDefault(), "Selected date %d %s %d",
-                date.getDayOfMonth(),
-                date.getMonth(),
-                date.getYear()));
-        }
-
         workoutTrackerViewModel.getExercisesForWorkoutOnDate(date);
         persistSelectedDate(date);
-    }
-
-    private void showCustomToast(String message) {
-        if (!isAdded()) {
-            return;
-        }
-        View root = getView();
-        if (root == null) {
-            return;
-        }
-        Snackbar.make(root, message, Snackbar.LENGTH_SHORT).show();
     }
 
     private void persistSelectedDate(@NonNull LocalDate date) {
@@ -773,6 +755,8 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
             null,
             3,
             10,
+            null,
+            null,
             null,
             null,
             null,
