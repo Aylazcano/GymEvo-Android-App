@@ -1,5 +1,6 @@
 package com.example.gymevo.ui.workoutsList;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.HapticFeedbackConstants;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -25,9 +27,9 @@ import com.example.gymevo.model.Workout;
 import com.example.gymevo.ui.common.adapter.WorkoutExerciseAdapter;
 import com.example.gymevo.ui.common.DragDropItemTouchHelper;
 import com.example.gymevo.ui.common.StarUi;
-import com.google.android.material.R.attr;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.color.MaterialColors;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -41,9 +43,6 @@ import java.util.Objects;
 import java.util.Set;
 
 public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.WorkoutViewHolder> {
-
-    private static final DateTimeFormatter UPDATED_DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault());
 
     public interface OnWorkoutStarToggleListener {
         void onStarToggled(Workout workout);
@@ -231,7 +230,7 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
         }
         selectedKeys.clear();
         selectionModeActive = false;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
         notifySelectionChanged();
     }
 
@@ -239,6 +238,7 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
         if (workout == null) {
             return;
         }
+        boolean wasSelectionMode = selectionModeActive;
         String key = getSelectionKey(workout);
         if (selectedKeys.contains(key)) {
             selectedKeys.remove(key);
@@ -246,7 +246,22 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
             selectedKeys.add(key);
         }
         selectionModeActive = true;
-        notifyDataSetChanged();
+
+        if (!wasSelectionMode) {
+            // entering selection mode — collapse any expanded workout so overlays are centered and not overlapping
+            expandedState = null;
+            // update whole list so selection-mode UI (handles) appears
+            notifyItemRangeChanged(0, getItemCount());
+        } else {
+            int idx = getCurrentList().indexOf(workout);
+            if (idx >= 0) {
+                notifyItemChanged(idx);
+            }
+        }
+
+        if (recyclerView != null) {
+            recyclerView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+        }
         notifySelectionChanged();
     }
 
@@ -271,6 +286,7 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
         return new WorkoutViewHolder(view, workoutActionListener);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onBindViewHolder(@NonNull WorkoutViewHolder holder, int position) {
         Workout workout = getItem(position);
@@ -317,11 +333,11 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
 
         if (holder.dragHandle != null) {
             holder.dragHandle.setOnTouchListener((v, event) -> {
-                if (event.getActionMasked() == MotionEvent.ACTION_DOWN
-                        && itemTouchHelper != null) {
+                if (itemTouchHelper != null && event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.performClick();
                     itemTouchHelper.startDrag(holder);
                 }
-                return false;
+                return false; // allow normal downstream handling
             });
         }
     }
@@ -419,7 +435,10 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
                             .toLocalDate();
                     String templateLabel = itemView.getResources()
                             .getString(R.string.workout_item_date_placeholder);
-                    workoutDate.setText(templateLabel + " • " + UPDATED_DATE_FORMATTER.format(updatedDate));
+                    workoutDate.setText(itemView.getResources().getString(
+                            R.string.workout_item_date_template_format,
+                            templateLabel,
+                            formatUpdatedDate(updatedDate)));
                 } else {
                     workoutDate.setText(R.string.workout_item_date_placeholder);
                 }
@@ -517,10 +536,10 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
             }
             MaterialCardView cardView = (MaterialCardView) itemView;
             int defaultStrokeWidth = dpToPx(cardView, 1);
-            int defaultStrokeColor = resolveThemeColor(cardView, attr.colorPrimary);
+                int defaultStrokeColor = resolveThemeColor(cardView, androidx.appcompat.R.attr.colorPrimary);
             int strokeWidth = selected ? dpToPx(cardView, 2) : defaultStrokeWidth;
             int strokeColor = selected
-                    ? ContextCompat.getColor(cardView.getContext(), R.color.example_1_selection_color)
+                    ? MaterialColors.getColor(cardView, com.google.android.material.R.attr.colorSecondary)
                     : defaultStrokeColor;
             cardView.setStrokeWidth(strokeWidth);
             cardView.setStrokeColor(strokeColor);
@@ -528,12 +547,15 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
 
         void applySelectionMode(boolean selectionMode) {
             if (dragHandle != null) {
-                dragHandle.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+                com.example.gymevo.ui.common.ViewUtils.animateOverlayVisibility(dragHandle, selectionMode);
             }
             if (removeIcon != null) {
-                removeIcon.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+                com.example.gymevo.ui.common.ViewUtils.animateOverlayVisibility(removeIcon, selectionMode);
             }
             if (starIcon != null) {
+                // Show star when not in selection mode so collapsed workout items display
+                // the star (keeps consistency with exercise items). During selection mode
+                // the star remains hidden.
                 starIcon.setVisibility(selectionMode ? View.GONE : View.VISIBLE);
             }
         }
@@ -554,6 +576,11 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
                 return typedValue.data;
             }
             return Color.TRANSPARENT;
+        }
+
+        private String formatUpdatedDate(LocalDate updatedDate) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault());
+            return formatter.format(updatedDate);
         }
 
     }

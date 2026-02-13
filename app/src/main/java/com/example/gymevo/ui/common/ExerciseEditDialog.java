@@ -2,6 +2,7 @@ package com.example.gymevo.ui.common;
 
 import android.content.Context;
 import android.graphics.Color;
+import com.google.android.material.color.MaterialColors;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
@@ -40,6 +41,7 @@ import com.example.gymevo.model.ExerciseType;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public final class ExerciseEditDialog {
 
@@ -188,11 +190,14 @@ public final class ExerciseEditDialog {
         // Initially select all filter
         selectedFilterImage[0] = filterAllImage;
         if (selectedFilterImage[0] != null) {
-            selectedFilterImage[0].setColorFilter(Color.parseColor("#FF4081"));
+            // use theme accent (colorSecondary) instead of hard-coded pink
+            int accent = MaterialColors.getColor(selectedFilterImage[0], com.google.android.material.R.attr.colorSecondary);
+            selectedFilterImage[0].setColorFilter(accent);
         }
 
         // Load exercise list preferences for sorting
         UserPreferencesRepository preferencesRepo = UserPreferencesRepository.getInstance(context.getApplicationContext());
+        //noinspection CheckResult
         preferencesRepo.getExerciseListPreferences().subscribe(preferences -> {
             if (preferences != null) {
                 sortField[0] = SortField.from(preferences.sortField, SortField.RECENT);
@@ -818,7 +823,7 @@ public final class ExerciseEditDialog {
         if (filteredOptions != null) {
             filteredOptions.clear();
         }
-        String normalized = query != null ? query.trim().toLowerCase() : "";
+        String normalized = query != null ? query.trim().toLowerCase(Locale.ROOT) : "";
         for (Exercise option : allOptions) {
             if (option == null) {
                 continue;
@@ -832,9 +837,9 @@ public final class ExerciseEditDialog {
                 }
                 continue;
             }
-            String name = option.getName() != null ? option.getName().toLowerCase() : "";
+                String name = option.getName() != null ? option.getName().toLowerCase(Locale.ROOT) : "";
             String muscles = option.getTargetedMusclesLabel() != null
-                    ? option.getTargetedMusclesLabel().toLowerCase() : "";
+                    ? option.getTargetedMusclesLabel().toLowerCase(Locale.ROOT) : "";
             if (name.contains(normalized) || muscles.contains(normalized)) {
                 if (filteredOptions != null) {
                     filteredOptions.add(option);
@@ -1000,6 +1005,7 @@ public final class ExerciseEditDialog {
                     break;
                 case MotionEvent.ACTION_UP:
                     if (!moved[0]) {
+                        v.performClick();
                         editText.requestFocus();
                         showKeyboard(context, editText);
                     }
@@ -1232,7 +1238,9 @@ public final class ExerciseEditDialog {
                 selectedFilterImage[0].setColorFilter(null);
             }
             selectedFilterImage[0] = imageView;
-            selectedFilterImage[0].setColorFilter(Color.parseColor("#FF4081"));
+            // theme-driven tint for selection
+            int accent = MaterialColors.getColor(selectedFilterImage[0], com.google.android.material.R.attr.colorSecondary);
+            selectedFilterImage[0].setColorFilter(accent);
             typeFilter[0] = filterType;
             applyExerciseFilter(context, exercisePicker, options, filteredOptions, exercise,
                 selectedExercise, getPickerQuery(context, exercisePicker), typeFilter[0], suppressFilter);

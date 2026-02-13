@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
     android:fillViewport="true"
     tools:context=".ui.statistics.StatisticsFragment">
 
@@ -20,7 +19,7 @@
             android:layout_height="wrap_content"
             android:text="@string/stats_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            android:textColor="?attr/colorPrimary" />
+            android:textColor="?attr/colorOnSurface" />
 
         <TextView
             android:id="@+id/stats_date_range"
@@ -38,7 +37,7 @@
             android:layout_marginTop="20dp"
             android:text="@string/stats_summary_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textColor="?attr/colorPrimary" />
+            android:textColor="?attr/colorOnSurface"/>
 
         <GridLayout
             android:layout_width="match_parent"
@@ -139,7 +138,7 @@
             android:layout_marginTop="24dp"
             android:text="@string/stats_top_exercises_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textColor="?attr/colorPrimary" />
+            android:textColor="?attr/colorOnSurface"/>
 
         <LinearLayout
             android:id="@+id/top_exercises_container"
@@ -154,7 +153,7 @@
             android:layout_marginTop="24dp"
             android:text="@string/stats_weekly_frequency_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textColor="?attr/colorPrimary" />
+            android:textColor="?attr/colorOnSurface"/>
 
         <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/weekly_range_toggle"
@@ -212,7 +211,7 @@
             android:layout_marginTop="24dp"
             android:text="@string/stats_top_muscle_groups_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textColor="?attr/colorPrimary" />
+            android:textColor="?attr/colorOnSurface" />
 
         <LinearLayout
             android:id="@+id/top_muscle_groups_container"
@@ -227,7 +226,7 @@
             android:layout_marginTop="24dp"
             android:text="@string/stats_prs_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:textColor="?attr/colorPrimary" />
+            android:textColor="?attr/colorOnSurface" />
 
         <LinearLayout
             android:id="@+id/top_prs_container"

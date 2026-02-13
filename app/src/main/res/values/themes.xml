@@ -41,6 +41,26 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
     </style>
 
+    <style name="Theme.GymEvo.Gray" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/gym_gray_primary</item>
+        <item name="colorPrimaryVariant">@color/gym_gray_primary_variant</item>
+        <item name="colorOnPrimary">@color/gym_gray_on_primary</item>
+        <item name="colorSecondary">@color/gym_gray_secondary</item>
+        <item name="colorSecondaryVariant">@color/gym_gray_secondary_variant</item>
+        <item name="colorOnSecondary">@color/gym_gray_on_secondary</item>
+
+        <!-- ensure surfaces/backgrounds and on-colors provide correct contrast -->
+        <item name="colorSurface">@color/gym_gray_surface</item>
+        <item name="colorOnSurface">@color/gym_gray_on_surface</item>
+        <item name="android:colorBackground">@color/gym_gray_background</item>
+        <item name="colorOnBackground">@color/gym_gray_on_background</item>
+
+        <!-- dialogs use semantic on-colors so text remains readable in Gray -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog</item>
+
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+    </style>
+
     <style name="Theme.GymEvo.NoActionBar" parent="Theme.GymEvo">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

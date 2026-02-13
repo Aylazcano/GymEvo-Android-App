@@ -1,20 +1,22 @@
 package com.example.gymevo.ui.common.adapter;
 
-import android.graphics.Color;
+import android.annotation.SuppressLint;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.HapticFeedbackConstants;
 
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.R;
 import com.example.gymevo.model.ExerciseInWorkout;
+import com.example.gymevo.ui.common.ViewUtils;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -66,6 +68,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         return new WorkoutExerciseViewHolder(view);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onBindViewHolder(WorkoutExerciseViewHolder holder, int position) {
         ExerciseInWorkout exercise = exercises.get(position);
@@ -87,8 +90,8 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         });
         if (holder.getDragHandle() != null) {
             holder.getDragHandle().setOnTouchListener((v, event) -> {
-                if (event.getActionMasked() == MotionEvent.ACTION_DOWN
-                        && itemTouchHelper != null) {
+                if (itemTouchHelper != null && event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.performClick();
                     itemTouchHelper.startDrag(holder);
                 }
                 return false;
@@ -116,6 +119,22 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
     public void onViewRecycled(WorkoutExerciseViewHolder holder) {
         holder.clearImageLoop();
         super.onViewRecycled(holder);
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(WorkoutExerciseViewHolder holder) {
+        holder.clearImageLoop();
+        super.onViewDetachedFromWindow(holder);
+    }
+
+    @Override
+    public void onViewAttachedToWindow(WorkoutExerciseViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        int position = holder.getBindingAdapterPosition();
+        if (position == RecyclerView.NO_POSITION || position >= exercises.size()) {
+            return;
+        }
+        holder.bindImageLoop(exercises.get(position));
     }
 
     public void setExercises(List<ExerciseInWorkout> exercises) {
@@ -202,7 +221,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         exercises.clear();
         exercises.addAll(selected);
         exercises.addAll(remaining);
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
         if (orderChangedListener != null) {
             orderChangedListener.onOrderChanged(new ArrayList<>(exercises));
         }
@@ -226,7 +245,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         exercises.clear();
         exercises.addAll(remaining);
         exercises.addAll(selected);
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
         if (orderChangedListener != null) {
             orderChangedListener.onOrderChanged(new ArrayList<>(exercises));
         }
@@ -256,7 +275,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         }
         selectedKeys.clear();
         selectionModeActive = false;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
         notifySelectionChanged();
     }
 
@@ -264,6 +283,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
         if (exercise == null) {
             return;
         }
+        boolean wasSelectionMode = selectionModeActive;
         String key = getSelectionKey(exercise);
         if (selectedKeys.contains(key)) {
             selectedKeys.remove(key);
@@ -271,7 +291,20 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
             selectedKeys.add(key);
         }
         selectionModeActive = true;
-        notifyDataSetChanged();
+
+        if (!wasSelectionMode) {
+            // entering selection mode — update whole list so selection-mode UI (handles) appears
+            notifyItemRangeChanged(0, getItemCount());
+        } else {
+            int idx = exercises.indexOf(exercise);
+            if (idx >= 0) {
+                notifyItemChanged(idx);
+            }
+        }
+
+        if (recyclerView != null) {
+            recyclerView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+        }
         notifySelectionChanged();
     }
 
@@ -290,7 +323,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
             return;
         }
         MaterialCardView card = (MaterialCardView) holder.itemView;
-        int selectedColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.example_1_selection_color);
+        int selectedColor = MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorSecondary);
         TypedValue typedValue = new TypedValue();
         holder.itemView.getContext().getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true);
         int defaultColor = typedValue.data;
@@ -299,10 +332,10 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
 
     private void applySelectionMode(WorkoutExerciseViewHolder holder, boolean selectionMode) {
         if (holder.getDragHandle() != null) {
-            holder.getDragHandle().setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+            ViewUtils.animateOverlayVisibility(holder.getDragHandle(), selectionMode);
         }
         if (holder.getRemoveIcon() != null) {
-            holder.getRemoveIcon().setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+            ViewUtils.animateOverlayVisibility(holder.getRemoveIcon(), selectionMode);
         }
     }
 

@@ -19,6 +19,9 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.google.android.material.color.MaterialColors;
+import androidx.core.graphics.ColorUtils;
+import android.graphics.Color;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -245,9 +248,12 @@ public class StatisticsFragment extends Fragment {
         }
 
         LineDataSet dataSet = new LineDataSet(entries, getString(R.string.stats_weekly_frequency_title));
-        dataSet.setColor(getResources().getColor(R.color.purple_500, null));
+        // use theme primary colors so chart follows the selected accent
+        int primary = MaterialColors.getColor(binding.weeklyTrendChart, androidx.appcompat.R.attr.colorPrimary);
+        int primaryVariant = ColorUtils.blendARGB(primary, Color.BLACK, 0.16f);
+        dataSet.setColor(primary);
         dataSet.setLineWidth(2f);
-        dataSet.setCircleColor(getResources().getColor(R.color.purple_700, null));
+        dataSet.setCircleColor(primaryVariant);
         dataSet.setCircleRadius(3.5f);
         dataSet.setDrawValues(false);
         dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);

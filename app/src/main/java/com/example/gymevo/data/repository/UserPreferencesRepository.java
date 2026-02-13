@@ -8,10 +8,13 @@ import androidx.datastore.preferences.core.Preferences;
 import androidx.datastore.preferences.core.PreferencesKeys;
 import androidx.datastore.rxjava3.RxDataStore;
 import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder;
+import kotlin.OptIn;
+import kotlinx.coroutines.ExperimentalCoroutinesApi;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
+@OptIn(markerClass = ExperimentalCoroutinesApi.class)
 public class UserPreferencesRepository {
 
     private static final String DATASTORE_NAME = "user_preferences";

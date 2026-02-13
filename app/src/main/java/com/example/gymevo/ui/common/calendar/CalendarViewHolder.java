@@ -10,7 +10,6 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.R;
-import com.google.android.material.R.attr;
 import com.google.android.material.color.MaterialColors;
 
 public class CalendarViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -44,13 +43,13 @@ public class CalendarViewHolder extends RecyclerView.ViewHolder implements View.
 
     void setState(boolean selected, boolean today) {
         int bgColor = selected
-            ? MaterialColors.getColor(itemView, attr.colorSecondary)
+            ? MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorSecondary)
             : ContextCompat.getColor(itemView.getContext(), android.R.color.transparent);
         int textColor = selected
-            ? MaterialColors.getColor(itemView, attr.colorOnSecondary)
+            ? MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorOnSecondary)
             : (today
-                ? MaterialColors.getColor(itemView, attr.colorPrimary)
-                : MaterialColors.getColor(itemView, attr.colorOnSurface));
+                ? MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorSecondary)
+                : MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorOnSurface));
 
         itemView.setBackgroundColor(bgColor);
         dayTextView.setTextColor(textColor);
@@ -63,8 +62,8 @@ public class CalendarViewHolder extends RecyclerView.ViewHolder implements View.
         }
         indicatorView.setVisibility(visible ? View.VISIBLE : View.GONE);
         int indicatorColor = selected
-            ? MaterialColors.getColor(itemView, attr.colorOnSecondary)
-            : MaterialColors.getColor(itemView, attr.colorSecondary);
+            ? MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorOnSecondary)
+            : MaterialColors.getColor(itemView, com.google.android.material.R.attr.colorSecondary);
         indicatorView.setBackgroundTintList(ColorStateList.valueOf(indicatorColor));
     }
 

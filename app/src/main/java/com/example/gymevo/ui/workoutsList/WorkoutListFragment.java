@@ -18,6 +18,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.R;
@@ -954,7 +955,7 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
         expandedIsNew = isNew;
         workoutsAdapter.setExpandedState(expandedWorkoutRef, expandedWorkoutCopy,
                 expandedExercises, expandedIsNew);
-        workoutsAdapter.notifyDataSetChanged();
+        workoutsAdapter.notifyItemRangeChanged(0, workoutsAdapter.getItemCount());
         if (backPressedCallback != null) {
             backPressedCallback.setEnabled(true);
         }
@@ -968,34 +969,30 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
             RecyclerView.ViewHolder holder = workoutsRecyclerView.findViewHolderForAdapterPosition(position);
             if (holder == null) {
                 workoutsRecyclerView.scrollToPosition(position);
-                workoutsRecyclerView.post(() -> scrollExpandedIfTall(position));
+                workoutsRecyclerView.post(() -> scrollExpandedToTop(position));
                 return;
             }
-            scrollExpandedIfTall(position);
+            scrollExpandedToTop(position);
         });
     }
 
-    private void scrollExpandedIfTall(int position) {
+    private void scrollExpandedToTop(int position) {
         if (workoutsRecyclerView == null) {
             return;
         }
-        RecyclerView.ViewHolder holder = workoutsRecyclerView.findViewHolderForAdapterPosition(position);
-        if (holder == null) {
-            return;
-        }
-        View expandedLayout = holder.itemView.findViewById(R.id.layout_workout_expand);
-        if (expandedLayout == null) {
-            return;
-        }
-        int expandedHeight = expandedLayout.getHeight();
-        int listHeight = workoutsRecyclerView.getHeight();
-        if (expandedHeight >= listHeight) {
-            RecyclerView.LayoutManager layoutManager = workoutsRecyclerView.getLayoutManager();
-            if (layoutManager instanceof LinearLayoutManager) {
-                ((LinearLayoutManager) layoutManager).scrollToPositionWithOffset(position, 0);
-            } else {
-                workoutsRecyclerView.scrollToPosition(position);
-            }
+        RecyclerView.LayoutManager layoutManager = workoutsRecyclerView.getLayoutManager();
+        if (layoutManager instanceof LinearLayoutManager) {
+            LinearLayoutManager lm = (LinearLayoutManager) layoutManager;
+            RecyclerView.SmoothScroller smoothScroller = new LinearSmoothScroller(workoutsRecyclerView.getContext()) {
+                @Override
+                protected int getVerticalSnapPreference() {
+                    return SNAP_TO_START;
+                }
+            };
+            smoothScroller.setTargetPosition(position);
+            lm.startSmoothScroll(smoothScroller);
+        } else {
+            workoutsRecyclerView.scrollToPosition(position);
         }
     }
 
@@ -1012,7 +1009,7 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
             pendingNewWorkout = null;
         }
         workoutsAdapter.clearExpandedState();
-        workoutsAdapter.notifyDataSetChanged();
+        workoutsAdapter.notifyItemRangeChanged(0, workoutsAdapter.getItemCount());
         if (backPressedCallback != null) {
             backPressedCallback.setEnabled(false);
         }

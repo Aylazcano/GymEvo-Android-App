@@ -1,11 +1,13 @@
 package com.example.gymevo.ui.exercisesList;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.HapticFeedbackConstants;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,6 +24,7 @@ import com.example.gymevo.ui.common.ImageUi;
 import com.example.gymevo.ui.common.StarUi;
 import com.google.android.material.R.attr;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -182,7 +185,7 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
         }
         selectedKeys.clear();
         selectionModeActive = false;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
         notifySelectionChanged();
     }
 
@@ -190,6 +193,7 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
         if (exercise == null) {
             return;
         }
+        boolean wasSelectionMode = selectionModeActive;
         String key = getSelectionKey(exercise);
         if (selectedKeys.contains(key)) {
             selectedKeys.remove(key);
@@ -197,7 +201,21 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
             selectedKeys.add(key);
         }
         selectionModeActive = true;
-        notifyDataSetChanged();
+
+        if (!wasSelectionMode) {
+            // entering selection mode — update whole list so selection-mode UI (handles) appears
+            notifyItemRangeChanged(0, getItemCount());
+        } else {
+            // only the toggled item needs to update — prevents UI flicker
+            int idx = getCurrentList().indexOf(exercise);
+            if (idx >= 0) {
+                notifyItemChanged(idx);
+            }
+        }
+
+        if (recyclerView != null) {
+            recyclerView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+        }
         notifySelectionChanged();
     }
 
@@ -219,6 +237,7 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
         return new ViewHolder(view);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Exercise exercise = getItem(position);
@@ -260,8 +279,8 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
         }
         if (holder.dragHandle != null) {
             holder.dragHandle.setOnTouchListener((v, event) -> {
-                if (event.getActionMasked() == MotionEvent.ACTION_DOWN
-                        && itemTouchHelper != null) {
+                if (itemTouchHelper != null && event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.performClick();
                     itemTouchHelper.startDrag(holder);
                 }
                 return false;
@@ -273,6 +292,22 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
     public void onViewRecycled(@NonNull ViewHolder holder) {
         holder.clearImageLoop();
         super.onViewRecycled(holder);
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull ViewHolder holder) {
+        holder.clearImageLoop();
+        super.onViewDetachedFromWindow(holder);
+    }
+
+    @Override
+    public void onViewAttachedToWindow(@NonNull ViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        int position = holder.getBindingAdapterPosition();
+        if (position == RecyclerView.NO_POSITION || position >= getCurrentList().size()) {
+            return;
+        }
+        holder.bindImageLoop(getCurrentList().get(position));
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -301,6 +336,14 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
             nameText.setText(exercise.getName());
             musclesText.setText(exercise.getTargetedMusclesLabel());
             StarUi.apply(starIcon, exercise.isStar());
+            bindImageLoop(exercise);
+        }
+
+        void bindImageLoop(Exercise exercise) {
+            if (exercise == null) {
+                exerciseImage.setImageResource(R.drawable.ic_menu_gallery);
+                return;
+            }
             ImageUi.startExerciseLoop(exerciseImage, exercise.getImageA(), exercise.getImageB());
         }
 
@@ -313,10 +356,10 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
                 return;
             }
             int defaultStrokeWidth = dpToPx(cardView, 1);
-            int defaultStrokeColor = resolveThemeColor(cardView, attr.colorPrimary);
+            int defaultStrokeColor = resolveThemeColor(cardView, androidx.appcompat.R.attr.colorPrimary);
             int strokeWidth = selected ? dpToPx(cardView, 2) : defaultStrokeWidth;
             int strokeColor = selected
-                    ? ContextCompat.getColor(cardView.getContext(), R.color.example_1_selection_color)
+                    ? MaterialColors.getColor(cardView, com.google.android.material.R.attr.colorSecondary)
                     : defaultStrokeColor;
             cardView.setStrokeWidth(strokeWidth);
             cardView.setStrokeColor(strokeColor);
@@ -324,10 +367,10 @@ public class ExerciseListAdapter extends ListAdapter<Exercise, ExerciseListAdapt
 
         void applySelectionMode(boolean selectionMode) {
             if (dragHandle != null) {
-                dragHandle.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+                com.example.gymevo.ui.common.ViewUtils.animateOverlayVisibility(dragHandle, selectionMode);
             }
             if (removeIcon != null) {
-                removeIcon.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
+                com.example.gymevo.ui.common.ViewUtils.animateOverlayVisibility(removeIcon, selectionMode);
             }
             if (starIcon != null) {
                 starIcon.setVisibility(selectionMode ? View.GONE : View.VISIBLE);

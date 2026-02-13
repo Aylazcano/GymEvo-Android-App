@@ -1,6 +1,5 @@
 package com.example.gymevo.ui.settings;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,12 +7,15 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.Fragment;
 
 import com.example.gymevo.R;
 import com.example.gymevo.data.repository.UserPreferencesRepository;
 import com.example.gymevo.databinding.FragmentSettingsBinding;
-import com.example.gymevo.ui.common.ThemeUtils;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.color.MaterialColors;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -23,7 +25,7 @@ public class SettingsFragment extends Fragment {
     private FragmentSettingsBinding binding;
     private UserPreferencesRepository userPreferencesRepository;
     private final CompositeDisposable disposables = new CompositeDisposable();
-    private String currentThemeName = ThemeUtils.THEME_DEFAULT;
+    private String currentThemeName = "default";
     private boolean suppressChanges;
 
     @Override
@@ -35,6 +37,7 @@ public class SettingsFragment extends Fragment {
         selectTheme(currentThemeName);
         setupThemePicker();
         loadThemeSelection();
+        updatePreview(currentThemeName);
         return binding.getRoot();
     }
 
@@ -46,25 +49,26 @@ public class SettingsFragment extends Fragment {
     }
 
     private void setupThemePicker() {
-        binding.themeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (suppressChanges) {
-                return;
-            }
-            String themeName = mapThemeName(checkedId);
-            if (themeName == null || themeName.equalsIgnoreCase(currentThemeName)) {
-                return;
-            }
+        binding.themeChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (suppressChanges) return;
+            View checked = group.findViewById(checkedId);
+            if (checked == null || checked.getTag() == null) return;
+            String themeName = checked.getTag().toString();
+            if (themeName.equalsIgnoreCase(currentThemeName)) return;
+
+            // immediate visual feedback in the preview
+            updatePreview(themeName);
+
             currentThemeName = themeName;
             disposables.add(userPreferencesRepository.setThemeName(themeName)
                     .subscribeOn(Schedulers.io())
                     .subscribe(() -> {
-                                if (!isAdded()) {
-                                    return;
-                                }
-                                requireActivity().runOnUiThread(this::restartActivity);
                             },
                             throwable -> {
                             }));
+            if (isAdded()) {
+                restartActivity();
+            }
         });
     }
 
@@ -72,15 +76,12 @@ public class SettingsFragment extends Fragment {
         disposables.add(userPreferencesRepository.getThemeName()
                 .subscribeOn(Schedulers.io())
                 .subscribe(themeName -> {
-                            if (!isAdded()) {
-                                return;
-                            }
+                            if (!isAdded()) return;
                             requireActivity().runOnUiThread(() -> {
-                                if (binding == null) {
-                                    return;
-                                }
+                                if (binding == null) return;
                                 currentThemeName = themeName;
                                 selectTheme(themeName);
+                                updatePreview(themeName);
                             });
                         },
                         throwable -> {
@@ -88,54 +89,69 @@ public class SettingsFragment extends Fragment {
     }
 
     private void selectTheme(String themeName) {
-        if (binding == null) {
-            return;
-        }
+        if (binding == null) return;
         suppressChanges = true;
-        int checkedId = getThemeId(themeName);
-        if (checkedId != View.NO_ID) {
-            binding.themeRadioGroup.check(checkedId);
+        Chip chip = findChipByTag(themeName);
+        if (chip != null) {
+            binding.themeChipGroup.check(chip.getId());
         }
         suppressChanges = false;
     }
 
-    private int getThemeId(String themeName) {
-        if (ThemeUtils.THEME_RED.equalsIgnoreCase(themeName)) {
-            return R.id.theme_red;
-        }
-        if (ThemeUtils.THEME_GREEN.equalsIgnoreCase(themeName)) {
-            return R.id.theme_green;
-        }
-        if (ThemeUtils.THEME_BLUE.equalsIgnoreCase(themeName)) {
-            return R.id.theme_blue;
-        }
-        return R.id.theme_default;
-    }
-
-    private String mapThemeName(int checkedId) {
-        if (checkedId == R.id.theme_red) {
-            return ThemeUtils.THEME_RED;
-        }
-        if (checkedId == R.id.theme_green) {
-            return ThemeUtils.THEME_GREEN;
-        }
-        if (checkedId == R.id.theme_blue) {
-            return ThemeUtils.THEME_BLUE;
-        }
-        if (checkedId == R.id.theme_default) {
-            return ThemeUtils.THEME_DEFAULT;
+    private Chip findChipByTag(String tag) {
+        if (binding == null) return null;
+        for (int i = 0; i < binding.themeChipGroup.getChildCount(); i++) {
+            View child = binding.themeChipGroup.getChildAt(i);
+            Object t = child.getTag();
+            if (t != null && t.toString().equalsIgnoreCase(tag) && child instanceof Chip) {
+                return (Chip) child;
+            }
         }
         return null;
     }
 
-    private void restartActivity() {
-        if (!isAdded()) {
-            return;
+    private void updatePreview(String themeName) {
+        if (binding == null || themeName == null) return;
+
+        int color = resolveThemePrimaryColor(themeName);
+
+        // apply to preview swatch
+        binding.themePreviewSample.setBackgroundColor(color);
+        binding.themePreviewLabel.setText(getString(R.string.settings_theme_preview_format, resolveThemeLabel(themeName)));
+
+        // choose readable text color (black or white) using luminance
+        double luminance = ColorUtils.calculateLuminance(color);
+        int textColor = luminance < 0.5d ? ContextCompat.getColor(requireContext(), android.R.color.white)
+                : ContextCompat.getColor(requireContext(), android.R.color.black);
+        binding.themePreviewLabel.setTextColor(textColor);
+    }
+
+    private int resolveThemePrimaryColor(@NonNull String themeName) {
+        switch (themeName.trim().toLowerCase(java.util.Locale.ROOT)) {
+            case "red":
+                return ContextCompat.getColor(requireContext(), R.color.gym_red_primary);
+            case "green":
+                return ContextCompat.getColor(requireContext(), R.color.gym_green_primary);
+            case "blue":
+                return ContextCompat.getColor(requireContext(), R.color.gym_blue_primary);
+            case "gray":
+                return ContextCompat.getColor(requireContext(), R.color.gym_gray_primary);
+            case "default":
+            default:
+                return MaterialColors.getColor(binding.getRoot(), androidx.appcompat.R.attr.colorPrimary);
         }
-        suppressChanges = true;
-        Intent intent = requireActivity().getIntent();
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-        requireActivity().finish();
+    }
+
+    private String resolveThemeLabel(@NonNull String themeName) {
+        Chip chip = findChipByTag(themeName);
+        if (chip != null && chip.getText() != null) {
+            return chip.getText().toString();
+        }
+        return themeName;
+    }
+
+    private void restartActivity() {
+        if (!isAdded()) return;
+        requireActivity().recreate();
     }
 }

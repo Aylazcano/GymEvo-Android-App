@@ -28,6 +28,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.color.MaterialColors;
 import android.provider.OpenableColumns;
 
 import java.util.ArrayList;
@@ -432,7 +433,9 @@ public final class ExerciseFormDialog {
         if (isNullOrEmpty(uri)) {
             preview.setVisibility(View.VISIBLE);
             preview.setImageResource(android.R.drawable.ic_menu_camera);
-            ImageViewCompat.setImageTintList(preview, android.content.res.ColorStateList.valueOf(Color.parseColor("#DDFFFFFF")));
+            int base = MaterialColors.getColor(preview, com.google.android.material.R.attr.colorOnSurface);
+            int tint = (0xDD << 24) | (base & 0x00FFFFFF);
+            ImageViewCompat.setImageTintList(preview, android.content.res.ColorStateList.valueOf(tint));
             setVisible(filename, false);
             return;
         }

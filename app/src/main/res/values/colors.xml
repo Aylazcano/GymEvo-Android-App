@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="example_1_bg">#3A284C</color>
-    <color name="example_1_bg_light">#433254</color>
-    <color name="example_1_bg_secondary">#51356E</color>
-    <color name="example_1_white_light">#4DFFFFFF</color>
-    <color name="example_1_white">#D9FFFFFF</color>
-    <color name="example_1_selection_color">#FCCA3E</color>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="star_on">#FFC107</color>
     <color name="star_off">#9E9E9E</color>
 
@@ -47,4 +34,23 @@
     <color name="gym_blue_secondary">#FF90CAF9</color>
     <color name="gym_blue_secondary_variant">#FF42A5F5</color>
     <color name="gym_blue_on_secondary">#FF000000</color>
+
+    <!-- Gray theme colors -->
+    <color name="gym_gray_primary">#FF424242</color>
+    <color name="gym_gray_primary_variant">#FF212121</color>
+    <color name="gym_gray_on_primary">#FFFFFFFF</color>
+    <color name="gym_gray_secondary">#FF607D8B</color>
+    <color name="gym_gray_secondary_variant">#FF455A64</color>
+    <color name="gym_gray_on_secondary">#FFFFFFFF</color>
+
+    <!-- Gray surfaces / background (light mode) -->
+    <color name="gym_gray_surface">#FFFFFFFF</color>
+    <color name="gym_gray_on_surface">#FF000000</color>
+    <color name="gym_gray_background">#FFFFFFFF</color>
+    <color name="gym_gray_on_background">#FF000000</color>
+    <!-- overlay behind small action icons (adjusts for light/dark via values-night) -->
+    <!-- stronger translucent bg for icon overlays (light theme) - higher contrast for black icons -->
+    <color name="overlay_icon_bg">#99FFFFFF</color>
+    <!-- stronger stroke for legibility against varied content -->
+    <color name="overlay_icon_stroke">#66000000</color>
 </resources>

@@ -1,27 +1,37 @@
 package com.example.gymevo.ui.common;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+
 import com.example.gymevo.R;
 
-public final class ThemeUtils {
+import java.util.Locale;
 
-    public static final String THEME_DEFAULT = "default";
-    public static final String THEME_RED = "red";
-    public static final String THEME_GREEN = "green";
-    public static final String THEME_BLUE = "blue";
+public final class ThemeUtils {
 
     private ThemeUtils() {
     }
 
-    public static int getThemeResId(String themeName) {
-        if (THEME_RED.equalsIgnoreCase(themeName)) {
-            return R.style.Theme_GymEvo_Red;
+    /**
+     * Maps persisted theme name to a concrete style resource.
+     */
+    public static int getThemeResId(@NonNull Context context, @NonNull String themeName) {
+        if (themeName == null) {
+            return R.style.Theme_GymEvo;
         }
-        if (THEME_GREEN.equalsIgnoreCase(themeName)) {
-            return R.style.Theme_GymEvo_Green;
+
+        switch (themeName.trim().toLowerCase(Locale.ROOT)) {
+            case "red":
+                return R.style.Theme_GymEvo_Red;
+            case "green":
+                return R.style.Theme_GymEvo_Green;
+            case "blue":
+                return R.style.Theme_GymEvo_Blue;
+            case "gray":
+                return R.style.Theme_GymEvo_Gray;
+            case "default":
+            default:
+                return R.style.Theme_GymEvo;
         }
-        if (THEME_BLUE.equalsIgnoreCase(themeName)) {
-            return R.style.Theme_GymEvo_Blue;
-        }
-        return R.style.Theme_GymEvo;
     }
 }

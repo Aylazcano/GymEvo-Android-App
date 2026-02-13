@@ -18,47 +18,119 @@
             android:text="@string/settings_theme_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
 
+        <TextView
+            android:id="@+id/theme_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:alpha="0.82"
+            android:text="@string/settings_theme_description"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textColor="?attr/colorOnSurface" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="12dp"
             app:cardElevation="1dp"
             app:strokeWidth="1dp"
             app:strokeColor="?attr/colorPrimary">
 
-            <RadioGroup
-                android:id="@+id/theme_radio_group"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="12dp">
 
-                <RadioButton
-                    android:id="@+id/theme_default"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/theme_default" />
+                <!-- Live preview for the selected accent -->
+                <LinearLayout
+                    android:id="@+id/theme_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:orientation="horizontal"
+                    android:padding="8dp"
+                    android:gravity="center_vertical"
+                    android:background="@android:color/transparent">
 
-                <RadioButton
-                    android:id="@+id/theme_red"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/theme_red" />
+                    <View
+                        android:id="@+id/theme_preview_sample"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="?attr/colorPrimary"
+                        android:contentDescription="@string/theme_preview_sample" />
 
-                <RadioButton
-                    android:id="@+id/theme_green"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/theme_green" />
+                    <TextView
+                        android:id="@+id/theme_preview_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_preview"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
+                </LinearLayout>
 
-                <RadioButton
-                    android:id="@+id/theme_blue"
-                    android:layout_width="wrap_content"
+                <!-- Chip-based accent chooser -->
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/theme_chip_group"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/theme_blue" />
-            </RadioGroup>
+                    app:singleSelection="true"
+                    app:chipSpacing="8dp"
+                    android:layout_marginTop="12dp">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_default"
+                        android:tag="default"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_default"
+                        app:chipStrokeWidth="2dp"
+                        app:chipStrokeColor="?attr/colorPrimary" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_red"
+                        android:tag="red"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_red"
+                        app:chipStrokeWidth="2dp"
+                        app:chipStrokeColor="@color/gym_red_primary" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_green"
+                        android:tag="green"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_green"
+                        app:chipStrokeWidth="2dp"
+                        app:chipStrokeColor="@color/gym_green_primary" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_blue"
+                        android:tag="blue"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_blue"
+                        app:chipStrokeWidth="2dp"
+                        app:chipStrokeColor="@color/gym_blue_primary" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_gray"
+                        android:tag="gray"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/theme_gray"
+                        app:chipStrokeWidth="2dp"
+                        app:chipStrokeColor="@color/gym_gray_primary" />
+
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

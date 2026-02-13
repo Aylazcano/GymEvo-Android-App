@@ -4,6 +4,13 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.MotionEvent;
+
+import androidx.navigation.NavOptions;
+import androidx.annotation.NonNull;
+
+import com.example.gymevo.ui.common.GestureConfig;
+import com.example.gymevo.ui.common.GestureManager;
 
 import androidx.annotation.Nullable;
 import androidx.activity.OnBackPressedCallback;
@@ -41,6 +48,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean isSearchExpanded;
     private boolean isUpdatingSearch;
 
+    // Gesture manager for global fragment swipes (config in GestureConfig)
+    private GestureManager gestureManager;
+    private float fragmentSwipeStartX;
+    private float fragmentSwipeStartY;
+    private boolean fragmentSwipeStartedInCalendar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         applyUserTheme();
@@ -57,9 +69,69 @@ public class MainActivity extends AppCompatActivity {
 
         initNavigation();
 
+        initializeFragmentSwipe();
+
         binding.appBarMain.fab.setOnClickListener(this::handleFabClick);
     }
 
+    private void initializeFragmentSwipe() {
+        gestureManager = new GestureManager(this, this::navigateByFragmentDelta);
+    }
+
+    /**
+     * Intercept touch events so we can detect global fragment swipes. We ignore gestures that start inside
+     * the calendar layout to avoid conflicts with calendar swipes.
+     */
+    @Override
+    public boolean dispatchTouchEvent(@NonNull MotionEvent ev) {
+        int action = ev.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
+            fragmentSwipeStartX = ev.getRawX();
+            fragmentSwipeStartY = ev.getRawY();
+            fragmentSwipeStartedInCalendar = isPointInsideCalendar(fragmentSwipeStartX, fragmentSwipeStartY);
+        }
+        // Only process global gestures when our guard allows it and the gesture didn't start in the calendar
+        if (!fragmentSwipeStartedInCalendar && gestureManager != null && shouldProcessGlobalGesture()) {
+            gestureManager.onTouchEvent(ev);
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private boolean isPointInsideCalendar(float rawX, float rawY) {
+        View calendar = findViewById(R.id.calendarLayout);
+        if (calendar == null || !calendar.isShown()) return false;
+        int[] loc = new int[2];
+        calendar.getLocationOnScreen(loc);
+        int left = loc[0];
+        int top = loc[1];
+        int right = left + calendar.getWidth();
+        int bottom = top + calendar.getHeight();
+        return rawX >= left && rawX <= right && rawY >= top && rawY <= bottom;
+    }
+
+    public void navigateByFragmentDelta(int delta) {
+        if (navController == null) return;
+        Integer id = getCurrentDestinationId();
+        if (id == null) return;
+        int idx = -1;
+        int[] order = GestureConfig.DEFAULT_NAV_ORDER;
+        for (int i = 0; i < order.length; i++) {
+            if (order[i] == id) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx == -1) return; // current destination not in our ordered list
+        int nextIdx = (idx + delta) % order.length;
+        if (nextIdx < 0) nextIdx += order.length;
+        int nextId = order[nextIdx];
+        if (nextId == id) return;
+        NavOptions opts = new NavOptions.Builder()
+                .setPopUpTo(navController.getGraph().getId(), false)
+                .setLaunchSingleTop(true)
+                .build();
+        navController.navigate(nextId, null, opts);
+    }
     public void showSelectionBar(int selectedCount,
                                  View.OnClickListener moveUp,
                                  View.OnClickListener moveDown,
@@ -69,7 +141,10 @@ public class MainActivity extends AppCompatActivity {
         }
         binding.appBarMain.toolbar.setVisibility(View.GONE);
         selectionBarBinding.getRoot().setVisibility(View.VISIBLE);
-        selectionBarBinding.textSelectionCount.setText(getString(R.string.selection_count, selectedCount));
+        selectionBarBinding.textSelectionCount.setText(getResources().getQuantityString(
+            R.plurals.selection_count,
+            selectedCount,
+            selectedCount));
         selectionBarBinding.buttonBack.setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         selectionBarBinding.buttonMoveUp.setOnClickListener(moveUp);
         selectionBarBinding.buttonMoveDown.setOnClickListener(moveDown);
@@ -105,7 +180,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initNavigation() {
-        navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        // Obtain NavController from NavHostFragment to ensure the NavHost is attached
+        androidx.navigation.fragment.NavHostFragment navHostFragment =
+                (androidx.navigation.fragment.NavHostFragment) getSupportFragmentManager()
+                        .findFragmentById(R.id.nav_host_fragment_content_main);
+        if (navHostFragment != null) {
+            navController = navHostFragment.getNavController();
+        } else {
+            // Fallback (rare): use Navigation API which may throw if the NavHost isn't attached yet
+            navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        }
 
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
@@ -127,6 +211,12 @@ public class MainActivity extends AppCompatActivity {
             if (!isHeaderActionsSupported()) {
                 collapseSearchIfExpanded();
             }
+        });
+
+        // Keep track of changes to decide if we should process global gestures
+        // (e.g. don't swipe while search is open)
+        binding.appBarMain.selectionBar.getRoot().addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            // no-op; this ensures selectionBarBinding exists and can be queried
         });
     }
 
@@ -153,6 +243,18 @@ public class MainActivity extends AppCompatActivity {
         return navController.getCurrentDestination() != null
                 ? navController.getCurrentDestination().getId()
                 : null;
+    }
+
+    private boolean shouldProcessGlobalGesture() {
+        // Don't process swipes when search is expanded
+        if (isSearchExpanded) return false;
+        // Don't process swipes when selection bar is visible
+        if (selectionBarBinding != null && selectionBarBinding.getRoot().getVisibility() == View.VISIBLE) return false;
+        // Don't process swipes when a DialogFragment is visible
+        for (Fragment f : getSupportFragmentManager().getFragments()) {
+            if (f instanceof androidx.fragment.app.DialogFragment && f.isVisible()) return false;
+        }
+        return true;
     }
 
     private SavedStateHandle getSavedStateHandle() {
@@ -279,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
     private void applyUserTheme() {
         UserPreferencesRepository repository = UserPreferencesRepository.getInstance(this);
         String themeName = repository.getThemeNameImmediate();
-        setTheme(ThemeUtils.getThemeResId(themeName));
+        setTheme(ThemeUtils.getThemeResId(this, themeName));
     }
 
     private void configureSearchView() {

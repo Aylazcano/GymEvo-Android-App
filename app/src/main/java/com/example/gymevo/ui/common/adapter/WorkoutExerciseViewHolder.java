@@ -89,6 +89,14 @@ public class WorkoutExerciseViewHolder extends RecyclerView.ViewHolder {
         distanceQtyTextView.setText(formatDistance(exercise.getDistance()));
         kcalValueTextView.setText(formatKcal(exercise.getCalories()));
         applyMetricVisibility(exercise);
+        bindImageLoop(exercise);
+    }
+
+    public void bindImageLoop(ExerciseInWorkout exercise) {
+        if (exercise == null) {
+            exerciseImageView.setImageResource(R.drawable.ic_menu_gallery);
+            return;
+        }
         ImageUi.startExerciseLoop(exerciseImageView, exercise.getImageA(), exercise.getImageB());
     }
 
@@ -97,7 +105,7 @@ public class WorkoutExerciseViewHolder extends RecyclerView.ViewHolder {
     }
 
     private String formatValue(Integer value) {
-        return value == null ? EMPTY_VALUE : String.valueOf(value);
+        return value == null ? EMPTY_VALUE : Integer.toString(value);
     }
 
     private String formatDuration(Integer seconds) {
@@ -107,7 +115,7 @@ public class WorkoutExerciseViewHolder extends RecyclerView.ViewHolder {
         int safe = Math.max(0, seconds);
         int minutes = safe / 60;
         int remaining = safe % 60;
-        return String.format("%02d:%02d", minutes, remaining);
+        return String.format(java.util.Locale.getDefault(), "%02d:%02d", minutes, remaining);
     }
 
     private String formatDistance(Integer meters) {
@@ -119,7 +127,7 @@ public class WorkoutExerciseViewHolder extends RecyclerView.ViewHolder {
             double km = safe / 1000.0;
             return String.format(java.util.Locale.getDefault(), "%.2f km", km);
         }
-        return String.valueOf(safe) + " m";
+        return safe + " m";
     }
 
     private String formatKcal(Integer value) {

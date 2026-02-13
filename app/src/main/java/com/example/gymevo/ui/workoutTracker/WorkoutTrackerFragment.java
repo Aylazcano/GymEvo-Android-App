@@ -1,5 +1,6 @@
 package com.example.gymevo.ui.workoutTracker;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -69,7 +70,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
     private List<ExerciseInWorkout> currentExercises = new ArrayList<>();
     private boolean isMonthView = true;
     private GestureDetector gestureDetector;
-    private GestureDetector workoutSwipeDetector;
     private CalendarHeaderBinding calendarHeaderBinding;
     private final List<Workout> availableWorkouts = new ArrayList<>();
     private final Set<LocalDate> workoutDatesWithExercises = new HashSet<>();
@@ -182,7 +182,6 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         calendarRecyclerView.setItemAnimator(null);
         headerTouchSlop = ViewConfiguration.get(requireContext()).getScaledTouchSlop();
         headerStepPx = Math.round(HEADER_STEP_DP * getResources().getDisplayMetrics().density);
-        workoutTouchSlop = ViewConfiguration.get(requireContext()).getScaledTouchSlop();
     }
 
     private void initializeViewModel() {
@@ -283,6 +282,7 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
                 }));
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initializeHeaderSwipe() {
         View swipeArea = calendarHeaderBinding.calendarHeaderSwipeArea;
         swipeArea.setOnTouchListener(this::handleHeaderSwipe);
@@ -368,93 +368,11 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
         helper.attachToRecyclerView(workoutRecyclerView);
         workoutAdapter.setItemTouchHelper(helper);
 
-        workoutSwipeDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-            private static final int SWIPE_THRESHOLD_PX = 80;
-            private static final int SWIPE_VELOCITY_PX = 200;
-
-            @Override
-            public boolean onDown(MotionEvent e) {
-                return true;
-            }
-
-            @Override
-            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                if (e1 == null || e2 == null) {
-                    return false;
-                }
-                float dx = e2.getX() - e1.getX();
-                float dy = e2.getY() - e1.getY();
-                if (Math.abs(dx) <= Math.abs(dy)) {
-                    return false;
-                }
-                if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(velocityX) < SWIPE_VELOCITY_PX) {
-                    return false;
-                }
-                int delta = dx < 0 ? 1 : -1;
-                changeSelectedDateByDays(delta);
-                return true;
-            }
-        });
-
-        workoutRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
-            @Override
-            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                forwardWorkoutSwipeEvent(e);
-                return shouldInterceptWorkoutTouch(e);
-            }
-
-            @Override
-            public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                forwardWorkoutSwipeEvent(e);
-                resetWorkoutSwipeOnFinish(e);
-            }
-
-            @Override
-            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-                // No-op
-            }
-        });
+        // Gesture handling for left/right swipes is centralized in the activity to avoid conflicts
+        // and duplicate navigation. No local fling handling is needed here.
     }
 
-    private void forwardWorkoutSwipeEvent(@NonNull MotionEvent event) {
-        if (workoutSwipeDetector != null) {
-            workoutSwipeDetector.onTouchEvent(event);
-        }
-    }
 
-    private boolean shouldInterceptWorkoutTouch(@NonNull MotionEvent event) {
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                workoutSwipeStartX = event.getX();
-                workoutSwipeStartY = event.getY();
-                workoutSwipeInProgress = false;
-                return false;
-            case MotionEvent.ACTION_MOVE:
-                if (!workoutSwipeInProgress && isHorizontalSwipe(event)) {
-                    workoutSwipeInProgress = true;
-                    return true;
-                }
-                return false;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                return workoutSwipeInProgress;
-            default:
-                return false;
-        }
-    }
-
-    private boolean isHorizontalSwipe(@NonNull MotionEvent event) {
-        float dx = event.getX() - workoutSwipeStartX;
-        float dy = event.getY() - workoutSwipeStartY;
-        return Math.abs(dx) > workoutTouchSlop && Math.abs(dx) > Math.abs(dy);
-    }
-
-    private void resetWorkoutSwipeOnFinish(@NonNull MotionEvent event) {
-        int action = event.getActionMasked();
-        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-            workoutSwipeInProgress = false;
-        }
-    }
 
     private void changeSelectedDateByDays(int delta) {
         if (selectedDate == null) {

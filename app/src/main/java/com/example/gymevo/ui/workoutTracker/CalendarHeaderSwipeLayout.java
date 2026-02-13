@@ -20,8 +20,4 @@ public class CalendarHeaderSwipeLayout extends LinearLayout {
         super(context, attrs, defStyleAttr);
     }
 
-    @Override
-    public boolean performClick() {
-        return super.performClick();
-    }
 }

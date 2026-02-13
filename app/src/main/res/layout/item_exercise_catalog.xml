@@ -11,98 +11,99 @@
     app:strokeWidth="1dp"
     app:strokeColor="?attr/colorPrimary">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="@dimen/workout_item_padding">
 
-        <ImageView
-            android:id="@+id/image_drag_handle"
-            android:layout_width="40dp"
-            android:layout_height="72dp"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="@string/action_move"
-            android:padding="8dp"
-            android:scaleType="center"
-            android:src="@drawable/ic_drag_handle_24"
-            app:tint="?attr/colorOnSurface" />
+        <!-- main content (drag/remove are overlays) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
         <ImageView
             android:id="@+id/image_exercise_photo"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginEnd="12dp"
+            android:layout_width="@dimen/list_item_image_size"
+            android:layout_height="@dimen/list_item_image_size"
+            android:layout_marginEnd="8dp"
             android:contentDescription="@string/exercise_label"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_menu_gallery" />
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
                     <TextView
                         android:id="@+id/text_exercise_name"
                         android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="@string/exercise_label"
                         android:autoSizeTextType="uniform"
                         android:textStyle="bold"
-                        android:textColor="?attr/colorOnSurface" />
+                        android:textColor="?attr/colorOnSurface"
+                        android:paddingStart="0dp"
+                        android:paddingEnd="@dimen/star_touch_size" />
 
                     <TextView
                         android:id="@+id/text_exercise_muscles"
                         android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="@string/exercise_targeted_muscles"
                         android:textSize="14sp"
                         android:textColor="?attr/colorOnSurface"
                         android:alpha="0.8" />
 
-                </LinearLayout>
+        </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/image_exercise_star"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:padding="8dp"
-                    android:contentDescription="@string/exercise_starred_label"
-                    android:src="@android:drawable/btn_star_big_off"
-                    android:visibility="visible"
-                    app:tint="?attr/colorOnSurface" />
-
-                <ImageView
-                    android:id="@+id/image_remove"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:padding="8dp"
-                    android:layout_marginStart="8dp"
-                    android:contentDescription="@string/action_delete"
-                    android:src="@android:drawable/ic_menu_close_clear_cancel"
-                    android:visibility="gone"
-                    app:tint="?attr/colorOnSurface" />
-            </LinearLayout>
+        <!-- star overlay (top-end) - larger touch target to cover corner -->
+        <ImageView
+            android:id="@+id/image_exercise_star"
+            android:layout_width="@dimen/star_touch_size"
+            android:layout_height="@dimen/star_touch_size"
+            android:layout_gravity="end|top"
+            android:layout_marginEnd="4dp"
+            android:padding="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/exercise_starred_label"
+            android:src="@android:drawable/btn_star_big_off"
+            android:visibility="visible"
+            app:tint="?attr/colorOnSurface" />
 
         </LinearLayout>
 
-    </LinearLayout>
+        <!-- overlay icons -->
+        <ImageView
+            android:id="@+id/image_drag_handle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/overlay_icon_bg"
+            android:contentDescription="@string/action_move"
+            android:padding="6dp"
+            android:scaleType="center"
+            android:src="@drawable/ic_drag_handle_24"
+            app:tint="?attr/colorOnSurface" />
+
+        <ImageView
+            android:id="@+id/image_remove"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/overlay_icon_bg"
+            android:padding="6dp"
+            android:contentDescription="@string/action_delete"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:visibility="gone"
+            app:tint="?attr/colorOnSurface" />
+
+    </FrameLayout>
 
 </com.google.android.material.card.MaterialCardView>

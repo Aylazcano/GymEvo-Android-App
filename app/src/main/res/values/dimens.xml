@@ -9,4 +9,14 @@
     <dimen name="section_header_padding_start">16dp</dimen>
     <dimen name="section_header_padding_bottom">6dp</dimen>
     <dimen name="section_header_text_size">12sp</dimen>
+
+    <!-- Workout item sizing (compact by default). Keep small, reusable values for maintainability -->
+    <dimen name="workout_item_padding">4dp</dimen>
+    <dimen name="workout_item_icon_size">36dp</dimen>
+    <dimen name="star_touch_size">40dp</dimen>
+    <dimen name="workout_item_date_margin_top">4dp</dimen>
+    <dimen name="workout_item_count_margin_top">2dp</dimen>
+
+    <!-- Shared list image size so list items stay visually consistent -->
+    <dimen name="list_item_image_size">64dp</dimen>
 </resources>
