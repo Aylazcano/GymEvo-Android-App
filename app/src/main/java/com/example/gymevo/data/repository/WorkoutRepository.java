@@ -6,9 +6,12 @@ import androidx.lifecycle.LiveData;
 
 import com.example.gymevo.R;
 import com.example.gymevo.data.local.AppDatabase;
+import com.example.gymevo.data.local.ExerciseDao;
 import com.example.gymevo.data.local.ExerciseInWorkoutDao;
 import com.example.gymevo.data.local.WorkoutDao;
+import com.example.gymevo.data.seed.FreeExerciseDbSeeder;
 import com.example.gymevo.data.seed.WorkoutSeed;
+import com.example.gymevo.model.Exercise;
 import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.Workout;
 import com.example.gymevo.model.WorkoutWithExercises;
@@ -27,6 +30,7 @@ public class WorkoutRepository {
     }
 
     private final WorkoutDao workoutDao;
+    private final ExerciseDao exerciseDao;
     private final ExerciseInWorkoutDao exerciseInWorkoutDao;
     private final LiveData<List<WorkoutWithExercises>> templatesLiveData;
     private final Application application;
@@ -35,6 +39,7 @@ public class WorkoutRepository {
         this.application = application;
         AppDatabase db = AppDatabase.getDatabase(application);
         workoutDao = db.workoutDao();
+        exerciseDao = db.exerciseDao();
         exerciseInWorkoutDao = db.exerciseInWorkoutDao();
         templatesLiveData = workoutDao.getWorkoutsWithExercisesByType(Workout.WorkoutType.TEMPLATE);
         seedTemplatesIfEmpty();
@@ -166,7 +171,11 @@ public class WorkoutRepository {
             if (count > 0) {
                 return;
             }
-            List<Workout> seed = WorkoutSeed.generateWorkouts();
+            List<Exercise> catalog = FreeExerciseDbSeeder.ensureSeeded(
+                    application.getApplicationContext(),
+                    exerciseDao
+            );
+            List<Workout> seed = WorkoutSeed.generateWorkouts(catalog);
             if (seed == null || seed.isEmpty()) {
                 return;
             }

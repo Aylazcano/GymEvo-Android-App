@@ -3,8 +3,6 @@ package com.example.gymevo.ui.common;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
@@ -12,11 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.graphics.Color;
 import androidx.core.widget.ImageViewCompat;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 
 import com.example.gymevo.R;
 import com.example.gymevo.model.Exercise;
@@ -38,11 +32,6 @@ public final class ExerciseFormDialog {
 
     private static final String DEFAULT_MUSCLES_LABEL = "-";
     private static final int DEFAULT_NAME_MAX = 100000;
-
-    private static final int THUMB_SIZE_PX = 256;
-    private static final int THUMB_JPEG_QUALITY = 80;
-    private static final String THUMB_DIR = "exercise_thumbs";
-    private static final String THUMB_PREFIX = "thumb_";
 
     public interface OnExerciseSaved {
         void onSaved(Exercise exercise, boolean isNew);
@@ -141,12 +130,11 @@ public final class ExerciseFormDialog {
                             if (isNullOrEmpty(uri)) {
                                 return;
                             }
-                            String thumbUri = createThumbnailUri(context, uri, THUMB_SIZE_PX);
-                            setTextIfNotNull(startImageInput, thumbUri);
-                            updatePreview(context, startPreview, startFilename, thumbUri);
-                            setVisible(endBlock, !isNullOrEmpty(thumbUri));
-                            setVisible(endPreview, !isNullOrEmpty(thumbUri));
-                            setVisible(removeStartButton, !isNullOrEmpty(thumbUri));
+                            setTextIfNotNull(startImageInput, uri);
+                            updatePreview(context, startPreview, startFilename, uri);
+                            setVisible(endBlock, !isNullOrEmpty(uri));
+                            setVisible(endPreview, !isNullOrEmpty(uri));
+                            setVisible(removeStartButton, !isNullOrEmpty(uri));
                         })
                 );
             }
@@ -156,10 +144,9 @@ public final class ExerciseFormDialog {
                             if (isNullOrEmpty(uri)) {
                                 return;
                             }
-                            String thumbUri = createThumbnailUri(context, uri, THUMB_SIZE_PX);
-                            setTextIfNotNull(endImageInput, thumbUri);
-                            updatePreview(context, endPreview, endFilename, thumbUri);
-                            setVisible(removeEndButton, !isNullOrEmpty(thumbUri));
+                            setTextIfNotNull(endImageInput, uri);
+                            updatePreview(context, endPreview, endFilename, uri);
+                            setVisible(removeEndButton, !isNullOrEmpty(uri));
                         })
                 );
             }
@@ -478,70 +465,5 @@ public final class ExerciseFormDialog {
 
     private static boolean isNullOrEmpty(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    private static String createThumbnailUri(Context context, String uriString, int maxSizePx) {
-        if (context == null || isNullOrEmpty(uriString)) {
-            return uriString;
-        }
-        Uri uri = Uri.parse(uriString);
-        try (InputStream boundsStream = context.getContentResolver().openInputStream(uri)) {
-            if (boundsStream == null) {
-                return uriString;
-            }
-            BitmapFactory.Options bounds = new BitmapFactory.Options();
-            bounds.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(boundsStream, null, bounds);
-
-            int sampleSize = 1;
-            int width = bounds.outWidth;
-            int height = bounds.outHeight;
-            while (width / sampleSize > maxSizePx || height / sampleSize > maxSizePx) {
-                sampleSize *= 2;
-            }
-
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = Math.max(1, sampleSize);
-            try (InputStream imageStream = context.getContentResolver().openInputStream(uri)) {
-                if (imageStream == null) {
-                    return uriString;
-                }
-                Bitmap decoded = BitmapFactory.decodeStream(imageStream, null, options);
-                if (decoded == null) {
-                    return uriString;
-                }
-
-                Bitmap scaled = scaleToMax(decoded, maxSizePx);
-                if (scaled != decoded) {
-                    decoded.recycle();
-                }
-
-                File dir = new File(context.getCacheDir(), THUMB_DIR);
-                if (!dir.exists() && !dir.mkdirs()) {
-                    return uriString;
-                }
-                File file = new File(dir, THUMB_PREFIX + System.currentTimeMillis() + ".jpg");
-                try (FileOutputStream out = new FileOutputStream(file)) {
-                    scaled.compress(Bitmap.CompressFormat.JPEG, THUMB_JPEG_QUALITY, out);
-                }
-                scaled.recycle();
-                return Uri.fromFile(file).toString();
-            }
-        } catch (Exception ignored) {
-            return uriString;
-        }
-    }
-
-    private static Bitmap scaleToMax(Bitmap source, int maxSizePx) {
-        int width = source.getWidth();
-        int height = source.getHeight();
-        int maxSide = Math.max(width, height);
-        if (maxSide <= maxSizePx) {
-            return source;
-        }
-        float scale = maxSizePx / (float) maxSide;
-        int newWidth = Math.round(width * scale);
-        int newHeight = Math.round(height * scale);
-        return Bitmap.createScaledBitmap(source, newWidth, newHeight, true);
     }
 }

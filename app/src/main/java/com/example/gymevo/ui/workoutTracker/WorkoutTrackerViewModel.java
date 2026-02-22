@@ -281,6 +281,7 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
                 null
         );
         copy.setType(source.getType());
+        copy.copyCatalogMetadataFrom(source);
         copy.setShowSeries(source.isShowSeries());
         copy.setShowRepetitions(source.isShowRepetitions());
         copy.setShowWeight(source.isShowWeight());

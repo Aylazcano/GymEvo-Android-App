@@ -33,7 +33,7 @@ import com.example.gymevo.ui.common.sort.SortOrder;
 
 import com.example.gymevo.R;
 import com.example.gymevo.data.local.AppDatabase;
-import com.example.gymevo.data.seed.WorkoutSeed;
+import com.example.gymevo.data.seed.FreeExerciseDbSeeder;
 import com.example.gymevo.model.Exercise;
 import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.ExerciseType;
@@ -311,18 +311,11 @@ public final class ExerciseEditDialog {
             return;
         }
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            List<Exercise> exercises = new ArrayList<>();
             AppDatabase db = AppDatabase.getDatabase(context.getApplicationContext());
-            List<Exercise> stored = db.exerciseDao().getAllExercisesNow();
-            if (stored != null && !stored.isEmpty()) {
-                exercises.addAll(stored);
-            } else {
-                List<Exercise> seed = WorkoutSeed.generateExercises();
-                if (!seed.isEmpty()) {
-                    db.exerciseDao().insertAll(seed);
-                    exercises.addAll(seed);
-                }
-            }
+            List<Exercise> exercises = FreeExerciseDbSeeder.ensureSeeded(
+                    context.getApplicationContext(),
+                    db.exerciseDao()
+            );
 
             new Handler(Looper.getMainLooper()).post(() -> callback.onLoaded(exercises));
         });
@@ -431,6 +424,7 @@ public final class ExerciseEditDialog {
                 source.getWorkoutId()
         );
         copy.setType(source.getType());
+        copy.copyCatalogMetadataFrom(source);
         copy.setWeightInKg(source.isWeightInKg());
         return copy;
     }
@@ -453,6 +447,7 @@ public final class ExerciseEditDialog {
         target.setImageB(source.getImageB());
         target.setExerciseId(source.getId());
         target.setType(source.getType());
+        target.copyCatalogMetadataFrom(source);
         target.setShowSeries(source.isShowSeries());
         target.setShowRepetitions(source.isShowRepetitions());
         target.setShowWeight(source.isShowWeight());
@@ -518,6 +513,7 @@ public final class ExerciseEditDialog {
         Exercise exercise = new Exercise(name, muscles, current.getImageA(), current.getImageB(), false);
         exercise.setId(current.getExerciseId());
         exercise.setType(current.getType());
+        exercise.copyCatalogMetadataFrom(current);
         exercise.setShowSeries(current.isShowSeries());
         exercise.setShowRepetitions(current.isShowRepetitions());
         exercise.setShowWeight(current.isShowWeight());

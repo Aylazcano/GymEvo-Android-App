@@ -1,31 +1,39 @@
 package com.example.gymevo.data.repository;
 
 import android.app.Application;
+import android.net.Uri;
+import android.text.TextUtils;
 
 import androidx.lifecycle.LiveData;
 
 import com.example.gymevo.data.local.AppDatabase;
 import com.example.gymevo.data.local.ExerciseDao;
+import com.example.gymevo.data.local.ExerciseImageSyncQueueDao;
 import com.example.gymevo.data.local.ExerciseInWorkoutDao;
-import com.example.gymevo.data.seed.WorkoutSeed;
+import com.example.gymevo.data.seed.FreeExerciseDbSeeder;
+import com.example.gymevo.data.sync.ExerciseImageSyncConfig;
+import com.example.gymevo.data.sync.ExerciseImageSyncScheduler;
 import com.example.gymevo.model.Exercise;
+import com.example.gymevo.model.ExerciseImageSyncQueueItem;
+import com.example.gymevo.util.ExerciseImageStore;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.io.File;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 public class ExerciseRepository {
 
+    private final Application application;
     private final ExerciseDao exerciseDao;
     private final ExerciseInWorkoutDao exerciseInWorkoutDao;
+    private final ExerciseImageSyncQueueDao exerciseImageSyncQueueDao;
     private final LiveData<List<Exercise>> allExercises;
 
     public ExerciseRepository(Application application) {
+        this.application = application;
         AppDatabase db = AppDatabase.getDatabase(application);
         exerciseDao = db.exerciseDao();
         exerciseInWorkoutDao = db.exerciseInWorkoutDao();
+        exerciseImageSyncQueueDao = db.exerciseImageSyncQueueDao();
         allExercises = exerciseDao.getAllExercises();
         seedMissingExercises();
     }
@@ -39,12 +47,16 @@ public class ExerciseRepository {
             return;
         }
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            persistExerciseImages(exercise);
+
             long now = System.currentTimeMillis();
             if (exercise.getCreatedAt() <= 0L) {
                 exercise.setCreatedAt(now);
             }
             exercise.setUpdatedAt(now);
-            exerciseDao.insert(exercise);
+            long id = exerciseDao.insert(exercise);
+            exercise.setId(id);
+            queuePendingImageSync(exercise);
         });
     }
 
@@ -53,6 +65,8 @@ public class ExerciseRepository {
             return;
         }
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            persistExerciseImages(exercise);
+
             Exercise existing = null;
             if (exercise.getId() != null) {
                 existing = exerciseDao.getByIdNow(exercise.getId());
@@ -64,6 +78,15 @@ public class ExerciseRepository {
                         exercise.getId(),
                         exercise.getName(),
                         exercise.getTargetedMuscles(),
+                    exercise.getSourceId(),
+                    exercise.getForce(),
+                    exercise.getLevel(),
+                    exercise.getMechanic(),
+                    exercise.getEquipment(),
+                    exercise.getCategory(),
+                    exercise.getPrimaryMuscles(),
+                    exercise.getSecondaryMuscles(),
+                    exercise.getInstructions(),
                         exercise.getImageA(),
                         exercise.getImageB(),
                         exercise.getType(),
@@ -82,6 +105,15 @@ public class ExerciseRepository {
                         existing.getTargetedMuscles(),
                         exercise.getName(),
                         exercise.getTargetedMuscles(),
+                    exercise.getSourceId(),
+                    exercise.getForce(),
+                    exercise.getLevel(),
+                    exercise.getMechanic(),
+                    exercise.getEquipment(),
+                    exercise.getCategory(),
+                    exercise.getPrimaryMuscles(),
+                    exercise.getSecondaryMuscles(),
+                    exercise.getInstructions(),
                         exercise.getImageA(),
                         exercise.getImageB(),
                         exercise.getType(),
@@ -94,6 +126,7 @@ public class ExerciseRepository {
                         exercise.isShowCalories()
                 );
             }
+            queuePendingImageSync(exercise);
         });
     }
 
@@ -111,48 +144,64 @@ public class ExerciseRepository {
 
     private void seedMissingExercises() {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            List<Exercise> existing = exerciseDao.getAllExercisesNow();
-            List<Exercise> seed = WorkoutSeed.generateExercises();
-            if (seed == null || seed.isEmpty()) {
-                return;
-            }
-            if (existing == null || existing.isEmpty()) {
-                exerciseDao.insertAll(seed);
-                return;
-            }
-
-            Set<String> existingKeys = new HashSet<>();
-            for (Exercise current : existing) {
-                if (current != null) {
-                    existingKeys.add(buildKey(current.getName(), current.getTargetedMusclesLabel()));
-                }
-            }
-
-            List<Exercise> missing = new ArrayList<>();
-            for (Exercise candidate : seed) {
-                if (candidate == null) {
-                    continue;
-                }
-                String key = buildKey(candidate.getName(), candidate.getTargetedMusclesLabel());
-                if (!existingKeys.contains(key)) {
-                    missing.add(candidate);
-                }
-            }
-
-            if (!missing.isEmpty()) {
-                exerciseDao.insertAll(missing);
-            }
+            FreeExerciseDbSeeder.ensureSeeded(application.getApplicationContext(), exerciseDao);
         });
     }
 
-    private static String buildKey(String name, String muscles) {
-        return normalize(name) + "|" + normalize(muscles);
+    private void persistExerciseImages(Exercise exercise) {
+        ExerciseImageStore.PersistResult result =
+                ExerciseImageStore.persistIfNeeded(application.getApplicationContext(), exercise);
+        exercise.setImageA(result.imageA);
+        exercise.setImageB(result.imageB);
     }
 
-    private static String normalize(String value) {
-        if (value == null) {
-            return "";
+    private void queuePendingImageSync(Exercise exercise) {
+        if (exercise == null || exercise.getId() == null) {
+            return;
         }
-        return value.trim().toLowerCase(Locale.US);
+
+        exerciseImageSyncQueueDao.deleteByExerciseId(exercise.getId());
+
+        long now = System.currentTimeMillis();
+        upsertQueueItem(exercise, "imageA", exercise.getImageA(), now);
+        upsertQueueItem(exercise, "imageB", exercise.getImageB(), now);
+
+        if (ExerciseImageSyncConfig.isValid()) {
+            ExerciseImageSyncScheduler.enqueue(application.getApplicationContext());
+        }
+    }
+
+    private void upsertQueueItem(Exercise exercise, String slot, String localUri, long now) {
+        File localFile = toFile(localUri);
+        if (localFile == null || !localFile.exists() || !localFile.isFile()) {
+            return;
+        }
+
+        ExerciseImageSyncQueueItem item = new ExerciseImageSyncQueueItem();
+        item.setExerciseId(exercise.getId());
+        item.setExerciseKey(exercise.getName());
+        item.setSlot(slot);
+        item.setSourceUri(localUri);
+        item.setLocalUri(localUri);
+        item.setLocalPath(localFile.getAbsolutePath());
+        item.setLocalLastModified(localFile.lastModified());
+        item.setStatus(ExerciseImageSyncQueueItem.STATUS_PENDING);
+        item.setRetryCount(0);
+        item.setCreatedAt(now);
+        item.setUpdatedAt(now);
+        exerciseImageSyncQueueDao.upsert(item);
+    }
+
+    private File toFile(String uriOrPath) {
+        if (TextUtils.isEmpty(uriOrPath)) {
+            return null;
+        }
+        String value = uriOrPath.trim();
+        if (value.startsWith("file://")) {
+            Uri uri = Uri.parse(value);
+            String path = uri.getPath();
+            return path == null ? null : new File(path);
+        }
+        return new File(value);
     }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 public interface ExerciseDao {
 
     @Insert
-    void insert(Exercise exercise);
+    long insert(Exercise exercise);
 
     @Insert
     void insertAll(List<Exercise> exercises);

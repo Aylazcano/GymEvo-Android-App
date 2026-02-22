@@ -1200,6 +1200,7 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
             exercise.getWorkoutId()
         );
         copy.setType(exercise.getType());
+        copy.copyCatalogMetadataFrom(exercise);
         copy.setShowSeries(exercise.isShowSeries());
         copy.setShowRepetitions(exercise.isShowRepetitions());
         copy.setShowWeight(exercise.isShowWeight());

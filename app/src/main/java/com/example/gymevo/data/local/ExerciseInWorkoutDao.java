@@ -18,10 +18,19 @@ public interface ExerciseInWorkoutDao {
     @Query("DELETE FROM exercise_in_workout WHERE workoutId = :workoutId")
     void deleteByWorkoutId(Long workoutId);
 
-    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate, showDistance = :showDistance, showCalories= :showCalories WHERE exerciseId = :exerciseId")
+    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, sourceId = :sourceId, force = :force, level = :level, mechanic = :mechanic, equipment = :equipment, category = :category, primaryMuscles = :primaryMuscles, secondaryMuscles = :secondaryMuscles, instructions = :instructions, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate, showDistance = :showDistance, showCalories= :showCalories WHERE exerciseId = :exerciseId")
     void updateExerciseDetailsByExerciseId(Long exerciseId,
                                            String name,
                                            MuscleGroup targetedMuscles,
+                                           String sourceId,
+                                           String force,
+                                           String level,
+                                           String mechanic,
+                                           String equipment,
+                                           String category,
+                                           String primaryMuscles,
+                                           String secondaryMuscles,
+                                           String instructions,
                                            String imageA,
                                            String imageB,
                                            ExerciseType type,
@@ -33,11 +42,20 @@ public interface ExerciseInWorkoutDao {
                                            boolean showDistance,
                                            boolean showCalories);
 
-    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate, showDistance = :showDistance, showCalories= :showCalories  WHERE exerciseId IS NULL AND name = :oldName AND targetedMuscles IS :oldTargetedMuscles")
+    @Query("UPDATE exercise_in_workout SET name = :name, targetedMuscles = :targetedMuscles, sourceId = :sourceId, force = :force, level = :level, mechanic = :mechanic, equipment = :equipment, category = :category, primaryMuscles = :primaryMuscles, secondaryMuscles = :secondaryMuscles, instructions = :instructions, imageA = :imageA, imageB = :imageB, type = :type, showSeries = :showSeries, showRepetitions = :showRepetitions, showWeight = :showWeight, showTime = :showTime, showHeartRate = :showHeartRate, showDistance = :showDistance, showCalories= :showCalories  WHERE exerciseId IS NULL AND name = :oldName AND targetedMuscles IS :oldTargetedMuscles")
     void updateExerciseDetailsByLegacyKey(String oldName,
                                           MuscleGroup oldTargetedMuscles,
                                           String name,
                                           MuscleGroup targetedMuscles,
+                                          String sourceId,
+                                          String force,
+                                          String level,
+                                          String mechanic,
+                                          String equipment,
+                                          String category,
+                                          String primaryMuscles,
+                                          String secondaryMuscles,
+                                          String instructions,
                                           String imageA,
                                           String imageB,
                                           ExerciseType type,

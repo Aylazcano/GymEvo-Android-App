@@ -11,6 +11,15 @@ public class Exercise {
 
     private String name;
     private MuscleGroup targetedMuscles;
+    private String sourceId;
+    private String force;
+    private String level;
+    private String mechanic;
+    private String equipment;
+    private String category;
+    private String primaryMuscles;
+    private String secondaryMuscles;
+    private String instructions;
     private String imageA;
     private String imageB;
     private boolean isStar;
@@ -60,6 +69,78 @@ public class Exercise {
 
     public void setTargetedMuscles(MuscleGroup targetedMuscles) {
         this.targetedMuscles = targetedMuscles;
+    }
+
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    public void setSourceId(String sourceId) {
+        this.sourceId = sourceId;
+    }
+
+    public String getForce() {
+        return force;
+    }
+
+    public void setForce(String force) {
+        this.force = force;
+    }
+
+    public String getLevel() {
+        return level;
+    }
+
+    public void setLevel(String level) {
+        this.level = level;
+    }
+
+    public String getMechanic() {
+        return mechanic;
+    }
+
+    public void setMechanic(String mechanic) {
+        this.mechanic = mechanic;
+    }
+
+    public String getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(String equipment) {
+        this.equipment = equipment;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getPrimaryMuscles() {
+        return primaryMuscles;
+    }
+
+    public void setPrimaryMuscles(String primaryMuscles) {
+        this.primaryMuscles = primaryMuscles;
+    }
+
+    public String getSecondaryMuscles() {
+        return secondaryMuscles;
+    }
+
+    public void setSecondaryMuscles(String secondaryMuscles) {
+        this.secondaryMuscles = secondaryMuscles;
+    }
+
+    public String getInstructions() {
+        return instructions;
+    }
+
+    public void setInstructions(String instructions) {
+        this.instructions = instructions;
     }
 
     @Ignore
@@ -205,6 +286,21 @@ public class Exercise {
 
     public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public void copyCatalogMetadataFrom(Exercise source) {
+        if (source == null) {
+            return;
+        }
+        sourceId = source.getSourceId();
+        force = source.getForce();
+        level = source.getLevel();
+        mechanic = source.getMechanic();
+        equipment = source.getEquipment();
+        category = source.getCategory();
+        primaryMuscles = source.getPrimaryMuscles();
+        secondaryMuscles = source.getSecondaryMuscles();
+        instructions = source.getInstructions();
     }
 
     private static String normalizeName(String value) {
