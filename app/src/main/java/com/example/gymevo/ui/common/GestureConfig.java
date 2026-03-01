@@ -9,7 +9,10 @@ public final class GestureConfig {
             com.example.gymevo.R.id.nav_workout_tracker,
             com.example.gymevo.R.id.nav_statistics,
             com.example.gymevo.R.id.nav_exercises_list,
-            com.example.gymevo.R.id.nav_workout_list
+            com.example.gymevo.R.id.nav_workout_list,
+            com.example.gymevo.R.id.nav_notes,
+            com.example.gymevo.R.id.nav_body_status,
+            com.example.gymevo.R.id.nav_calorie_tracker
     };
 
     private GestureConfig() {

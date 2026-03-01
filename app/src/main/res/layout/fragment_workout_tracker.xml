@@ -46,5 +46,8 @@
         android:layout_height="match_parent"
         android:layout_margin="8dp"
         android:clipToPadding="false"
+        android:scrollbars="vertical"
+        android:scrollbarStyle="outsideOverlay"
+        android:fadeScrollbars="true"
         android:paddingBottom="88dp"/>
 </LinearLayout>

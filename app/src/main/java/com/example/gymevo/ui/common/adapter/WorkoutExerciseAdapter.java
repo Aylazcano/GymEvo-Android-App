@@ -323,7 +323,7 @@ public class WorkoutExerciseAdapter extends RecyclerView.Adapter<WorkoutExercise
             return;
         }
         MaterialCardView card = (MaterialCardView) holder.itemView;
-        int selectedColor = MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorSecondary);
+        int selectedColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.selection_highlight);
         TypedValue typedValue = new TypedValue();
         holder.itemView.getContext().getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true);
         int defaultColor = typedValue.data;

@@ -2,6 +2,7 @@
 <resources>
     <color name="star_on">#FFC107</color>
     <color name="star_off">#9E9E9E</color>
+    <color name="selection_highlight">#FFC107</color>
 
     <!-- Default (light) theme colors -->
     <color name="gym_primary">#FF6200EE</color>

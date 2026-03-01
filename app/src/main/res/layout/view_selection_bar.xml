@@ -56,4 +56,14 @@
         android:src="@android:drawable/ic_menu_delete"
         app:tint="?attr/colorOnSurface" />
 
+    <ImageButton
+        android:id="@+id/button_copy"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/action_copy"
+        android:src="@android:drawable/ic_menu_agenda"
+        app:tint="?attr/colorOnSurface"
+        android:visibility="gone" />
+
 </LinearLayout>

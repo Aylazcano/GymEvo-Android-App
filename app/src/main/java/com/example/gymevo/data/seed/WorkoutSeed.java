@@ -324,7 +324,7 @@ public final class WorkoutSeed {
                 exercise.getImageB(),
                 series,
                 repetitions,
-                weight,
+                (float) weight,
                 time,
                 heartRates,
                 null,

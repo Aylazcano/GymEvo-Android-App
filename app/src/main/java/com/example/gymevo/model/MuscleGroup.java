@@ -45,6 +45,47 @@ public enum MuscleGroup {
         return label;
     }
 
+    /**
+     * Returns an integer representing the anatomical order from head to toe.
+     * Used for top-to-bottom body sort.
+     */
+    public int anatomicalOrder() {
+        switch (this) {
+            case NECK:          return 0;
+            case TRAPS:         return 1;
+            case SHOULDERS:     return 2;
+            case FRONT_DELTS:   return 3;
+            case LATERAL_DELTS: return 4;
+            case REAR_DELTS:    return 5;
+            case CHEST:         return 6;
+            case UPPER_CHEST:   return 7;
+            case LOWER_CHEST:   return 8;
+            case BACK:          return 9;
+            case UPPER_BACK:    return 10;
+            case MIDDLE_BACK:   return 11;
+            case LATS:          return 12;
+            case RHOMBOIDS:     return 13;
+            case ARMS:          return 14;
+            case BICEPS:        return 15;
+            case TRICEPS:       return 16;
+            case FOREARMS:      return 17;
+            case ABS:           return 18;
+            case OBLIQUES:      return 19;
+            case LOWER_BACK:    return 20;
+            case HIP_FLEXORS:   return 21;
+            case GLUTES:        return 22;
+            case LEGS:          return 23;
+            case QUADRICEPS:    return 24;
+            case HAMSTRINGS:    return 25;
+            case ADDUCTORS:     return 26;
+            case ABDUCTORS:     return 27;
+            case CALVES:        return 28;
+            case FULL_BODY:     return 29;
+            case OTHER:
+            default:            return 30;
+        }
+    }
+
     public static MuscleGroup fromLabel(String value) {
         if (value == null) {
             return null;

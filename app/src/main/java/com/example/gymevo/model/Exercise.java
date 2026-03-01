@@ -40,6 +40,35 @@ public class Exercise {
     }
 
     @Ignore
+    public Exercise(Exercise source) {
+        this.id = source.id;
+        this.name = source.name;
+        this.targetedMuscles = source.targetedMuscles;
+        this.sourceId = source.sourceId;
+        this.force = source.force;
+        this.level = source.level;
+        this.mechanic = source.mechanic;
+        this.equipment = source.equipment;
+        this.category = source.category;
+        this.primaryMuscles = source.primaryMuscles;
+        this.secondaryMuscles = source.secondaryMuscles;
+        this.instructions = source.instructions;
+        this.imageA = source.imageA;
+        this.imageB = source.imageB;
+        this.isStar = source.isStar;
+        this.type = source.type;
+        this.showSeries = source.showSeries;
+        this.showRepetitions = source.showRepetitions;
+        this.showWeight = source.showWeight;
+        this.showTime = source.showTime;
+        this.showHeartRate = source.showHeartRate;
+        this.showDistance = source.showDistance;
+        this.showCalories = source.showCalories;
+        this.createdAt = source.createdAt;
+        this.updatedAt = source.updatedAt;
+    }
+
+    @Ignore
     public Exercise(String name, MuscleGroup targetedMuscles, String imageA, String imageB, boolean isStar) {
         this(name, targetedMuscles, imageA, imageB, isStar, ExerciseType.ANAEROBIC);
     }
@@ -164,14 +193,8 @@ public class Exercise {
     public String getImageA() { return imageA; }
     public void setImageA(String imageA) { this.imageA = imageA; }
 
-    public String getStartImage() { return imageA; }
-    public void setStartImage(String startImage) { this.imageA = startImage; }
-
     public String getImageB() { return imageB; }
     public void setImageB(String imageB) { this.imageB = imageB; }
-
-    public String getEndImage() { return imageB; }
-    public void setEndImage(String endImage) { this.imageB = endImage; }
 
     public boolean isStar() { return isStar; }
     public void setStar(boolean isStar) { this.isStar = isStar; }

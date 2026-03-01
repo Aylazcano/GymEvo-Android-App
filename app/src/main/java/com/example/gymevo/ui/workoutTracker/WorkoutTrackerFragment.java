@@ -37,6 +37,7 @@ import com.example.gymevo.model.Workout;
 import com.example.gymevo.ui.common.ConfirmDeleteDialog;
 import com.example.gymevo.ui.common.ExerciseEditDialog;
 import com.example.gymevo.ui.common.DragDropItemTouchHelper;
+import com.example.gymevo.ui.common.ImportWorkoutBottomSheet;
 import com.example.gymevo.data.repository.UserPreferencesRepository;
 import com.example.gymevo.ui.common.adapter.WorkoutExerciseAdapter;
 import com.example.gymevo.ui.common.calendar.CalendarAdapter;
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.OnItemListener, MainActivity.WorkoutTrackerMenuDelegate {
@@ -468,20 +470,18 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
             return;
         }
 
-        CharSequence[] names = new CharSequence[availableWorkouts.size()];
-        for (int i = 0; i < availableWorkouts.size(); i++) {
-            Workout workout = availableWorkouts.get(i);
-            String name = workout != null ? workout.getName() : "";
-            names[i] = TextUtils.isEmpty(name)
-                    ? getString(R.string.workout_import_unnamed, i + 1)
-                    : name;
-        }
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.workout_import_from_list)
-                .setItems(names, (dialog, which) -> handleWorkoutImportSelection(which))
-                .setNegativeButton(R.string.action_cancel, null)
-                .show();
+        ImportWorkoutBottomSheet sheet = ImportWorkoutBottomSheet.newInstance(
+                availableWorkouts,
+                workout -> {
+                    boolean imported = workoutTrackerViewModel.importExercisesFromWorkout(selectedDate, workout);
+                    if (imported) {
+                        showToast(getString(R.string.workout_import_success));
+                    } else {
+                        showToast(getString(R.string.workout_import_failed));
+                    }
+                }
+        );
+        sheet.show(getChildFragmentManager(), "import_workout");
     }
 
     private void handleWorkoutImportSelection(int index) {
@@ -701,6 +701,17 @@ public class WorkoutTrackerFragment extends Fragment implements CalendarAdapter.
                 continue;
             }
             if (targetId != null && targetId.equals(item.getId())) {
+                return i;
+            }
+        }
+        // Fallback: match by name + exerciseId (for imported exercises without DB IDs)
+        String targetName = target.getName();
+        Long targetExerciseId = target.getExerciseId();
+        for (int i = exercises.size() - 1; i >= 0; i--) {
+            ExerciseInWorkout item = exercises.get(i);
+            if (item == null) continue;
+            if (Objects.equals(targetName, item.getName())
+                    && Objects.equals(targetExerciseId, item.getExerciseId())) {
                 return i;
             }
         }

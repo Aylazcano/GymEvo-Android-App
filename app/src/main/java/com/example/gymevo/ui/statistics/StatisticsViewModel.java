@@ -30,9 +30,9 @@ public class StatisticsViewModel extends AndroidViewModel {
     private static class ExerciseAggregate {
         String name;
         int volume;
-        int maxWeight;
+        float maxWeight;
         int best1RM;
-        int bestWeight;
+        float bestWeight;
         int bestReps;
     }
 
@@ -67,7 +67,7 @@ public class StatisticsViewModel extends AndroidViewModel {
         int totalTimeSeconds = 0;
         int totalHeartRate = 0;
         int heartRateCount = 0;
-        int maxWeight = 0;
+        float maxWeight = 0;
         int best1RM = 0;
 
         Set<String> uniqueExercises = new HashSet<>();
@@ -97,13 +97,13 @@ public class StatisticsViewModel extends AndroidViewModel {
                 }
                 int series = safeInt(exercise.getSeries());
                 int reps = safeInt(exercise.getRepetitions());
-                int weight = safeInt(exercise.getWeight());
+                float weight = safeFloat(exercise.getWeight());
                 int time = safeInt(exercise.getTime());
                 int heartRate = safeInt(exercise.getHeartRates());
 
                 totalSets += series;
                 totalReps += series * reps;
-                int volume = series * reps * weight;
+                int volume = (int) (series * reps * weight);
                 totalVolume += volume;
                 totalTimeSeconds += time;
 
@@ -177,7 +177,8 @@ public class StatisticsViewModel extends AndroidViewModel {
             buildTopExercises(exercises, numberFormat),
             buildTopMuscles(muscleVolume, totalVolume, numberFormat),
             buildPersonalRecords(exercises, numberFormat),
-            buildWeeklyFrequency(sessionDates)
+            buildWeeklyFrequency(sessionDates),
+            new HashMap<>(muscleVolume)
         );
 
         statisticsLiveData.setValue(uiModel);
@@ -192,7 +193,7 @@ public class StatisticsViewModel extends AndroidViewModel {
         return name != null ? "name:" + name : "unknown";
     }
 
-    private int estimate1RM(int weight, int reps) {
+    private int estimate1RM(float weight, int reps) {
         if (weight <= 0 || reps <= 0) {
             return 0;
         }
@@ -201,6 +202,17 @@ public class StatisticsViewModel extends AndroidViewModel {
 
     private static int safeInt(Integer value) {
         return value != null ? value : 0;
+    }
+
+    private static float safeFloat(Float value) {
+        return value != null ? value : 0f;
+    }
+
+    private static String formatWeight(float weight) {
+        if (weight == (int) weight) {
+            return String.valueOf((int) weight);
+        }
+        return String.format(Locale.US, "%.1f", weight);
     }
 
     private String getExerciseName(ExerciseInWorkout exercise, String fallback) {
@@ -318,7 +330,7 @@ public class StatisticsViewModel extends AndroidViewModel {
             ExerciseAggregate agg = list.get(i);
             String value = numberFormat.format(agg.volume) + " lb";
             String subtitle = getApplication().getString(
-                R.string.stats_max_weight_format, numberFormat.format(agg.maxWeight));
+                R.string.stats_max_weight_format, formatWeight(agg.maxWeight));
             rows.add(new StatisticsRow(agg.name, value, subtitle));
         }
         return rows;
@@ -362,7 +374,7 @@ public class StatisticsViewModel extends AndroidViewModel {
                 R.string.stats_pr_value_format, numberFormat.format(agg.best1RM));
             String subtitle = getApplication().getString(
                 R.string.stats_pr_subtitle_format,
-                numberFormat.format(agg.bestWeight),
+                formatWeight(agg.bestWeight),
                 numberFormat.format(agg.bestReps));
             rows.add(new StatisticsRow(agg.name, value, subtitle));
         }

@@ -209,6 +209,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:text="@string/stats_muscle_heatmap_title"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textColor="?attr/colorOnSurface" />
+
+        <com.example.gymevo.ui.statistics.MuscleHeatmapView
+            android:id="@+id/muscle_heatmap"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="@string/stats_top_muscle_groups_title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
             android:textColor="?attr/colorOnSurface" />

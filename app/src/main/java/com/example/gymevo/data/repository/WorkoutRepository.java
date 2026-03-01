@@ -15,6 +15,7 @@ import com.example.gymevo.model.Exercise;
 import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.Workout;
 import com.example.gymevo.model.WorkoutWithExercises;
+import com.example.gymevo.ui.common.WorkoutMapper;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class WorkoutRepository {
         runOnDbThread(() -> {
             WorkoutWithExercises result = workoutDao
                     .getWorkoutWithExercisesByTypeAndDateNow(Workout.WorkoutType.SESSION, date);
-            Workout workout = mapToWorkout(result);
+            Workout workout = WorkoutMapper.mapToWorkout(result);
             callback.onLoaded(workout);
         });
     }
@@ -138,7 +139,7 @@ public class WorkoutRepository {
             applyDefaultNameIfMissing(workout, workoutId, now, type);
 
             exerciseInWorkoutDao.deleteByWorkoutId(workoutId);
-            List<ExerciseInWorkout> exercises = safeExercises(workout.getExercises());
+            List<ExerciseInWorkout> exercises = WorkoutMapper.safeExercises(workout.getExercises());
             if (!exercises.isEmpty()) {
                 applyExerciseOrder(exercises);
                 for (ExerciseInWorkout exercise : exercises) {
@@ -185,7 +186,7 @@ public class WorkoutRepository {
                 applyType(workout, Workout.WorkoutType.TEMPLATE);
                 Long workoutId = workoutDao.insertWorkout(workout);
                 workout.setId(workoutId);
-                List<ExerciseInWorkout> exercises = safeExercises(workout.getExercises());
+                List<ExerciseInWorkout> exercises = WorkoutMapper.safeExercises(workout.getExercises());
                 if (!exercises.isEmpty()) {
                     List<ExerciseInWorkout> inserts = new ArrayList<>();
                     for (ExerciseInWorkout exercise : exercises) {
@@ -205,15 +206,6 @@ public class WorkoutRepository {
         });
     }
 
-    private Workout mapToWorkout(WorkoutWithExercises data) {
-        if (data == null || data.workout == null) {
-            return null;
-        }
-        Workout workout = data.workout;
-        workout.setExercises(sortExercises(safeExercises(data.exercises)));
-        return workout;
-    }
-
     private void applyExerciseOrder(List<ExerciseInWorkout> exercises) {
         if (exercises == null) {
             return;
@@ -224,17 +216,6 @@ public class WorkoutRepository {
                 exercise.setOrderIndex(i);
             }
         }
-    }
-
-    private List<ExerciseInWorkout> sortExercises(List<ExerciseInWorkout> exercises) {
-        if (exercises == null || exercises.isEmpty()) {
-            return exercises != null ? exercises : new ArrayList<>();
-        }
-        List<ExerciseInWorkout> sorted = new ArrayList<>(exercises);
-        sorted.sort((a, b) -> Integer.compare(
-                a != null ? a.getOrderIndex() : 0,
-                b != null ? b.getOrderIndex() : 0));
-        return sorted;
     }
 
     private void runOnDbThread(Runnable action) {
@@ -260,9 +241,5 @@ public class WorkoutRepository {
         workout.setName(defaultName);
         workout.setUpdatedAt(now);
         workoutDao.updateWorkout(workout);
-    }
-
-    private List<ExerciseInWorkout> safeExercises(List<ExerciseInWorkout> exercises) {
-        return exercises != null ? exercises : new ArrayList<>();
     }
 }

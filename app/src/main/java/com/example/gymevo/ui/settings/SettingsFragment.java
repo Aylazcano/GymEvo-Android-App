@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import com.example.gymevo.R;
 import com.example.gymevo.data.repository.UserPreferencesRepository;
 import com.example.gymevo.databinding.FragmentSettingsBinding;
+import com.example.gymevo.ui.common.HintDialog;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
 
@@ -38,6 +39,7 @@ public class SettingsFragment extends Fragment {
         setupThemePicker();
         loadThemeSelection();
         updatePreview(currentThemeName);
+        binding.buttonShowTutorial.setOnClickListener(v -> HintDialog.show(requireContext()));
         return binding.getRoot();
     }
 

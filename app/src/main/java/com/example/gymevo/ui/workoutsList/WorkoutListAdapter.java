@@ -539,7 +539,7 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
                 int defaultStrokeColor = resolveThemeColor(cardView, androidx.appcompat.R.attr.colorPrimary);
             int strokeWidth = selected ? dpToPx(cardView, 2) : defaultStrokeWidth;
             int strokeColor = selected
-                    ? MaterialColors.getColor(cardView, com.google.android.material.R.attr.colorSecondary)
+                    ? ContextCompat.getColor(cardView.getContext(), R.color.selection_highlight)
                     : defaultStrokeColor;
             cardView.setStrokeWidth(strokeWidth);
             cardView.setStrokeColor(strokeColor);
@@ -687,6 +687,17 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
         }
     }
 
+    /**
+     * Returns the first letter of the workout name at the given position,
+     * used for the fast-scroll section popup.
+     */
+    public String getSectionText(int position) {
+        if (position < 0 || position >= getCurrentList().size()) return "";
+        Workout w = getItem(position);
+        if (w == null || w.getName() == null || w.getName().isEmpty()) return "";
+        return w.getName().substring(0, 1).toUpperCase();
+    }
+
     private void onStarClicked(WorkoutViewHolder holder, Workout workout) {
         workout.setStar(!workout.isStar());
         holder.applyStarState(workout);
@@ -714,4 +725,5 @@ public class WorkoutListAdapter extends ListAdapter<Workout, WorkoutListAdapter.
             this.isNew = isNew;
         }
     }
+
 }

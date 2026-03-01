@@ -35,4 +35,22 @@
         android:label="@string/menu_settings"
         tools:layout="@layout/fragment_settings" />
 
+    <fragment
+        android:id="@+id/nav_notes"
+        android:name="com.example.gymevo.ui.notes.NotesFragment"
+        android:label="@string/menu_notes"
+        tools:layout="@layout/fragment_notes" />
+
+    <fragment
+        android:id="@+id/nav_body_status"
+        android:name="com.example.gymevo.ui.bodyStatus.BodyStatusFragment"
+        android:label="@string/menu_body_status"
+        tools:layout="@layout/fragment_body_status" />
+
+    <fragment
+        android:id="@+id/nav_calorie_tracker"
+        android:name="com.example.gymevo.ui.calories.CalorieTrackerFragment"
+        android:label="@string/menu_calorie_tracker"
+        tools:layout="@layout/fragment_calorie_tracker" />
+
 </navigation>

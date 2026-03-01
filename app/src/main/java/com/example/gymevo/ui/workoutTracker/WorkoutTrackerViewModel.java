@@ -13,10 +13,12 @@ import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.Workout;
 import com.example.gymevo.model.Workout.WorkoutType;
 import com.example.gymevo.model.WorkoutWithExercises;
+import com.example.gymevo.ui.common.WorkoutMapper;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class WorkoutTrackerViewModel extends AndroidViewModel {
     private final MutableLiveData<List<ExerciseInWorkout>> exercisesOnDateLiveData = new MutableLiveData<>(new ArrayList<>());
@@ -28,7 +30,7 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
         super(application);
         workoutRepository = new WorkoutRepository(application);
         templatesLiveData.addSource(workoutRepository.getTemplateWorkouts(),
-                items -> templatesLiveData.setValue(mapToWorkouts(items)));
+                items -> templatesLiveData.setValue(WorkoutMapper.mapToWorkouts(items)));
         loadWorkoutDatesWithExercises();
     }
 
@@ -230,6 +232,17 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
                 return i;
             }
         }
+        // Fallback: match by name + exerciseId (for imported exercises without DB IDs)
+        String targetName = target.getName();
+        Long targetExerciseId = target.getExerciseId();
+        for (int i = 0; i < exercises.size(); i++) {
+            ExerciseInWorkout existing = exercises.get(i);
+            if (existing == null) continue;
+            if (Objects.equals(targetName, existing.getName())
+                    && Objects.equals(targetExerciseId, existing.getExerciseId())) {
+                return i;
+            }
+        }
         return -1;
     }
 
@@ -256,7 +269,7 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
         if (workout == null || workout.getExercises() == null) {
             return new ArrayList<>();
         }
-        return sortExercises(workout.getExercises());
+        return WorkoutMapper.sortExercises(workout.getExercises());
     }
 
     private List<LocalDate> safeDates(List<LocalDate> dates) {
@@ -290,34 +303,5 @@ public class WorkoutTrackerViewModel extends AndroidViewModel {
         copy.setWeightInKg(source.isWeightInKg());
         copy.setOrderIndex(source.getOrderIndex());
         return copy;
-    }
-
-    private List<Workout> mapToWorkouts(List<WorkoutWithExercises> items) {
-        List<Workout> workouts = new ArrayList<>();
-        if (items == null) {
-            return workouts;
-        }
-        for (WorkoutWithExercises item : items) {
-            if (item == null || item.workout == null) {
-                continue;
-            }
-            Workout workout = item.workout;
-            workout.setExercises(sortExercises(item.exercises != null
-                    ? item.exercises
-                    : new ArrayList<>()));
-            workouts.add(workout);
-        }
-        return workouts;
-    }
-
-    private List<ExerciseInWorkout> sortExercises(List<ExerciseInWorkout> exercises) {
-        if (exercises == null || exercises.isEmpty()) {
-            return exercises != null ? exercises : new ArrayList<>();
-        }
-        List<ExerciseInWorkout> sorted = new ArrayList<>(exercises);
-        sorted.sort((a, b) -> Integer.compare(
-                a != null ? a.getOrderIndex() : 0,
-                b != null ? b.getOrderIndex() : 0));
-        return sorted;
     }
 }

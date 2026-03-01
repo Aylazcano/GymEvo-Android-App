@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,10 +27,13 @@ import com.example.gymevo.ui.common.adapter.WorkoutExerciseAdapter;
 import com.example.gymevo.databinding.FragmentWorkoutsListBinding;
 import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.ExerciseType;
+import com.example.gymevo.model.MuscleGroup;
 import com.example.gymevo.model.Workout;
 import com.example.gymevo.ui.common.ConfirmDeleteDialog;
 import com.example.gymevo.ui.common.DragDropItemTouchHelper;
 import com.example.gymevo.ui.common.ExerciseEditDialog;
+import com.example.gymevo.ui.common.FastScrollDragHelper;
+import com.example.gymevo.ui.common.FastScrollSectionTextFormatter;
 import com.example.gymevo.ui.common.FilterUi;
 import com.example.gymevo.ui.common.SectionHeaderDecoration;
 import com.example.gymevo.data.repository.UserPreferencesRepository;
@@ -75,6 +79,7 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
     private List<Workout> currentFilteredList = new ArrayList<>();
     private UserPreferencesRepository userPreferencesRepository;
     private final CompositeDisposable disposables = new CompositeDisposable();
+    private FastScrollDragHelper fastScrollDragHelper;
     private enum SelectionContext {
         NONE,
         WORKOUTS,
@@ -233,6 +238,10 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
     public void onDestroyView() {
         super.onDestroyView();
         disposables.clear();
+        if (fastScrollDragHelper != null) {
+            fastScrollDragHelper.detach();
+            fastScrollDragHelper = null;
+        }
         binding = null;
     }
 
@@ -276,6 +285,8 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
         workoutsRecyclerView.setAdapter(workoutsAdapter);
         workoutsAdapter.setRecyclerView(workoutsRecyclerView);
 
+        setupFastScrollPopup();
+
         workoutsAdapter.setSelectionListener(this::updateWorkoutSelectionUi);
         workoutsAdapter.setNestedExerciseSelectionListener(this::updateNestedExerciseSelectionUi);
         workoutsAdapter.setNestedExerciseOrderListener(this::persistExpandedExerciseOrder);
@@ -294,6 +305,24 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
             }
             applyWorkoutFilters();
         });
+    }
+
+    private void setupFastScrollPopup() {
+        if (binding == null || workoutsRecyclerView == null || workoutsAdapter == null) {
+            return;
+        }
+        if (fastScrollDragHelper != null) {
+            fastScrollDragHelper.detach();
+        }
+        fastScrollDragHelper = new FastScrollDragHelper(
+                workoutsRecyclerView,
+                binding.fastScrollPopup,
+            position -> FastScrollSectionTextFormatter.forWorkout(
+                workoutsAdapter.getItemAt(position),
+                sortField
+            )
+        );
+        fastScrollDragHelper.attach();
     }
 
     private void showMuscleFilterDialog() {
@@ -349,12 +378,12 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_smart, smart));
 
         List<SortBottomSheet.SortOption> anatomical = new ArrayList<>();
+        anatomical.add(new SortBottomSheet.SortOption(R.string.sort_muscle_anatomical, SortField.MUSCLE, SortOrder.ASC));
         anatomical.add(new SortBottomSheet.SortOption(R.string.sort_muscle_asc, SortField.MUSCLE_GROUP, SortOrder.ASC));
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_anatomical, anatomical));
 
         List<SortBottomSheet.SortOption> basic = new ArrayList<>();
         basic.add(new SortBottomSheet.SortOption(R.string.sort_name_asc, SortField.NAME, SortOrder.ASC));
-        basic.add(new SortBottomSheet.SortOption(R.string.sort_name_desc, SortField.NAME, SortOrder.DESC));
         basic.add(new SortBottomSheet.SortOption(R.string.sort_custom, SortField.CUSTOM, SortOrder.ASC));
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_basic, basic));
 
@@ -496,18 +525,30 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
                         .reversed();
                 break;
             case POPULAR:
-                base = Comparator.comparingInt(this::workoutExerciseCount).reversed()
-                        .thenComparingLong(Workout::getUpdatedAt).reversed()
-                        .thenComparing(workout -> FilterUi.normalize(workout.getName()));
+                base = (a, b) -> {
+                    int countCmp = Integer.compare(
+                            FastScrollSectionTextFormatter.workoutPopularityPoints(b),
+                            FastScrollSectionTextFormatter.workoutPopularityPoints(a)
+                    );
+                    if (countCmp != 0) return countCmp;
+                    int updCmp = Long.compare(b.getUpdatedAt(), a.getUpdatedAt());
+                    if (updCmp != 0) return updCmp;
+                    return FilterUi.normalize(a.getName()).compareTo(FilterUi.normalize(b.getName()));
+                };
                 break;
             case CUSTOM:
                 base = buildCustomWorkoutComparator();
                 break;
             case MUSCLE:
-            case MUSCLE_GROUP:
-                base = Comparator.comparing(
-                    (Workout workout) -> FilterUi.normalize(firstWorkoutMuscle(workout))
+                base = Comparator.comparingInt(
+                    (Workout workout) -> muscleAnatomicalOrder(firstWorkoutMuscle(workout))
                 ).thenComparing(workout -> FilterUi.normalize(workout.getName()));
+                break;
+            case MUSCLE_GROUP:
+                base = Comparator
+                        .comparing((Workout workout) -> FastScrollSectionTextFormatter
+                                .normalizeMuscleLabel(firstWorkoutMuscle(workout)))
+                        .thenComparing(workout -> FilterUi.normalize(workout.getName()));
                 break;
             case CREATED:
                 base = Comparator.comparingLong(Workout::getCreatedAt);
@@ -586,9 +627,6 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
     }
 
     private SortField normalizeSortField(SortField field) {
-        if (field == SortField.MUSCLE) {
-            return SortField.MUSCLE_GROUP;
-        }
         return field != null ? field : SortField.RECENT;
     }
 
@@ -639,13 +677,6 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
         return map;
     }
 
-    private int workoutExerciseCount(Workout workout) {
-        if (workout == null || workout.getExercises() == null) {
-            return 0;
-        }
-        return workout.getExercises().size();
-    }
-
     private String firstWorkoutMuscle(Workout workout) {
         List<ExerciseInWorkout> exercises = workout.getExercises();
         if (exercises == null || exercises.isEmpty()) {
@@ -657,6 +688,11 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
             }
         }
         return "";
+    }
+
+    private static int muscleAnatomicalOrder(String label) {
+        MuscleGroup group = label != null ? MuscleGroup.fromLabel(label) : null;
+        return group != null ? group.anatomicalOrder() : 99;
     }
 
     private void updateWorkoutSelectionUi(int selectedCount) {
@@ -683,16 +719,51 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
         boolean show = selectedCount > 0 || selectionModeActive;
         if (show) {
             selectionContext = context;
+            View.OnClickListener copyAction = (context == SelectionContext.WORKOUTS)
+                    ? v -> onCopySelectedWorkouts() : null;
             activity.showSelectionBar(
                     selectedCount,
                     v -> onMoveSelected(),
                     v -> onMoveSelectedBottom(),
-                    v -> onDeleteSelected()
+                    v -> onDeleteSelected(),
+                    copyAction
             );
         } else if (selectionContext == context || context == SelectionContext.NONE) {
             selectionContext = SelectionContext.NONE;
             activity.hideSelectionBar();
         }
+    }
+
+    private void onCopySelectedWorkouts() {
+        if (workoutsAdapter == null) return;
+        List<Workout> selected = workoutsAdapter.getSelectedItems();
+        if (selected.isEmpty()) return;
+        String suffix = getString(R.string.workout_copy_suffix);
+        for (Workout original : selected) {
+            Workout duplicate = new Workout(
+                    null,
+                    (original.getName() != null ? original.getName() : "") + suffix,
+                    original.getDate(),
+                    original.isStar(),
+                    original.getType()
+            );
+            long now = System.currentTimeMillis();
+            duplicate.setCreatedAt(now);
+            duplicate.setUpdatedAt(now);
+            List<ExerciseInWorkout> cloned = new ArrayList<>();
+            if (original.getExercises() != null) {
+                for (ExerciseInWorkout ex : original.getExercises()) {
+                    ExerciseInWorkout copy = copyExercise(ex);
+                    copy.setId(null);
+                    copy.setWorkoutId(null);
+                    cloned.add(copy);
+                }
+            }
+            duplicate.setExercises(cloned);
+            workoutsListViewModel.duplicateWorkout(duplicate);
+        }
+        workoutsAdapter.clearSelection();
+        Toast.makeText(requireContext(), R.string.workout_copy_success, Toast.LENGTH_SHORT).show();
     }
 
     private void onDeleteSelectedWorkouts() {
@@ -857,6 +928,10 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
 
     private void persistExpandedExerciseOrder(List<ExerciseInWorkout> newOrder) {
         expandedExercises = newOrder != null ? new ArrayList<>(newOrder) : new ArrayList<>();
+        if (workoutsAdapter != null && expandedWorkoutRef != null) {
+            workoutsAdapter.setExpandedState(expandedWorkoutRef, expandedWorkoutCopy,
+                    expandedExercises, expandedIsNew);
+        }
     }
 
     private void refreshWorkoutsList(List<Workout> workouts) {
@@ -1243,7 +1318,7 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
                     null,
                     1,
                     1,
-                    0,
+                    0f,
                     0,
                     0,
                     null,
@@ -1335,6 +1410,8 @@ public class WorkoutListFragment extends Fragment implements MainActivity.MainHe
                 && Objects.equals(a.getWeight(), b.getWeight())
                 && Objects.equals(a.getTime(), b.getTime())
                 && Objects.equals(a.getHeartRates(), b.getHeartRates())
+                && Objects.equals(a.getDistance(), b.getDistance())
+                && Objects.equals(a.getCalories(), b.getCalories())
                 && Objects.equals(a.getExerciseId(), b.getExerciseId())
                 && Objects.equals(a.getWorkoutId(), b.getWorkoutId());
     }

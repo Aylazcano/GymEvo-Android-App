@@ -23,7 +23,7 @@ public class ExerciseInWorkout extends Exercise {
 
     private Integer series;
     private Integer repetitions;
-    private Integer weight;
+    private Float weight;
     private Integer time;
     private Integer heartRates;
     private Integer distance;
@@ -42,7 +42,7 @@ public class ExerciseInWorkout extends Exercise {
     }
 
     public ExerciseInWorkout(Long id, String name, String targetedMuscles, String imageA, String imageB,
-                             Integer series, Integer repetitions, Integer weight, Integer time, Integer heartRates,
+                             Integer series, Integer repetitions, Float weight, Integer time, Integer heartRates,
                              Integer distance, Integer calories, Long exerciseId, Long workoutId) {
         super(name, targetedMuscles, imageA, imageB, false);
         this.id = id;
@@ -86,11 +86,11 @@ public class ExerciseInWorkout extends Exercise {
         this.repetitions = repetitions;
     }
 
-    public Integer getWeight() {
+    public Float getWeight() {
         return weight;
     }
 
-    public void setWeight(Integer weight) {
+    public void setWeight(Float weight) {
         if (weight != null && weight < 0) {
             throw new IllegalArgumentException("Weight cannot be negative.");
         }

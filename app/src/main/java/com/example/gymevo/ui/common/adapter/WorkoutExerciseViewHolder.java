@@ -77,7 +77,7 @@ public class WorkoutExerciseViewHolder extends RecyclerView.ViewHolder {
         targetedMusclesTextView.setText(exercise.getTargetedMusclesLabel());
         seriesQtyTextView.setText(formatValue(exercise.getSeries()));
         repetitionsQtyTextView.setText(formatValue(exercise.getRepetitions()));
-        weightQtyTextView.setText(formatValue(exercise.getWeight()));
+        weightQtyTextView.setText(formatWeight(exercise.getWeight()));
         if (weightLabelTextView != null) {
             int labelRes = exercise.isWeightInKg()
                 ? R.string.exercise_weight_kg
@@ -106,6 +106,14 @@ public class WorkoutExerciseViewHolder extends RecyclerView.ViewHolder {
 
     private String formatValue(Integer value) {
         return value == null ? EMPTY_VALUE : Integer.toString(value);
+    }
+
+    private String formatWeight(Float value) {
+        if (value == null) return EMPTY_VALUE;
+        if (value == (int) (float) value) {
+            return Integer.toString((int) (float) value);
+        }
+        return String.format(java.util.Locale.US, "%.1f", value);
     }
 
     private String formatDuration(Integer seconds) {

@@ -142,9 +142,6 @@ public class SortBottomSheet extends BottomSheetDialogFragment {
         if (option == null) {
             return false;
         }
-        if (selectedField == SortField.MUSCLE && option.field == SortField.MUSCLE_GROUP) {
-            return option.order == selectedOrder;
-        }
         return option.field == selectedField && option.order == selectedOrder;
     }
 }

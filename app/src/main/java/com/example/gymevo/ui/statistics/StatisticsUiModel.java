@@ -7,7 +7,9 @@ import androidx.annotation.NonNull;
 import com.example.gymevo.R;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StatisticsUiModel {
 
@@ -28,6 +30,7 @@ public class StatisticsUiModel {
     private final List<StatisticsRow> topMuscleGroups;
     private final List<StatisticsRow> personalRecords;
     private final List<WeeklyFrequencyItem> weeklyFrequency;
+    private final Map<String, Integer> muscleVolumeMap;
 
     public StatisticsUiModel(String dateRange,
                              String totalSessions,
@@ -45,7 +48,8 @@ public class StatisticsUiModel {
                              List<StatisticsRow> topExercises,
                              List<StatisticsRow> topMuscleGroups,
                              List<StatisticsRow> personalRecords,
-                             List<WeeklyFrequencyItem> weeklyFrequency) {
+                             List<WeeklyFrequencyItem> weeklyFrequency,
+                             Map<String, Integer> muscleVolumeMap) {
         this.dateRange = dateRange;
         this.totalSessions = totalSessions;
         this.totalExercises = totalExercises;
@@ -63,6 +67,7 @@ public class StatisticsUiModel {
         this.topMuscleGroups = topMuscleGroups != null ? topMuscleGroups : Collections.emptyList();
         this.personalRecords = personalRecords != null ? personalRecords : Collections.emptyList();
         this.weeklyFrequency = weeklyFrequency != null ? weeklyFrequency : Collections.emptyList();
+        this.muscleVolumeMap = muscleVolumeMap != null ? muscleVolumeMap : Collections.emptyMap();
     }
 
     public static StatisticsUiModel empty(@NonNull Application application) {
@@ -84,7 +89,8 @@ public class StatisticsUiModel {
             Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(),
-            Collections.emptyList()
+            Collections.emptyList(),
+            Collections.emptyMap()
         );
     }
 
@@ -154,5 +160,9 @@ public class StatisticsUiModel {
 
     public List<WeeklyFrequencyItem> getWeeklyFrequency() {
         return weeklyFrequency;
+    }
+
+    public Map<String, Integer> getMuscleVolumeMap() {
+        return muscleVolumeMap;
     }
 }

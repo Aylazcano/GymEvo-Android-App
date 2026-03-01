@@ -12,12 +12,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.example.gymevo.model.Exercise;
 import com.example.gymevo.model.ExerciseImageSyncQueueItem;
 import com.example.gymevo.model.ExerciseInWorkout;
+import com.example.gymevo.model.CalorieEntry;
+import com.example.gymevo.model.Note;
 import com.example.gymevo.model.Workout;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@Database(entities = {Workout.class, Exercise.class, ExerciseInWorkout.class, ExerciseImageSyncQueueItem.class}, version = 14, exportSchema = false)
+@Database(entities = {Workout.class, Exercise.class, ExerciseInWorkout.class, ExerciseImageSyncQueueItem.class, Note.class, CalorieEntry.class}, version = 17, exportSchema = false)
 @TypeConverters({LocalDateConverter.class, WorkoutTypeConverter.class, MuscleGroupConverter.class, ExerciseTypeConverter.class})
 public abstract class AppDatabase extends RoomDatabase {
 
@@ -28,6 +30,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ExerciseInWorkoutDao exerciseInWorkoutDao();
     public abstract ExerciseDao exerciseDao();
     public abstract ExerciseImageSyncQueueDao exerciseImageSyncQueueDao();
+    public abstract NoteDao noteDao();
+    public abstract CalorieEntryDao calorieEntryDao();
 
     private static final Migration MIGRATION_9_10 = new Migration(9, 10) {
         @Override
@@ -240,6 +244,102 @@ public abstract class AppDatabase extends RoomDatabase {
                 }
                 };
 
+    private static final Migration MIGRATION_14_15 = new Migration(14, 15) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("PRAGMA foreign_keys=OFF");
+
+            database.execSQL("ALTER TABLE exercise_in_workout RENAME TO exercise_in_workout_old");
+            database.execSQL("CREATE TABLE IF NOT EXISTS exercise_in_workout ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "series INTEGER, "
+                + "repetitions INTEGER, "
+                + "weight REAL, "
+                + "time INTEGER, "
+                + "heartRates INTEGER, "
+                + "distance INTEGER, "
+                + "calories INTEGER, "
+                + "weightInKg INTEGER NOT NULL, "
+                + "orderIndex INTEGER NOT NULL, "
+                + "exerciseId INTEGER, "
+                + "workoutId INTEGER, "
+                + "name TEXT, "
+                + "targetedMuscles TEXT, "
+                + "sourceId TEXT, "
+                + "force TEXT, "
+                + "level TEXT, "
+                + "mechanic TEXT, "
+                + "equipment TEXT, "
+                + "category TEXT, "
+                + "primaryMuscles TEXT, "
+                + "secondaryMuscles TEXT, "
+                + "instructions TEXT, "
+                + "imageA TEXT, "
+                + "imageB TEXT, "
+                + "isStar INTEGER NOT NULL, "
+                + "type TEXT, "
+                + "showSeries INTEGER NOT NULL, "
+                + "showRepetitions INTEGER NOT NULL, "
+                + "showWeight INTEGER NOT NULL, "
+                + "showTime INTEGER NOT NULL, "
+                + "showHeartRate INTEGER NOT NULL, "
+                + "showDistance INTEGER NOT NULL, "
+                + "showCalories INTEGER NOT NULL, "
+                + "createdAt INTEGER NOT NULL, "
+                + "updatedAt INTEGER NOT NULL, "
+                + "FOREIGN KEY(exerciseId) REFERENCES exercise(id) ON UPDATE NO ACTION ON DELETE CASCADE, "
+                + "FOREIGN KEY(workoutId) REFERENCES workout(id) ON UPDATE NO ACTION ON DELETE CASCADE"
+                + ")");
+            database.execSQL("INSERT INTO exercise_in_workout ("
+                + "id, series, repetitions, weight, time, heartRates, distance, calories, weightInKg, "
+                + "orderIndex, exerciseId, workoutId, name, targetedMuscles, sourceId, force, level, "
+                + "mechanic, equipment, category, primaryMuscles, secondaryMuscles, instructions, "
+                + "imageA, imageB, isStar, type, showSeries, showRepetitions, showWeight, showTime, "
+                + "showHeartRate, showDistance, showCalories, createdAt, updatedAt"
+                + ") SELECT "
+                + "id, series, repetitions, CAST(weight AS REAL), time, heartRates, distance, calories, weightInKg, "
+                + "orderIndex, exerciseId, workoutId, name, targetedMuscles, sourceId, force, level, "
+                + "mechanic, equipment, category, primaryMuscles, secondaryMuscles, instructions, "
+                + "imageA, imageB, isStar, type, showSeries, showRepetitions, showWeight, showTime, "
+                + "showHeartRate, showDistance, showCalories, createdAt, updatedAt "
+                + "FROM exercise_in_workout_old");
+            database.execSQL("DROP TABLE exercise_in_workout_old");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_exercise_in_workout_exerciseId ON exercise_in_workout(exerciseId)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_exercise_in_workout_workoutId ON exercise_in_workout(workoutId)");
+
+            database.execSQL("PRAGMA foreign_keys=ON");
+        }
+    };
+
+    private static final Migration MIGRATION_15_16 = new Migration(15, 16) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS note ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "title TEXT, "
+                    + "content TEXT, "
+                    + "color TEXT, "
+                    + "pinned INTEGER NOT NULL DEFAULT 0, "
+                    + "createdAt INTEGER NOT NULL DEFAULT 0, "
+                    + "updatedAt INTEGER NOT NULL DEFAULT 0)");
+        }
+    };
+
+    private static final Migration MIGRATION_16_17 = new Migration(16, 17) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS calorie_entry ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + "date INTEGER NOT NULL DEFAULT 0, "
+                    + "mealName TEXT, "
+                    + "calories INTEGER NOT NULL DEFAULT 0, "
+                    + "protein INTEGER NOT NULL DEFAULT 0, "
+                    + "carbs INTEGER NOT NULL DEFAULT 0, "
+                    + "fat INTEGER NOT NULL DEFAULT 0, "
+                    + "createdAt INTEGER NOT NULL DEFAULT 0)");
+        }
+    };
+
     private static volatile AppDatabase INSTANCE;
 
     public static AppDatabase getDatabase(final Context context) {
@@ -253,6 +353,9 @@ public abstract class AppDatabase extends RoomDatabase {
                             .addMigrations(MIGRATION_11_12)
                             .addMigrations(MIGRATION_12_13)
                             .addMigrations(MIGRATION_13_14)
+                            .addMigrations(MIGRATION_14_15)
+                            .addMigrations(MIGRATION_15_16)
+                            .addMigrations(MIGRATION_16_17)
                             .fallbackToDestructiveMigration()
                             .build();
                 }

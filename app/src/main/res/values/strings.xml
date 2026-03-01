@@ -1,8 +1,14 @@
 <resources>
     <string name="app_name">GymEvo</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_title">GymEvo</string>
+    <string name="nav_header_subtitle">Your fitness companion</string>
     <string name="nav_header_desc">Navigation header</string>
+
+    <!-- User avatar -->
+    <string name="default_user_name">GymEvo User</string>
+    <string name="avatar_content_description">User avatar</string>
+    <string name="edit_name_title">Edit name</string>
+    <string name="edit_name_hint">Your name</string>
     <string name="action_settings">Settings</string>
 
     <string name="menu_workout_tracker">Workout Tracker</string>
@@ -12,6 +18,9 @@
     <string name="menu_settings">Settings</string>
     <string name="settings_theme_title">Theme</string>
     <string name="settings_theme_description">Choose your app color style. Changes apply instantly.</string>
+    <string name="settings_help_title">Help</string>
+    <string name="settings_help_description">Review the app tutorial at any time.</string>
+    <string name="settings_show_tutorial">Show tutorial</string>
     <string name="theme_default">Default</string>
     <string name="theme_red">Red</string>
     <string name="theme_green">Green</string>
@@ -34,9 +43,11 @@
 
     <string name="exercise_list_empty">No exercises yet</string>
     <string name="exercise_add">Add exercise</string>
+    <string name="exercise_new_default_name">New exercise</string>
     <string name="exercise_edit">Edit exercise</string>
     <string name="exercise_name">Name</string>
     <string name="exercise_targeted_muscles">Targeted muscles</string>
+    <string name="exercise_type">Exercise type</string>
     <string name="exercise_type_label">Exercise type</string>
     <string name="exercise_type_anaerobic">Anaerobic</string>
     <string name="exercise_type_aerobic">Aerobic</string>
@@ -58,6 +69,22 @@
     <string name="exercise_starred_label">★ Starred</string>
     <string name="exercise_add_fab_desc">Add exercise</string>
     <string name="exercise_default_name">Exercise %1$d</string>
+    <string name="exercise_detail_muscles">Muscles</string>
+    <string name="exercise_detail_instructions">Instructions</string>
+    <string name="exercise_detail_primary">Primary: %1$s</string>
+    <string name="exercise_detail_secondary">Secondary: %1$s</string>
+    <string name="exercise_detail_no_image">No image</string>
+    <string name="exercise_detail_force">Force: %1$s</string>
+    <string name="exercise_detail_level">Level: %1$s</string>
+    <string name="exercise_detail_mechanic">Mechanic: %1$s</string>
+    <string name="exercise_detail_equipment">Equipment: %1$s</string>
+    <string name="exercise_detail_category">Category: %1$s</string>
+    <string name="exercise_image_edit_title">Edit image</string>
+    <string name="exercise_image_pick_single">Select image</string>
+    <string name="exercise_image_pick_multiple">Select multiple images</string>
+    <string name="exercise_image_take_photo">Take photo</string>
+    <string name="exercise_image_remove">Remove image</string>
+    <string name="exercise_image_max_two">You can select up to 2 images.</string>
     <string name="exercise_search_hint">Search exercises</string>
     <string name="exercise_filter_muscle">Filter by muscle</string>
     <string name="exercise_filter_type">Filter by type</string>
@@ -70,6 +97,9 @@
     <string name="action_apply">Apply</string>
     <string name="action_reset">Reset</string>
     <string name="action_move">Move</string>
+    <string name="action_copy">Copy</string>
+    <string name="workout_copy_suffix"> (Copy)</string>
+    <string name="workout_copy_success">Workout copied.</string>
     <string name="action_move_up">Move to top</string>
     <string name="action_move_down">Move to bottom</string>
     <string name="fab_action_not_supported">Current destination does not support actions</string>
@@ -89,6 +119,16 @@
     <string name="workout_import_from_list">Import from saved workout</string>
     <string name="workout_import_empty">No saved workouts available to import.</string>
     <string name="workout_import_unnamed">Workout %1$d</string>
+    <string name="import_sort_name">A-Z</string>
+    <string name="import_sort_recent">Recent</string>
+
+    <!-- Muscle heatmap -->
+    <string name="stats_muscle_heatmap_title">Muscle heatmap</string>
+    <string name="heatmap_front">FRONT</string>
+    <string name="heatmap_back">BACK</string>
+    <string name="heatmap_low">Low</string>
+    <string name="heatmap_high">High</string>
+
     <string name="workout_export_action">Save to workouts</string>
     <string name="workout_export_title">Save workout</string>
     <string name="workout_export_default_name">Workout %1$s</string>
@@ -105,6 +145,7 @@
     <string name="sort_name_asc">Name (A → Z)</string>
     <string name="sort_name_desc">Name (Z → A)</string>
     <string name="sort_muscle_asc">Muscle (A → Z)</string>
+    <string name="sort_muscle_anatomical">Muscle (top → bottom)</string>
     <string name="sort_recent">Recent</string>
     <string name="sort_popular">Popular</string>
     <string name="sort_custom">Custom</string>
@@ -155,4 +196,93 @@
         <item quantity="one">%1$d selected</item>
         <item quantity="other">%1$d selected</item>
     </plurals>
+
+    <!-- Hint / Onboarding dialog -->
+    <string name="hint_welcome_title">Welcome to GymEvo! 💪</string>
+    <string name="hint_welcome_message">Here\'s a quick tour to help you get started.</string>
+    <string name="hint_tracker_title">Workout Tracker</string>
+    <string name="hint_tracker_message">Track your daily workouts with the calendar. Tap a day, add exercises, and log sets, reps, and weight. Long-press exercises to select, reorder, or delete them.</string>
+    <string name="hint_exercises_title">Exercises List</string>
+    <string name="hint_exercises_message">Browse 800+ exercises from the catalog. Tap + to create custom exercises with your own images. Star your favorites, filter by muscle group, and sort by name, popularity, or muscle position.</string>
+    <string name="hint_workouts_title">Workouts List</string>
+    <string name="hint_workouts_message">Create reusable workout templates. Tap a workout to expand and edit its exercises. Long-press to select workouts for copying, reordering, or deleting. Import templates into the Tracker to start a session.</string>
+    <string name="hint_statistics_title">Statistics</string>
+    <string name="hint_statistics_message">View your training summary, personal records, top exercises, weekly frequency, and muscle group distribution. Switch between 4, 8, and 12 week ranges.</string>
+    <string name="hint_tips_title">Tips &amp; Tricks</string>
+    <string name="hint_tips_message">• Swipe left/right in the drawer to switch sections\n• Use the ★ star to mark favorites\n• Long-press items for multi-select mode\n• Tap the search icon to find exercises quickly\n• Weight supports 0.5 increments — tap the number to type directly</string>
+    <string name="hint_next">Next</string>
+    <string name="hint_back">Back</string>
+    <string name="hint_done">Got it!</string>
+    <string name="hint_skip">Skip</string>
+    <string name="hint_page_indicator">%1$d / %2$d</string>
+
+    <!-- Notes -->
+    <string name="menu_notes">Notes</string>
+    <string name="notes_empty">No notes yet. Tap + to create one.</string>
+    <string name="note_add">Add note</string>
+    <string name="note_title_hint">Title</string>
+    <string name="note_content_hint">Note</string>
+    <string name="note_pinned">Pinned</string>
+    <string name="note_pin_toggle">Pin / Unpin</string>
+    <string name="note_delete_title">Delete note</string>
+    <string name="note_delete_confirm">This note will be permanently removed. Continue?</string>
+
+    <!-- Body Status -->
+    <string name="menu_body_status">Body Status</string>
+    <string name="body_status_title">Body Status</string>
+    <string name="body_status_subtitle">Enter your body metrics for personalised calculations</string>
+    <string name="body_gender">Gender</string>
+    <string name="body_male">Male</string>
+    <string name="body_female">Female</string>
+    <string name="body_age">Age (years)</string>
+    <string name="body_height_cm">Height (cm)</string>
+    <string name="body_weight_kg">Weight (kg)</string>
+    <string name="body_activity_level">Activity level</string>
+    <string name="body_sedentary">Sedentary</string>
+    <string name="body_lightly_active">Light</string>
+    <string name="body_moderately_active">Moderate</string>
+    <string name="body_very_active">Active</string>
+    <string name="body_extra_active">Very active</string>
+    <string name="body_save">Calculate</string>
+    <string name="body_fill_all">Please fill in all fields</string>
+    <string name="body_saved">Results updated</string>
+    <string name="body_results_title">Your results</string>
+    <string name="body_bmi">BMI</string>
+    <string name="body_bmr">BMR</string>
+    <string name="body_tdee">TDEE</string>
+    <string name="body_ideal_weight">Ideal weight</string>
+    <string name="body_bmr_desc">kcal/day at rest</string>
+    <string name="body_tdee_desc">kcal/day total</string>
+    <string name="body_ideal_weight_desc">Based on height</string>
+    <string name="body_placeholder">–</string>
+    <string name="body_bmi_underweight">Underweight</string>
+    <string name="body_bmi_normal">Normal</string>
+    <string name="body_bmi_overweight">Overweight</string>
+    <string name="body_bmi_obese">Obese</string>
+    <string name="body_macros_title">Recommended macros</string>
+    <string name="body_protein">Protein</string>
+    <string name="body_carbs">Carbs</string>
+    <string name="body_fat">Fat</string>
+    <string name="body_grams_format">%1$d g</string>
+
+    <!-- Calorie Tracker -->
+    <string name="menu_calorie_tracker">Calorie Tracker</string>
+    <string name="cal_prev_day">Previous day</string>
+    <string name="cal_next_day">Next day</string>
+    <string name="cal_total_label">Total</string>
+    <string name="cal_protein_label">Protein</string>
+    <string name="cal_carbs_label">Carbs</string>
+    <string name="cal_fat_label">Fat</string>
+    <string name="cal_kcal">kcal</string>
+    <string name="cal_meals_title">Meals</string>
+    <string name="cal_empty">No meals logged for this day.\nTap + to add one.</string>
+    <string name="cal_add_meal">Add Meal</string>
+    <string name="cal_edit_meal">Edit Meal</string>
+    <string name="cal_meal_name">Meal name</string>
+    <string name="cal_calories">Calories</string>
+    <string name="cal_protein_g">Protein (g)</string>
+    <string name="cal_carbs_g">Carbs (g)</string>
+    <string name="cal_fat_g">Fat (g)</string>
+    <string name="cal_delete_title">Delete Meal</string>
+    <string name="cal_delete_confirm">Delete this meal entry?</string>
 </resources>

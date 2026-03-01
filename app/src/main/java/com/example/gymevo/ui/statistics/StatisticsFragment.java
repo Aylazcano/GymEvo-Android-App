@@ -76,6 +76,7 @@ public class StatisticsFragment extends Fragment {
         updateStatRows(binding.topExercisesContainer, model.getTopExercises());
         updateStatRows(binding.topMuscleGroupsContainer, model.getTopMuscleGroups());
         updateStatRows(binding.topPrsContainer, model.getPersonalRecords());
+        binding.muscleHeatmap.setMuscleVolumes(model.getMuscleVolumeMap());
         weeklyItems = model.getWeeklyFrequency();
         renderWeeklyFrequency();
     }

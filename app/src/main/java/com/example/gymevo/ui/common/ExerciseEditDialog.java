@@ -27,6 +27,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import com.example.gymevo.data.repository.UserPreferencesRepository;
 import com.example.gymevo.ui.common.FilterUi;
+import com.example.gymevo.ui.common.TextFormatUtils;
 import com.example.gymevo.ui.common.sort.SortBottomSheet;
 import com.example.gymevo.ui.common.sort.SortField;
 import com.example.gymevo.ui.common.sort.SortOrder;
@@ -37,6 +38,7 @@ import com.example.gymevo.data.seed.FreeExerciseDbSeeder;
 import com.example.gymevo.model.Exercise;
 import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.ExerciseType;
+import com.example.gymevo.model.MuscleGroup;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,6 +53,7 @@ public final class ExerciseEditDialog {
     private static final int MAX_REPS = 50;
     private static final int MIN_WEIGHT = 0;
     private static final int MAX_WEIGHT = 500;
+    private static final int WEIGHT_PICKER_MAX = 1000;  // 0-500 in 0.5 steps = 1001 values
     private static final int MIN_MINUTES = 0;
     private static final int MAX_MINUTES = 59;
     private static final int MIN_SECONDS = 0;
@@ -133,7 +136,7 @@ public final class ExerciseEditDialog {
         configureExercisePicker(context, exercisePicker, options, toExercise(exercise), selectedExercise);
         configurePicker(seriesPicker, MIN_SERIES, MAX_SERIES, exercise.getSeries());
         configurePicker(repetitionsPicker, MIN_REPS, MAX_REPS, exercise.getRepetitions());
-        configurePicker(weightPicker, MIN_WEIGHT, MAX_WEIGHT, exercise.getWeight());
+        configureWeightPicker(weightPicker, exercise.getWeight());
         int timeSeconds = exercise.getTime() != null ? exercise.getTime() : 0;
         int minutes = timeSeconds / 60;
         int seconds = timeSeconds % 60;
@@ -145,7 +148,7 @@ public final class ExerciseEditDialog {
 
         setupDirectInput(context, seriesPicker);
         setupDirectInput(context, repetitionsPicker);
-        setupDirectInput(context, weightPicker);
+        setupWeightDirectInput(context, weightPicker);
         setupDirectInput(context, timeMinutesPicker);
         setupDirectInput(context, timeSecondsPicker);
         setupDirectInput(context, heartRatePicker);
@@ -159,11 +162,11 @@ public final class ExerciseEditDialog {
         if (weightLabel != null && weightPicker != null) {
             weightLabel.setOnClickListener(v -> {
                 weightUnit[0] = weightUnit[0].toggle();
-                int current = weightPicker.getValue();
-                int converted = weightUnit[0] == WeightUnit.KG
+                float current = weightPickerToFloat(weightPicker);
+                float converted = weightUnit[0] == WeightUnit.KG
                         ? toKg(current)
                         : toLbs(current);
-                weightPicker.setValue(clamp(converted, MIN_WEIGHT, MAX_WEIGHT));
+                setWeightPickerValue(weightPicker, converted);
                 applyWeightLabel(context, weightLabel, weightUnit[0]);
             });
         }
@@ -395,7 +398,7 @@ public final class ExerciseEditDialog {
         }
         exercise.setSeries(toNullableValue(seriesPicker));
         exercise.setRepetitions(toNullableValue(repetitionsPicker));
-        exercise.setWeight(toNullableValue(weightPicker));
+        exercise.setWeight(toNullableWeightValue(weightPicker));
         exercise.setWeightInKg(weightUnit == WeightUnit.KG);
         exercise.setTime(toTimeSeconds(timeMinutesPicker, timeSecondsPicker));
         exercise.setHeartRates(toNullableValue(heartRatePicker));
@@ -435,6 +438,45 @@ public final class ExerciseEditDialog {
         }
         int value = picker.getValue();
         return value == 0 ? null : value;
+    }
+
+    private static Float toNullableWeightValue(NumberPicker picker) {
+        if (picker == null) {
+            return null;
+        }
+        float value = weightPickerToFloat(picker);
+        return value == 0f ? null : value;
+    }
+
+    private static void configureWeightPicker(NumberPicker picker, Float value) {
+        if (picker == null) {
+            return;
+        }
+        picker.setFocusable(true);
+        picker.setFocusableInTouchMode(true);
+        String[] displayedValues = new String[WEIGHT_PICKER_MAX + 1];
+        for (int i = 0; i <= WEIGHT_PICKER_MAX; i++) {
+            float w = i * 0.5f;
+            displayedValues[i] = w == (int) w
+                    ? String.valueOf((int) w)
+                    : String.format(Locale.US, "%.1f", w);
+        }
+        picker.setMinValue(0);
+        picker.setMaxValue(WEIGHT_PICKER_MAX);
+        picker.setDisplayedValues(displayedValues);
+        picker.setWrapSelectorWheel(true);
+        float safeValue = value != null ? value : 0f;
+        int index = Math.round(safeValue * 2);
+        picker.setValue(clamp(index, 0, WEIGHT_PICKER_MAX));
+    }
+
+    private static float weightPickerToFloat(NumberPicker picker) {
+        return picker.getValue() * 0.5f;
+    }
+
+    private static void setWeightPickerValue(NumberPicker picker, float weight) {
+        int index = Math.round(weight * 2);
+        picker.setValue(clamp(index, 0, WEIGHT_PICKER_MAX));
     }
 
     private static void applyExerciseSelection(ExerciseInWorkout target, Exercise source) {
@@ -508,8 +550,8 @@ public final class ExerciseEditDialog {
         if (current == null) {
             return new Exercise("", "", null, null, false);
         }
-        String name = safeText(current.getName());
-        String muscles = safeText(current.getTargetedMusclesLabel());
+        String name = TextFormatUtils.safeText(current.getName());
+        String muscles = TextFormatUtils.safeText(current.getTargetedMusclesLabel());
         Exercise exercise = new Exercise(name, muscles, current.getImageA(), current.getImageB(), false);
         exercise.setId(current.getExerciseId());
         exercise.setType(current.getType());
@@ -525,15 +567,15 @@ public final class ExerciseEditDialog {
     }
 
     private static String buildExerciseKey(ExerciseInWorkout exercise) {
-        String name = safeText(exercise.getName());
-        String muscles = safeText(exercise.getTargetedMusclesLabel());
+        String name = TextFormatUtils.safeText(exercise.getName());
+        String muscles = TextFormatUtils.safeText(exercise.getTargetedMusclesLabel());
         String idPart = exercise.getExerciseId() != null ? String.valueOf(exercise.getExerciseId()) : "";
         return idPart + "|" + name + "|" + muscles;
     }
 
     private static String buildExerciseKey(Exercise exercise) {
-        String name = safeText(exercise.getName());
-        String muscles = safeText(exercise.getTargetedMusclesLabel());
+        String name = TextFormatUtils.safeText(exercise.getName());
+        String muscles = TextFormatUtils.safeText(exercise.getTargetedMusclesLabel());
         String idPart = exercise.getId() != null ? String.valueOf(exercise.getId()) : "";
         return idPart + "|" + name + "|" + muscles;
     }
@@ -543,15 +585,22 @@ public final class ExerciseEditDialog {
             return "";
         }
         String star = exercise.isStar() ? "★ " : "";
-        String name = safeText(exercise.getName());
+        String name = TextFormatUtils.safeText(exercise.getName());
         if (name.isEmpty() && context != null) {
             name = context.getString(R.string.exercise_select_placeholder);
         }
         String muscles = exercise.getTargetedMusclesLabel();
+        String label;
         if (muscles == null || muscles.isEmpty()) {
-            return star + name;
+            label = star + name;
+        } else {
+            label = star + name + " • " + muscles;
         }
-        return star + name + " • " + muscles;
+        int maxLen = 40;
+        if (label.length() > maxLen) {
+            label = label.substring(0, maxLen - 1) + "…";
+        }
+        return label;
     }
 
 
@@ -637,12 +686,14 @@ public final class ExerciseEditDialog {
         if (calories != null) calories.setVisibility(exercise.isShowCalories() ? View.VISIBLE : View.GONE);
     }
 
-    private static int toKg(int lbs) {
-        return (int) Math.round(lbs * LBS_TO_KG);
+    private static float toKg(float lbs) {
+        float raw = (float) (lbs * LBS_TO_KG);
+        return Math.round(raw * 2) / 2.0f;
     }
 
-    private static int toLbs(int kg) {
-        return (int) Math.round(kg * KG_TO_LBS);
+    private static float toLbs(float kg) {
+        float raw = (float) (kg * KG_TO_LBS);
+        return Math.round(raw * 2) / 2.0f;
     }
 
     private static void setupDirectInput(Context context, NumberPicker picker) {
@@ -704,6 +755,78 @@ public final class ExerciseEditDialog {
                 try {
                     int value = Integer.parseInt(v.getText().toString());
                     picker.setValue(clamp(value, picker.getMinValue(), picker.getMaxValue()));
+                } catch (NumberFormatException ignored) {
+                }
+                hideKeyboard(context, editText);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private static void setupWeightDirectInput(Context context, NumberPicker picker) {
+        if (context == null || picker == null) {
+            return;
+        }
+        picker.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        EditText editText = findNumberPickerEditText(picker);
+        if (editText == null) {
+            return;
+        }
+        final boolean[] suppress = {false};
+        editText.setFocusable(true);
+        editText.setFocusableInTouchMode(true);
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        editText.setSelectAllOnFocus(true);
+        editText.setCursorVisible(true);
+        editText.setShowSoftInputOnFocus(true);
+        editText.setOnClickListener(v -> showKeyboard(context, editText));
+        editText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                showKeyboard(context, editText);
+            }
+        });
+        attachPickerTapToFocus(context, picker, editText);
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (suppress[0]) {
+                    return;
+                }
+                String value = s != null ? s.toString().trim() : "";
+                if (value.isEmpty()) {
+                    return;
+                }
+                try {
+                    float parsed = Float.parseFloat(value);
+                    float rounded = Math.round(parsed * 2) / 2.0f;
+                    int index = Math.round(rounded * 2);
+                    int clamped = clamp(index, 0, WEIGHT_PICKER_MAX);
+                    if (clamped != picker.getValue()) {
+                        suppress[0] = true;
+                        picker.setValue(clamped);
+                        suppress[0] = false;
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        editText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                try {
+                    float value = Float.parseFloat(v.getText().toString());
+                    float rounded = Math.round(value * 2) / 2.0f;
+                    int index = Math.round(rounded * 2);
+                    picker.setValue(clamp(index, 0, WEIGHT_PICKER_MAX));
                 } catch (NumberFormatException ignored) {
                 }
                 hideKeyboard(context, editText);
@@ -891,7 +1014,7 @@ public final class ExerciseEditDialog {
             String preferredName = preferred.getName() != null ? preferred.getName().trim() : "";
             if (!preferredName.isEmpty()) {
                 for (Exercise option : options) {
-                    if (option != null && preferredName.equalsIgnoreCase(safeText(option.getName()).trim())) {
+                    if (option != null && preferredName.equalsIgnoreCase(TextFormatUtils.safeText(option.getName()))) {
                         return option;
                     }
                 }
@@ -931,7 +1054,7 @@ public final class ExerciseEditDialog {
                 if (option.getId().equals(target.getId())) {
                     return i;
                 }
-            } else if (safeText(option.getName()).equalsIgnoreCase(safeText(target.getName()))) {
+            } else if (TextFormatUtils.safeText(option.getName()).equalsIgnoreCase(TextFormatUtils.safeText(target.getName()))) {
                 return i;
             }
         }
@@ -1042,18 +1165,30 @@ public final class ExerciseEditDialog {
                         .reversed();
                 break;
             case POPULAR:
-                base = Comparator.comparing(Exercise::isStar).reversed()
-                        .thenComparingLong(Exercise::getUpdatedAt).reversed()
-                        .thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
+                base = (a, b) -> {
+                    int pointsCmp = Integer.compare(
+                            FastScrollSectionTextFormatter.exercisePopularityPoints(b),
+                            FastScrollSectionTextFormatter.exercisePopularityPoints(a)
+                    );
+                    if (pointsCmp != 0) return pointsCmp;
+                    int updCmp = Long.compare(b.getUpdatedAt(), a.getUpdatedAt());
+                    if (updCmp != 0) return updCmp;
+                    return FilterUi.normalize(a.getName()).compareTo(FilterUi.normalize(b.getName()));
+                };
                 break;
             case CUSTOM:
                 base = buildCustomExerciseComparator(starPriorityEnabled, customOrderIds);
                 break;
             case MUSCLE:
-            case MUSCLE_GROUP:
-                base = Comparator.comparing(
-                    (Exercise exercise) -> FilterUi.normalize(exercise.getTargetedMusclesLabel())
+                base = Comparator.comparingInt(
+                    (Exercise exercise) -> muscleAnatomicalOrder(exercise.getTargetedMusclesLabel())
                 ).thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
+                break;
+            case MUSCLE_GROUP:
+                base = Comparator
+                        .comparing((Exercise exercise) -> FastScrollSectionTextFormatter
+                                .normalizeMuscleLabel(exercise.getTargetedMusclesLabel()))
+                        .thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
                 break;
             case CREATED:
                 base = Comparator.comparingLong(Exercise::getCreatedAt);
@@ -1101,6 +1236,11 @@ public final class ExerciseEditDialog {
             String nameB = b != null ? FilterUi.normalize(b.getName()) : "";
             return nameA.compareTo(nameB);
         };
+    }
+
+    private static int muscleAnatomicalOrder(String label) {
+        MuscleGroup group = label != null ? MuscleGroup.fromLabel(label) : null;
+        return group != null ? group.anatomicalOrder() : 99;
     }
 
     private static java.util.Map<Long, Integer> buildOrderMap(List<Long> ids) {
@@ -1180,12 +1320,12 @@ public final class ExerciseEditDialog {
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_smart, smart));
 
         List<SortBottomSheet.SortOption> anatomical = new ArrayList<>();
+        anatomical.add(new SortBottomSheet.SortOption(R.string.sort_muscle_anatomical, SortField.MUSCLE, SortOrder.ASC));
         anatomical.add(new SortBottomSheet.SortOption(R.string.sort_muscle_asc, SortField.MUSCLE_GROUP, SortOrder.ASC));
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_anatomical, anatomical));
 
         List<SortBottomSheet.SortOption> basic = new ArrayList<>();
         basic.add(new SortBottomSheet.SortOption(R.string.sort_name_asc, SortField.NAME, SortOrder.ASC));
-        basic.add(new SortBottomSheet.SortOption(R.string.sort_name_desc, SortField.NAME, SortOrder.DESC));
         basic.add(new SortBottomSheet.SortOption(R.string.sort_custom, SortField.CUSTOM, SortOrder.ASC));
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_basic, basic));
 
@@ -1219,10 +1359,6 @@ public final class ExerciseEditDialog {
             builder.append(id);
         }
         return builder.toString();
-    }
-
-    private static String safeText(String value) {
-        return value != null ? value : "";
     }
 
     private static void setupFilterImageClickListener(ImageView imageView, ExerciseType filterType, ImageView[] selectedFilterImage, ExerciseType[] typeFilter, boolean[] suppressFilter, Context context, NumberPicker exercisePicker, List<Exercise> options, List<Exercise> filteredOptions, Exercise[] selectedExercise, ExerciseInWorkout exercise, ImageView exercisePreview, View metricSeries, View metricReps, View metricWeight, View metricTime, View metricHr, View metricDistance, View metricCalories) {

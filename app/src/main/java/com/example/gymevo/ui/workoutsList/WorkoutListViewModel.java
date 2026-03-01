@@ -9,12 +9,11 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.gymevo.data.repository.WorkoutRepository;
-import com.example.gymevo.model.ExerciseInWorkout;
 import com.example.gymevo.model.Workout;
 import com.example.gymevo.model.Workout.WorkoutType;
 import com.example.gymevo.model.WorkoutWithExercises;
+import com.example.gymevo.ui.common.WorkoutMapper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class WorkoutListViewModel extends AndroidViewModel {
@@ -73,41 +72,25 @@ public class WorkoutListViewModel extends AndroidViewModel {
         currentWorkoutLiveData.setValue(new Workout());
     }
 
+    public void duplicateWorkout(Workout workout) {
+        if (workout == null) return;
+        applyTemplateDefaults(workout);
+        workoutRepository.saveTemplate(workout);
+    }
+
     public void toggleWorkoutStar(Workout workout) {
         if (workout == null) return;
         workoutRepository.updateWorkoutStar(workout);
     }
 
     private List<Workout> mapToWorkouts(List<WorkoutWithExercises> items) {
-        List<Workout> workouts = new ArrayList<>();
-        if (items == null) {
-            return workouts;
-        }
-        for (WorkoutWithExercises item : items) {
-            if (item == null || item.workout == null) {
-                continue;
-            }
-            Workout workout = item.workout;
-            workout.setExercises(sortExercises(item.exercises != null ? item.exercises : new ArrayList<>()));
-            workouts.add(workout);
-        }
+        List<Workout> workouts = WorkoutMapper.mapToWorkouts(items);
         if (!workouts.isEmpty()) {
             currentWorkoutLiveData.setValue(workouts.get(0));
         } else {
             currentWorkoutLiveData.setValue(new Workout());
         }
         return workouts;
-    }
-
-    private List<ExerciseInWorkout> sortExercises(List<ExerciseInWorkout> exercises) {
-        if (exercises == null || exercises.isEmpty()) {
-            return exercises != null ? exercises : new ArrayList<>();
-        }
-        List<ExerciseInWorkout> sorted = new ArrayList<>(exercises);
-        sorted.sort((a, b) -> Integer.compare(
-                a != null ? a.getOrderIndex() : 0,
-                b != null ? b.getOrderIndex() : 0));
-        return sorted;
     }
 
     private Workout ensureCurrentWorkout() {

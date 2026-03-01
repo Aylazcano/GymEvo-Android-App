@@ -1,9 +1,12 @@
 package com.example.gymevo.ui.exercisesList;
 
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.activity.result.ActivityResultLauncher;
@@ -14,14 +17,18 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymevo.R;
 import com.example.gymevo.databinding.FragmentExercisesListBinding;
 import com.example.gymevo.model.Exercise;
+import com.example.gymevo.model.ExerciseType;
+import com.example.gymevo.model.MuscleGroup;
 import com.example.gymevo.data.repository.UserPreferencesRepository;
 import com.example.gymevo.ui.common.ConfirmDeleteDialog;
 import com.example.gymevo.ui.common.DragDropItemTouchHelper;
-import com.example.gymevo.ui.common.ExerciseFormDialog;
+import com.example.gymevo.ui.common.FastScrollDragHelper;
+import com.example.gymevo.ui.common.FastScrollSectionTextFormatter;
 import com.example.gymevo.ui.common.FilterUi;
 import com.example.gymevo.ui.common.SectionHeaderDecoration;
 import com.example.gymevo.ui.common.sort.SortBottomSheet;
@@ -37,6 +44,9 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class ExerciseListFragment extends Fragment implements MainActivity.MainHeaderDelegate {
 
@@ -45,8 +55,6 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
     private FragmentExercisesListBinding binding;
     private ExerciseListAdapter adapter;
     private ExerciseListViewModel viewModel;
-    private ActivityResultLauncher<String> imagePickerLauncher;
-    private ExerciseFormDialog.OnImagePicked pendingImagePicked;
     private androidx.activity.OnBackPressedCallback backPressedCallback;
     private final List<Exercise> allExercises = new ArrayList<>();
     private String searchQuery = "";
@@ -59,12 +67,13 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
     private SectionHeaderDecoration muscleHeaderDecoration;
     private UserPreferencesRepository userPreferencesRepository;
     private final CompositeDisposable disposables = new CompositeDisposable();
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        initImagePicker();
-    }
+    private FastScrollDragHelper fastScrollDragHelper;
+    private long pendingExpandCreatedAt = -1L;
+    private ActivityResultLauncher<String> singleImagePickerLauncher;
+    private ActivityResultLauncher<String> multiImagePickerLauncher;
+    private ActivityResultLauncher<Void> cameraPreviewLauncher;
+    private Exercise pendingImageExercise;
+    private ExerciseListAdapter.ImageSlot pendingImageSlot;
 
     @Override
     public void onPause() {
@@ -84,14 +93,17 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
                              ViewGroup container, Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(ExerciseListViewModel.class);
         userPreferencesRepository = UserPreferencesRepository.getInstance(requireContext());
+        setupImageLaunchers();
 
         binding = FragmentExercisesListBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        adapter = new ExerciseListAdapter(this::showEditDialog, viewModel::toggleExerciseStar);
+        adapter = new ExerciseListAdapter(exercise -> { }, viewModel::toggleExerciseStar);
         binding.recyclerExercises.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recyclerExercises.setAdapter(adapter);
         adapter.setRecyclerView(binding.recyclerExercises);
+        adapter.setSaveListener(this::onSaveInlineExercise);
+        adapter.setImageRequestListener(this::onExerciseImageRequested);
 
         adapter.setSelectionListener(this::updateSelectionUi);
         adapter.setDeleteListener(this::onDeleteSingleExercise);
@@ -101,7 +113,9 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
         helper.attachToRecyclerView(binding.recyclerExercises);
         adapter.setItemTouchHelper(helper);
 
-        binding.fabAddExercise.setOnClickListener(v -> showEditDialog(null));
+        binding.fabAddExercise.setOnClickListener(v -> onAddExerciseInline());
+
+        setupFastScrollPopup();
 
         viewModel.getExercises().observe(getViewLifecycleOwner(), exercises -> {
             allExercises.clear();
@@ -116,6 +130,127 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
         observeFabAddRequests();
         setupBackNavigation();
         return root;
+    }
+
+    private void setupImageLaunchers() {
+        if (singleImagePickerLauncher == null) {
+            singleImagePickerLauncher = registerForActivityResult(
+                    new ActivityResultContracts.GetContent(),
+                    this::handleSingleImagePicked
+            );
+        }
+        if (multiImagePickerLauncher == null) {
+            multiImagePickerLauncher = registerForActivityResult(
+                    new ActivityResultContracts.GetMultipleContents(),
+                    this::handleMultiImagesPicked
+            );
+        }
+        if (cameraPreviewLauncher == null) {
+            cameraPreviewLauncher = registerForActivityResult(
+                    new ActivityResultContracts.TakePicturePreview(),
+                    this::handleCameraImagePicked
+            );
+        }
+    }
+
+    private void onExerciseImageRequested(Exercise exercise, ExerciseListAdapter.ImageSlot slot) {
+        if (!isAdded() || exercise == null || slot == null) {
+            return;
+        }
+        pendingImageExercise = exercise;
+        pendingImageSlot = slot;
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.exercise_image_edit_title)
+                .setItems(new CharSequence[]{
+                        getString(R.string.exercise_image_pick_single),
+                        getString(R.string.exercise_image_pick_multiple),
+                        getString(R.string.exercise_image_take_photo),
+                        getString(R.string.exercise_image_remove)
+                }, (dialog, which) -> {
+                    if (which == 0 && singleImagePickerLauncher != null) {
+                        singleImagePickerLauncher.launch("image/*");
+                    } else if (which == 1 && multiImagePickerLauncher != null) {
+                        multiImagePickerLauncher.launch("image/*");
+                    } else if (which == 2 && cameraPreviewLauncher != null) {
+                        cameraPreviewLauncher.launch(null);
+                    } else if (which == 3) {
+                        applyImageToEditingState(null);
+                    }
+                })
+                .setNegativeButton(R.string.action_cancel, null)
+                .show();
+    }
+
+    private void handleSingleImagePicked(Uri uri) {
+        if (uri == null) {
+            return;
+        }
+        applyImageToEditingState(uri.toString());
+    }
+
+    private void handleMultiImagesPicked(List<Uri> uris) {
+        if (adapter == null || pendingImageExercise == null || uris == null || uris.isEmpty()) {
+            return;
+        }
+        if (uris.size() > 2) {
+            Toast.makeText(requireContext(), R.string.exercise_image_max_two, Toast.LENGTH_SHORT).show();
+        }
+        // Only keep first 2 images
+        String imageA = uris.get(0) != null ? uris.get(0).toString() : null;
+        String imageB = uris.size() > 1 && uris.get(1) != null ? uris.get(1).toString() : null;
+        adapter.setPendingImagesForEditing(pendingImageExercise, imageA, imageB);
+        pendingImageExercise = null;
+        pendingImageSlot = null;
+    }
+
+    private void handleCameraImagePicked(Bitmap bitmap) {
+        if (bitmap == null || !isAdded()) {
+            return;
+        }
+        String path = saveBitmapToCache(bitmap);
+        applyImageToEditingState(path);
+    }
+
+    private void applyImageToEditingState(String imagePath) {
+        if (adapter == null || pendingImageExercise == null || pendingImageSlot == null) {
+            return;
+        }
+        adapter.setPendingImageForEditing(pendingImageExercise, pendingImageSlot, imagePath);
+    }
+
+    private String saveBitmapToCache(Bitmap bitmap) {
+        if (!isAdded() || bitmap == null) {
+            return null;
+        }
+        File outputDir = new File(requireContext().getCacheDir(), "exercise_images");
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            return null;
+        }
+        File outputFile = new File(outputDir, "img_" + System.currentTimeMillis() + ".jpg");
+        try (FileOutputStream stream = new FileOutputStream(outputFile)) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
+            return Uri.fromFile(outputFile).toString();
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
+
+    private void setupFastScrollPopup() {
+        if (binding == null || adapter == null) {
+            return;
+        }
+        if (fastScrollDragHelper != null) {
+            fastScrollDragHelper.detach();
+        }
+        fastScrollDragHelper = new FastScrollDragHelper(
+                binding.recyclerExercises,
+                binding.fastScrollPopup,
+            position -> FastScrollSectionTextFormatter.forExercise(
+                adapter.getItemAt(position),
+                sortField
+            )
+        );
+        fastScrollDragHelper.attach();
     }
 
     private boolean exitSelectionMode() {
@@ -208,12 +343,12 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_smart, smart));
 
         List<SortBottomSheet.SortOption> anatomical = new ArrayList<>();
+        anatomical.add(new SortBottomSheet.SortOption(R.string.sort_muscle_anatomical, SortField.MUSCLE, SortOrder.ASC));
         anatomical.add(new SortBottomSheet.SortOption(R.string.sort_muscle_asc, SortField.MUSCLE_GROUP, SortOrder.ASC));
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_anatomical, anatomical));
 
         List<SortBottomSheet.SortOption> basic = new ArrayList<>();
         basic.add(new SortBottomSheet.SortOption(R.string.sort_name_asc, SortField.NAME, SortOrder.ASC));
-        basic.add(new SortBottomSheet.SortOption(R.string.sort_name_desc, SortField.NAME, SortOrder.DESC));
         basic.add(new SortBottomSheet.SortOption(R.string.sort_custom, SortField.CUSTOM, SortOrder.ASC));
         groups.add(new SortBottomSheet.SortGroup(R.string.sort_group_basic, basic));
 
@@ -235,7 +370,8 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
 
         Comparator<Exercise> comparator = buildExerciseComparator();
         filtered.sort(comparator);
-        adapter.setExercises(filtered);
+        boolean hasPending = pendingExpandCreatedAt > 0L;
+        adapter.setExercises(filtered, hasPending ? () -> maybeExpandPendingExercise(filtered) : null);
         updateExerciseHeaders();
 
         boolean isEmpty = filtered.isEmpty();
@@ -333,18 +469,30 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
                         .reversed();
                 break;
             case POPULAR:
-                base = Comparator.comparing(Exercise::isStar).reversed()
-                        .thenComparingLong(Exercise::getUpdatedAt).reversed()
-                        .thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
+                base = (a, b) -> {
+                    int pointsCmp = Integer.compare(
+                            FastScrollSectionTextFormatter.exercisePopularityPoints(b),
+                            FastScrollSectionTextFormatter.exercisePopularityPoints(a)
+                    );
+                    if (pointsCmp != 0) return pointsCmp;
+                    int updCmp = Long.compare(b.getUpdatedAt(), a.getUpdatedAt());
+                    if (updCmp != 0) return updCmp;
+                    return FilterUi.normalize(a.getName()).compareTo(FilterUi.normalize(b.getName()));
+                };
                 break;
             case CUSTOM:
                 base = buildCustomExerciseComparator();
                 break;
             case MUSCLE:
-            case MUSCLE_GROUP:
-                base = Comparator.comparing(
-                    (Exercise exercise) -> FilterUi.normalize(exercise.getTargetedMusclesLabel())
+                base = Comparator.comparingInt(
+                    (Exercise exercise) -> muscleAnatomicalOrder(exercise.getTargetedMusclesLabel())
                 ).thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
+                break;
+            case MUSCLE_GROUP:
+                base = Comparator
+                        .comparing((Exercise exercise) -> FastScrollSectionTextFormatter
+                                .normalizeMuscleLabel(exercise.getTargetedMusclesLabel()))
+                        .thenComparing(exercise -> FilterUi.normalize(exercise.getName()));
                 break;
             case CREATED:
                 base = Comparator.comparingLong(Exercise::getCreatedAt);
@@ -423,10 +571,12 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
     }
 
     private SortField normalizeSortField(SortField field) {
-        if (field == SortField.MUSCLE) {
-            return SortField.MUSCLE_GROUP;
-        }
         return field != null ? field : SortField.RECENT;
+    }
+
+    private static int muscleAnatomicalOrder(String label) {
+        MuscleGroup group = label != null ? MuscleGroup.fromLabel(label) : null;
+        return group != null ? group.anatomicalOrder() : 99;
     }
 
     private java.util.List<Long> parseIdList(String value) {
@@ -486,6 +636,10 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
                 if (exitSelectionMode()) {
                     return;
                 }
+                if (adapter != null && adapter.isExpanded()) {
+                    adapter.collapseExpanded();
+                    return;
+                }
                 setEnabled(false);
                 try {
                     requireActivity().getOnBackPressedDispatcher().onBackPressed();
@@ -510,34 +664,63 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
                         navController.getCurrentBackStackEntry()
                                 .getSavedStateHandle()
                                 .set(ARG_OPEN_ADD_EXERCISE, false);
-                        showEditDialog(null);
+                        onAddExerciseInline();
                     }
                 });
     }
 
-    private void showEditDialog(Exercise exercise) {
-        Exercise safeExercise = copyExercise(exercise);
-        ExerciseFormDialog.ImagePicker imagePicker = callback -> {
-            pendingImagePicked = callback;
-            imagePickerLauncher.launch("image/*");
-        };
-
-        ExerciseFormDialog.show(
-                requireContext(),
-                safeExercise,
-                (updated, isNew) -> {
-                    if (isNew) {
-                        if (updated.getCreatedAt() <= 0L) {
-                            updated.setCreatedAt(System.currentTimeMillis());
-                        }
-                        viewModel.addExercise(updated);
-                    } else {
-                        viewModel.updateExercise(updated);
-                    }
-                },
-                viewModel::deleteExercise,
-                imagePicker
+    private void onAddExerciseInline() {
+        if (!isAdded()) {
+            return;
+        }
+        Exercise draft = new Exercise(
+                getString(R.string.exercise_new_default_name),
+                MuscleGroup.OTHER,
+                null,
+                null,
+                false,
+                ExerciseType.ANAEROBIC
         );
+        long now = System.currentTimeMillis();
+        draft.setCreatedAt(now);
+        draft.setUpdatedAt(now);
+        pendingExpandCreatedAt = now;
+        viewModel.addExercise(draft);
+    }
+
+    private void onSaveInlineExercise(Exercise updated) {
+        if (updated == null) {
+            return;
+        }
+        if (updated.getCreatedAt() <= 0L) {
+            updated.setCreatedAt(System.currentTimeMillis());
+        }
+        updated.setUpdatedAt(System.currentTimeMillis());
+        if (updated.getId() == null) {
+            viewModel.addExercise(updated);
+        } else {
+            viewModel.updateExercise(updated);
+        }
+    }
+
+    private void maybeExpandPendingExercise(List<Exercise> filtered) {
+        if (pendingExpandCreatedAt <= 0L || adapter == null || binding == null) {
+            return;
+        }
+        Exercise target = null;
+        if (filtered != null) {
+            for (Exercise exercise : filtered) {
+                if (exercise != null && exercise.getCreatedAt() == pendingExpandCreatedAt) {
+                    target = exercise;
+                    break;
+                }
+            }
+        }
+        if (target == null) {
+            return;
+        }
+        pendingExpandCreatedAt = -1L;
+        adapter.startEditing(target);
     }
 
     private void updateSelectionUi(int selectedCount) {
@@ -684,45 +867,14 @@ public class ExerciseListFragment extends Fragment implements MainActivity.MainH
         return R.string.exercise_search_hint;
     }
 
-    private Exercise copyExercise(Exercise exercise) {
-        if (exercise == null) {
-            return null;
-        }
-        Exercise copy = new Exercise(
-                exercise.getName() != null ? exercise.getName() : "",
-                exercise.getTargetedMusclesLabel() != null ? exercise.getTargetedMusclesLabel() : "",
-                exercise.getImageA(),
-                exercise.getImageB(),
-                exercise.isStar()
-        );
-        copy.setId(exercise.getId());
-        copy.setType(exercise.getType());
-        copy.setShowSeries(exercise.isShowSeries());
-        copy.setShowRepetitions(exercise.isShowRepetitions());
-        copy.setShowWeight(exercise.isShowWeight());
-        copy.setShowTime(exercise.isShowTime());
-        copy.setShowHeartRate(exercise.isShowHeartRate());
-        copy.setCreatedAt(exercise.getCreatedAt());
-        copy.setUpdatedAt(exercise.getUpdatedAt());
-        return copy;
-    }
-
-    private void initImagePicker() {
-        imagePickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (pendingImagePicked != null) {
-                        pendingImagePicked.onPicked(uri != null ? uri.toString() : null);
-                        pendingImagePicked = null;
-                    }
-                }
-        );
-    }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         disposables.clear();
+        if (fastScrollDragHelper != null) {
+            fastScrollDragHelper.detach();
+            fastScrollDragHelper = null;
+        }
         binding = null;
     }
 

@@ -1,16 +1,24 @@
 package com.example.gymevo.ui.main;
 
 import android.os.Bundle;
+import android.net.Uri;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.MotionEvent;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.content.SharedPreferences;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.navigation.NavOptions;
 import androidx.annotation.NonNull;
 
 import com.example.gymevo.ui.common.GestureConfig;
 import com.example.gymevo.ui.common.GestureManager;
+import com.example.gymevo.ui.common.HintDialog;
 
 import androidx.annotation.Nullable;
 import androidx.activity.OnBackPressedCallback;
@@ -36,6 +44,10 @@ import com.example.gymevo.ui.workoutTracker.WorkoutTrackerFragment;
 import com.example.gymevo.ui.workoutsList.WorkoutListFragment;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.imageview.ShapeableImageView;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,10 +65,22 @@ public class MainActivity extends AppCompatActivity {
     private float fragmentSwipeStartX;
     private float fragmentSwipeStartY;
     private boolean fragmentSwipeStartedInCalendar;
+
+    // Avatar / user profile
+    private static final String PROFILE_PREFS = "user_profile";
+    private static final String KEY_USER_NAME = "user_name";
+    private static final String KEY_AVATAR_URI = "avatar_uri";
+    private ShapeableImageView avatarImage;
+    private TextView userNameText;
+    private ActivityResultLauncher<String> avatarPickerLauncher;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         applyUserTheme();
         super.onCreate(savedInstanceState);
+
+        avatarPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                this::onAvatarPicked);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -71,7 +95,11 @@ public class MainActivity extends AppCompatActivity {
 
         initializeFragmentSwipe();
 
+        initDrawerHeader();
+
         binding.appBarMain.fab.setOnClickListener(this::handleFabClick);
+
+        HintDialog.showIfFirstTime(this);
     }
 
     private void initializeFragmentSwipe() {
@@ -89,6 +117,25 @@ public class MainActivity extends AppCompatActivity {
             fragmentSwipeStartX = ev.getRawX();
             fragmentSwipeStartY = ev.getRawY();
             fragmentSwipeStartedInCalendar = isPointInsideCalendar(fragmentSwipeStartX, fragmentSwipeStartY);
+
+            // Dismiss keyboard when tapping outside the focused EditText
+            View focused = getCurrentFocus();
+            if (focused instanceof android.widget.EditText) {
+                int[] loc = new int[2];
+                focused.getLocationOnScreen(loc);
+                float x = ev.getRawX();
+                float y = ev.getRawY();
+                if (x < loc[0] || x > loc[0] + focused.getWidth()
+                        || y < loc[1] || y > loc[1] + focused.getHeight()) {
+                    focused.clearFocus();
+                    android.view.inputmethod.InputMethodManager imm =
+                            (android.view.inputmethod.InputMethodManager)
+                                    getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+                    }
+                }
+            }
         }
         // Only process global gestures when our guard allows it and the gesture didn't start in the calendar
         if (!fragmentSwipeStartedInCalendar && gestureManager != null && shouldProcessGlobalGesture()) {
@@ -136,6 +183,14 @@ public class MainActivity extends AppCompatActivity {
                                  View.OnClickListener moveUp,
                                  View.OnClickListener moveDown,
                                  View.OnClickListener deleteAction) {
+        showSelectionBar(selectedCount, moveUp, moveDown, deleteAction, null);
+    }
+
+    public void showSelectionBar(int selectedCount,
+                                 View.OnClickListener moveUp,
+                                 View.OnClickListener moveDown,
+                                 View.OnClickListener deleteAction,
+                                 View.OnClickListener copyAction) {
         if (selectionBarBinding == null) {
             return;
         }
@@ -149,6 +204,13 @@ public class MainActivity extends AppCompatActivity {
         selectionBarBinding.buttonMoveUp.setOnClickListener(moveUp);
         selectionBarBinding.buttonMoveDown.setOnClickListener(moveDown);
         selectionBarBinding.buttonDelete.setOnClickListener(deleteAction);
+        if (copyAction != null) {
+            selectionBarBinding.buttonCopy.setVisibility(View.VISIBLE);
+            selectionBarBinding.buttonCopy.setOnClickListener(copyAction);
+        } else {
+            selectionBarBinding.buttonCopy.setVisibility(View.GONE);
+            selectionBarBinding.buttonCopy.setOnClickListener(null);
+        }
     }
 
     public void hideSelectionBar() {
@@ -199,6 +261,9 @@ public class MainActivity extends AppCompatActivity {
                 R.id.nav_statistics,
                 R.id.nav_exercises_list,
             R.id.nav_workout_list,
+            R.id.nav_notes,
+            R.id.nav_body_status,
+            R.id.nav_calorie_tracker,
             R.id.nav_settings)
                 .setOpenableLayout(drawer)
                 .build();
@@ -211,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
             if (!isHeaderActionsSupported()) {
                 collapseSearchIfExpanded();
             }
+            updateFabVisibility(destination.getId());
         });
 
         // Keep track of changes to decide if we should process global gestures
@@ -222,6 +288,78 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestAddExercise() {
         setSavedStateFlag(ExerciseListFragment.ARG_OPEN_ADD_EXERCISE);
+    }
+
+    /* ── Drawer header (avatar + user name) ────────────────────────────── */
+
+    private void initDrawerHeader() {
+        View header = binding.navView.getHeaderView(0);
+        if (header == null) return;
+
+        avatarImage = header.findViewById(R.id.avatar_image);
+        userNameText = header.findViewById(R.id.user_name_text);
+
+        SharedPreferences prefs = getSharedPreferences(PROFILE_PREFS, MODE_PRIVATE);
+        String savedName = prefs.getString(KEY_USER_NAME, null);
+        String savedUri = prefs.getString(KEY_AVATAR_URI, null);
+
+        if (savedName != null && !savedName.isEmpty()) {
+            userNameText.setText(savedName);
+        }
+        if (savedUri != null && !savedUri.isEmpty()) {
+            loadAvatar(Uri.parse(savedUri));
+        }
+
+        avatarImage.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
+        userNameText.setOnClickListener(v -> showEditNameDialog());
+    }
+
+    private void onAvatarPicked(Uri uri) {
+        if (uri == null) return;
+        // Persist read permission so the URI survives reboots
+        try {
+            getContentResolver().takePersistableUriPermission(uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException ignored) { /* photo picker URIs may not support this */ }
+
+        getSharedPreferences(PROFILE_PREFS, MODE_PRIVATE)
+                .edit().putString(KEY_AVATAR_URI, uri.toString()).apply();
+        loadAvatar(uri);
+    }
+
+    private void loadAvatar(Uri uri) {
+        if (avatarImage == null || uri == null) return;
+        Glide.with(this)
+                .load(uri)
+                .apply(RequestOptions.circleCropTransform()
+                        .placeholder(R.mipmap.ic_launcher_round)
+                        .error(R.mipmap.ic_launcher_round))
+                .into(avatarImage);
+    }
+
+    private void showEditNameDialog() {
+        EditText input = new EditText(this);
+        input.setHint(R.string.edit_name_hint);
+        input.setSingleLine();
+
+        SharedPreferences prefs = getSharedPreferences(PROFILE_PREFS, MODE_PRIVATE);
+        String current = prefs.getString(KEY_USER_NAME, "");
+        input.setText(current);
+        input.setSelection(current.length());
+
+        int px = (int) (24 * getResources().getDisplayMetrics().density);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.edit_name_title)
+                .setView(input, px, 0, px, 0)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String name = input.getText().toString().trim();
+                    if (!name.isEmpty()) {
+                        prefs.edit().putString(KEY_USER_NAME, name).apply();
+                        userNameText.setText(name);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void requestAddExerciseInTracker() {
@@ -261,6 +399,17 @@ public class MainActivity extends AppCompatActivity {
         return navController.getCurrentBackStackEntry() != null
                 ? navController.getCurrentBackStackEntry().getSavedStateHandle()
                 : null;
+    }
+
+    private void updateFabVisibility(int destinationId) {
+        boolean showFab = destinationId == R.id.nav_workout_tracker
+                || destinationId == R.id.nav_exercises_list
+                || destinationId == R.id.nav_workout_list;
+        if (showFab) {
+            binding.appBarMain.fab.show();
+        } else {
+            binding.appBarMain.fab.hide();
+        }
     }
 
     private void showUnsupportedAction(View view) {
